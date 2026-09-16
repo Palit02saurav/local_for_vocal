@@ -1,36 +1,39 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Category = require('./Category');
-const Admin = sequelize.define('Admin', {
+
+const Notification = sequelize.define('Notification', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  full_name: {
+  type: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+  title: {
     type: DataTypes.STRING(150),
     allowNull: false,
   },
-  email: {
-    type: DataTypes.STRING(150),
-    allowNull: false,
-    unique: true,
-    validate: { isEmail: true },
-  },
-  password_hash: {
+  message: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
   },
-  role: {
+  link: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  recipient_role: {
     type: DataTypes.STRING(30),
+    allowNull: false,
     defaultValue: 'SUPER_ADMIN',
   },
-  is_active: {
+  is_read: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    defaultValue: false,
   },
 }, {
-  tableName: 'admins',
+  tableName: 'notifications',
 });
 
-module.exports = Admin;
+module.exports = Notification;
