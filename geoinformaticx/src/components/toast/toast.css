@@ -1,0 +1,111 @@
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+}
+
+.toast-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: white;
+  color: #1a1a1a;
+  padding: 12px 34px 14px 14px;
+  border-radius: 10px;
+  min-width: 260px;
+  max-width: 340px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  animation: toastSlideIn 0.25s ease;
+}
+
+.toast-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.toast-success .toast-icon { background: #2f8d46; }
+.toast-info .toast-icon { background: #4a90d9; }
+.toast-warning .toast-icon { background: #e07b2a; }
+.toast-error .toast-icon { background: #e63946; }
+
+.toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.toast-message {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: #777;
+}
+
+.toast-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: none;
+  color: #aaa;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.toast-close:hover {
+  color: #666;
+}
+
+.toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform: scaleX(1);
+  transform-origin: left;
+  animation: toastShrink 3s linear forwards;
+}
+
+.toast-success .toast-progress { background: #2f8d46; }
+.toast-info .toast-progress { background: #4a90d9; }
+.toast-warning .toast-progress { background: #e07b2a; }
+.toast-error .toast-progress { background: #e63946; }
+
+@keyframes toastShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

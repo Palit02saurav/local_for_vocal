@@ -1,0 +1,176 @@
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.profile-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 460px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.profile-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.profile-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.profile-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  display: flex;
+}
+
+.profile-modal-loading,
+.profile-modal-error {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+.profile-modal-body {
+  padding: 20px;
+}
+
+.profile-modal-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-modal-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.profile-modal-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.profile-modal-subtitle {
+  color: #888;
+  font-size: 13px;
+}
+
+.profile-modal-section {
+  margin-bottom: 22px;
+}
+
+.profile-modal-section h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.profile-modal-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.profile-modal-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-modal-detail-label {
+  font-size: 12px;
+  color: #999;
+}
+
+.profile-modal-detail-value {
+  font-size: 14px;
+  color: #222;
+  word-break: break-word;
+}
+
+.profile-modal-default-pw-note {
+  font-size: 13px;
+  color: #555;
+  background: #f6f6f6;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 0 0 14px;
+}
+
+.profile-modal-pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-modal-pw-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #444;
+}
+
+.profile-modal-pw-form input {
+  padding: 9px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.profile-modal-pw-error {
+  color: #c0392b;
+  font-size: 13px;
+}
+
+.profile-modal-pw-success {
+  color: #16a34a;
+  font-size: 13px;
+}
+
+.profile-modal-pw-submit {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.profile-modal-pw-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

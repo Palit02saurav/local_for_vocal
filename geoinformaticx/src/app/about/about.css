@@ -1,0 +1,405 @@
+/* ===== About Page ===== */
+.about-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+  color: #1f2a24;
+}
+
+/* Breadcrumb */
+.about-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #7a8a80;
+  margin-bottom: 28px;
+}
+
+.about-breadcrumb a {
+  color: #7a8a80;
+  text-decoration: none;
+}
+
+.about-breadcrumb a:hover {
+  color: #123524;
+}
+
+.about-breadcrumb .current {
+  color: #123524;
+  font-weight: 500;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== Hero ===== */
+.about-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 90px;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 480px;
+  padding: 0 40px;
+}
+
+.about-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.about-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10, 25, 18, 0.82) 0%, rgba(10, 25, 18, 0.55) 55%, rgba(10, 25, 18, 0.15) 100%);
+  z-index: 1;
+}
+
+.about-hero-text,
+.about-hero-visual {
+  position: relative;
+  z-index: 2;
+}
+
+.about-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a9d4b6;
+  margin-bottom: 14px;
+}
+
+.about-hero-text h1 {
+  font-size: 40px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 18px;
+}
+
+.about-hero-text h1 .highlight {
+  color: #6fd493;
+}
+
+.about-hero-text p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #dbe6de;
+  margin-bottom: 26px;
+  max-width: 480px;
+}
+
+.about-cta {
+  background: #ffffff;
+  color: #123524;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.about-cta:hover {
+  background: #eaf3ea;
+}
+
+/* Hero visual (now just holds the floating cards) */
+.about-hero-visual {
+  min-height: 360px;
+}
+
+.floating-card {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e3ebe4;
+  border-radius: 10px;
+  padding: 14px 16px;
+  width: 250px;
+  box-shadow: 0 6px 18px rgba(18, 53, 36, 0.08);
+}
+
+.card-1 { top: 4%; }
+.card-2 { top: 40%; }
+.card-3 { top: 76%; }
+
+.floating-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eaf3ea;
+  color: #123524;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.floating-card h4 {
+  font-size: 13px;
+  margin: 0 0 4px;
+  color: #14231b;
+}
+
+.floating-card p {
+  font-size: 12px;
+  margin: 0;
+  color: #7a8a80;
+  line-height: 1.4;
+}
+
+
+
+
+/* ===== Pillars: Mission / Vision / Values ===== */
+.about-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 70px;
+}
+
+.pillar-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #eaf3ea;
+  color: #123524;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 18px;
+}
+
+.pillar h3 {
+  font-size: 17px;
+  margin: 0 0 10px;
+  color: #14231b;
+}
+
+.pillar p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #5b665f;
+  margin: 0;
+}
+
+.pillar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pillar ul li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #5b665f;
+}
+
+.pillar ul li svg {
+  color: #1e6b3c;
+  flex-shrink: 0;
+}
+
+/* ===== Why Choose Us ===== */
+.about-why {
+  background: #f6f8f3;
+  border-radius: 16px;
+  padding: 44px 36px;
+  margin-bottom: 40px;
+}
+
+.about-why h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #14231b;
+  margin: 0 0 36px;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+.why-item {
+  text-align: center;
+}
+
+.why-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eaf3ea;
+  color: #123524;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin: 0 auto 14px;
+}
+
+.why-item h4 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: #14231b;
+}
+
+.why-item p {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #6c7a70;
+  margin: 0;
+}
+
+/* ===== Stats bar ===== */
+.about-stats {
+  background: #123524;
+  border-radius: 14px;
+  padding: 30px 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  color: #fff;
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.stat h3 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.stat p {
+  font-size: 12px;
+  margin: 2px 0 0;
+  color: #cfe0d3;
+}
+
+/* ===== Bottom strip ===== */
+.about-footer-strip {
+  background: #f6f8f3;
+  border-radius: 14px;
+  padding: 30px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.strip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.strip-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eaf3ea;
+  color: #123524;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.strip-item h4 {
+  font-size: 13.5px;
+  margin: 0 0 6px;
+  color: #14231b;
+}
+
+.strip-item p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6c7a70;
+  margin: 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .about-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero-image {
+    margin-left: 0;
+  }
+
+  .floating-card {
+    position: static;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .about-pillars {
+    grid-template-columns: 1fr;
+  }
+
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-footer-strip {
+    grid-template-columns: 1fr;
+  }
+}

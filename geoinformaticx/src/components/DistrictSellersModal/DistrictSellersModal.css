@@ -1,0 +1,109 @@
+.district-sellers-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.district-sellers-modal {
+  width: 380px;
+  max-width: 90vw;
+  height: 100%;
+  background: #fff;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: district-sellers-modal-slide-in 0.25s ease-out;
+  position: relative;
+}
+
+@keyframes district-sellers-modal-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.district-sellers-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.district-sellers-modal-header {
+  padding: 32px 20px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.district-sellers-modal-header h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.district-sellers-modal-subtitle {
+  color: #777;
+  font-size: 13px;
+  margin: 0;
+}
+
+.district-sellers-modal-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.district-sellers-modal-empty {
+  color: #999;
+  font-size: 13px;
+}
+
+.district-sellers-modal-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.district-sellers-modal-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.district-sellers-modal-location {
+  font-size: 12.5px;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.district-sellers-modal-rating {
+  font-size: 12.5px;
+  color: #aaa;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.district-sellers-modal-view-btn {
+  width: 100%;
+  padding: 7px 0;
+  background: #2d6a4f;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.district-sellers-modal-view-btn:hover {
+  background: #245a41;
+}

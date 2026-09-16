@@ -1,0 +1,13 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-main-content {
+  margin-left: 240px;
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
+}

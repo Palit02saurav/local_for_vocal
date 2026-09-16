@@ -1,0 +1,337 @@
+.wl-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.wl-loading {
+  padding: 60px;
+  text-align: center;
+  color: #888;
+}
+
+.wl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.wl-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.wl-subtitle {
+  color: #777;
+  font-size: 14px;
+  margin: 0;
+}
+
+.wl-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.wl-share-btn,
+.wl-move-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wl-share-btn {
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.wl-move-all-btn {
+  background: #1f6e4a;
+  border: none;
+  color: white;
+}
+
+.wl-move-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wl-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.wl-select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.wl-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.wl-sort-row select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .wl-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .wl-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.wl-card {
+  position: relative;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wl-card-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+.wl-heart-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.wl-card-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.wl-card > a {
+  display: block;
+}
+
+.wl-card-body {
+  padding: 12px;
+}
+
+.wl-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.wl-card-seller {
+  font-size: 12px;
+  color: #888;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wl-verified {
+  color: #1f6e4a;
+}
+
+.wl-card-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 2px;
+}
+
+.wl-card-stock {
+  font-size: 12px;
+  margin: 0 0 10px;
+}
+
+.wl-card-stock.in-stock {
+  color: #1f6e4a;
+}
+
+.wl-card-stock.out-stock {
+  color: #c0392b;
+}
+
+.wl-add-to-cart-btn {
+  width: 100%;
+  padding: 8px;
+  background: #1f6e4a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.wl-add-to-cart-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wl-remove-btn {
+  width: 100%;
+  padding: 8px;
+  background: white;
+  color: #c0392b;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wl-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.wl-empty-icon {
+  font-size: 40px;
+}
+
+.wl-continue-btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #1f6e4a;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.wl-suggestions-section {
+  margin-top: 48px;
+}
+
+.wl-suggestions-section h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.wl-suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .wl-suggestions-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.wl-suggestion-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.wl-suggestion-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.wl-suggestion-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 12px 2px;
+}
+
+.wl-suggestion-price {
+  font-size: 13px;
+  color: #555;
+  margin: 0 12px 8px;
+}
+
+.wl-suggestion-add-btn {
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  padding: 6px;
+  background: #1f6e4a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.wl-perks-strip {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 48px;
+  padding: 20px;
+  background: #f7f7f7;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.wl-perk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.wl-perk span {
+  font-weight: 400;
+  color: #888;
+  font-size: 12px;
+}

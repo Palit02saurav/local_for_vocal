@@ -1,0 +1,124 @@
+.store-page {
+  padding: 24px;
+  font-family: var(--font-poppins), "Poppins", "Segoe UI", Arial, sans-serif;
+}
+
+.store-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.store-subtitle {
+  color: #777;
+  margin: 0 0 20px;
+  font-size: 14px;
+}
+
+.store-success,
+.store-error {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.store-success {
+  background: #e6f4ea;
+  color: #2f8d46;
+}
+
+.store-error {
+  background: #fdeaea;
+  color: #e63946;
+}
+
+.store-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.store-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.store-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.store-card-title h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.store-field {
+  margin-bottom: 16px;
+}
+
+.store-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.store-field input,
+.store-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.store-locked-input {
+  background: #f5f5f5;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.store-hint {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.store-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.store-save-btn {
+  background: #2f8d46;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.store-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 800px) {
+  .store-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,257 @@
+.track-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+  color: #1a1a1a;
+}
+
+.track-breadcrumb {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.track-breadcrumb a {
+  color: #2d6a4f;
+  text-decoration: none;
+}
+
+.track-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.track-subtitle {
+  font-size: 13.5px;
+  color: #777;
+  margin: 0 0 28px;
+}
+
+.track-empty {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.track-empty-icon {
+  font-size: 48px;
+  margin: 0 0 16px;
+}
+
+.track-empty h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.track-empty p {
+  color: #777;
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.track-empty-btn {
+  display: inline-block;
+  background: #2d6a4f;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.track-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.track-card-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.track-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.track-card-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+
+.track-card-seller {
+  font-size: 12.5px;
+  color: #777;
+  margin: 0 0 6px;
+}
+
+.track-card-id {
+  font-size: 11.5px;
+  color: #999;
+  margin: 0;
+}
+
+.track-card-date {
+  font-size: 11.5px;
+  color: #999;
+  margin: 0;
+}
+
+.track-card-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.track-status {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.track-status-placed { background: #fdf3de; color: #b9840e; }
+.track-status-shipped { background: #e8f1fb; color: #4a90d9; }
+.track-status-delivered { background: #e6f4ea; color: #2d6a4f; }
+
+.track-card-qty {
+  font-size: 12px;
+  color: #777;
+  margin: 0 0 3px;
+}
+
+.track-card-price {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.track-mixed-banner {
+  background: #eaf4ef;
+  color: #2d6a4f;
+  border: 1px solid #cde5da;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+}
+
+.track-mixed-banner a {
+  color: #2d6a4f;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.track-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.track-expand-panel {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 20px;
+  margin-top: -1px;
+}
+
+.track-stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.track-step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.track-step:last-child {
+  flex: 0;
+}
+
+.track-step-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ddd;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.track-step.done .track-step-dot {
+  background: #2d6a4f;
+}
+
+.track-step-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.track-step.done .track-step-label {
+  color: #2d6a4f;
+  font-weight: 600;
+}
+
+.track-step-line {
+  flex: 1;
+  height: 2px;
+  background: #ddd;
+  margin: 0 4px;
+}
+
+.track-step-line.done {
+  background: #2d6a4f;
+}
+
+.track-cancelled-note {
+  color: #d64545;
+  font-size: 13.5px;
+  margin: 0 0 12px;
+}
+
+.track-cancel-btn {
+  background: white;
+  border: 1px solid #d64545;
+  color: #d64545;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.track-cancel-btn:hover {
+  background: #d64545;
+  color: white;
+}
+
+.track-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,92 @@
+.filter {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.filter-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.clear-btn {
+  background: none;
+  border: none;
+  color: #2e7d32;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.filter-section {
+  margin-bottom: 28px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+}
+
+.filter-section:last-of-type {
+  border: none;
+}
+
+.filter-section h4 {
+  margin: 0 0 15px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.filter-section label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.filter-section input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #2e7d32;
+  flex-shrink: 0;
+}
+
+.filter-section input[type="range"] {
+  width: 100%;
+  accent-color: #2e7d32;
+}
+
+.price-range {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+.apply-filter {
+  width: 100%;
+  height: 46px;
+  border: 2px solid #2e7d32;
+  border-radius: 8px;
+  background: #fff;
+  color: #2e7d32;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.apply-filter:hover {
+  background: #2e7d32;
+  color: #fff;
+}
