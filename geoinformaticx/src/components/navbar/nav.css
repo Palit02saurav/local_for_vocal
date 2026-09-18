@@ -403,3 +403,52 @@
 .sell-with-us-btn:hover {
   background: #245a42;
 }
+
+.nav-profile-wrapper {
+  position: relative;
+}
+
+.nav-profile-trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 150px;
+  padding: 6px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-profile-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #333;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-profile-dropdown-item:hover {
+  background: #f2f7f4;
+}
+
+.nav-profile-logout {
+  color: #e03131;
+}

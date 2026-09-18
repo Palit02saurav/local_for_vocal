@@ -549,7 +549,11 @@
 }
 
 .view-store-btn {
+  display: block;
   width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
   background: white;
   color: #1a1a1a;
   border: 1.5px solid #ddd;
@@ -560,8 +564,13 @@
   cursor: pointer;
   transition: border-color 0.2s;
 }
-
 .view-store-btn:hover { border-color: #2d6a4f; color: #2d6a4f; }
+
+.biz-empty-msg {
+  padding: 30px 0;
+  color: #888;
+  font-size: 14px;
+}
 
 /* Trust Badges */
 

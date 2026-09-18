@@ -1,14 +1,16 @@
 "use client";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, signOut } from "@/lib/auth";
+import { getProductOrders } from "@/lib/orders";
 import "./profile.css";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 const sidebarItems = [
   { key: "profile", label: "My Profile", icon: "user" },
-  { key: "orders", label: "My Orders", icon: "bag" },
+  { key: "orders", label: "My Orders", icon: "bag", href: "/trackorder" },
   { key: "wishlist", label: "Wishlist", icon: "heart", href: "/wishlist" },
   { key: "addresses", label: "Addresses", icon: "pin" },
   { key: "payment", label: "Payment Methods", icon: "card" },
@@ -16,7 +18,6 @@ const sidebarItems = [
   { key: "notifications", label: "Notifications", icon: "bell" },
   { key: "settings", label: "Account Settings", icon: "gear" },
 ];
-
 const icons = {
   user: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />,
   bag: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4M3 6h18M16 10a4 4 0 0 1-8 0" />,
@@ -104,11 +105,28 @@ export default function Profile() {
       setSaving(false);
     }
   };
-
   const handleLogout = () => {
     signOut();
     router.push("/");
   };
+
+  const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const openOrdersModal = async () => {
+    setShowOrdersModal(true);
+    setOrdersLoading(true);
+    setOrders(await getProductOrders());
+    setOrdersLoading(false);
+  };
+
+  const closeOrdersModal = () => setShowOrdersModal(false);
+
+  useEffect(() => {
+    document.body.style.overflow = showOrdersModal ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showOrdersModal]);
 
   if (!user) return null;
 
@@ -160,6 +178,12 @@ export default function Profile() {
                 key={item.key}
                 href={item.href || "#"}
                 className={`prf-nav-item ${i === 0 ? "active" : ""}`}
+                onClick={(e) => {
+                  if (item.key === "orders") {
+                    e.preventDefault();
+                    openOrdersModal();
+                  }
+                }}
               >
                 <Icon name={item.icon} />
                 <span>{item.label}</span>
@@ -290,6 +314,63 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {showOrdersModal && typeof document !== "undefined" &&
+        createPortal(
+          <div className="prf-orders-overlay" onClick={closeOrdersModal}>
+            <div className="prf-orders-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="prf-orders-modal-header">
+                <h3>My Orders</h3>
+                <button className="prf-orders-close" onClick={closeOrdersModal} aria-label="Close">✕</button>
+              </div>
+
+              {ordersLoading ? (
+                <p className="prf-orders-state">Loading your orders…</p>
+              ) : orders.length === 0 ? (
+                <div className="prf-orders-empty">
+                  <p className="prf-orders-empty-icon">📦</p>
+                  <p>No orders yet.</p>
+                  <Link href="/shop" className="prf-orders-shop-link" onClick={closeOrdersModal}>
+                    Start Shopping
+                  </Link>
+                </div>
+              ) : (
+                <div className="prf-orders-list">
+                  {orders.map((order) => (
+                    <div key={order.orderId} className="prf-orders-item">
+                      <img src={order.image} alt={order.name} className="prf-orders-item-img" />
+                      <div className="prf-orders-item-info">
+                        <p className="prf-orders-item-name">{order.name}</p>
+                        <p className="prf-orders-item-seller">{order.seller}</p>
+                        <p className="prf-orders-item-date">
+                          {new Date(order.date).toLocaleDateString("en-IN", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <div className="prf-orders-item-right">
+                        <span className={`prf-orders-status prf-orders-status-${order.status.toLowerCase().replace(/\s/g, "-")}`}>
+                          {order.status}
+                        </span>
+                        <p className="prf-orders-item-qty">Qty: {order.quantity}</p>
+                        <p className="prf-orders-item-price">
+                          ₹{(order.price * order.quantity).toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="prf-orders-modal-footer">
+                <Link href="/trackorder" className="prf-orders-track-link" onClick={closeOrdersModal}>
+                  Full order tracking & cancellation →
+                </Link>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </main>
   );
-}
+} 

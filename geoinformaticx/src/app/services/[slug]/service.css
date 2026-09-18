@@ -33,11 +33,32 @@
   overflow: hidden;
 }
 
-.sd-image {
-  width: 100%;
+.sd-details {
+  display: flex;
+  flex-direction: column;
   height: 420px;
-  object-fit: cover;
-  display: block;
+}
+
+.sd-details-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /* hide scrollbar, keep scrolling */
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* old Edge/IE */
+}
+
+.sd-details-scroll::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari */
+}
+
+.sd-price-row {
+  flex-shrink: 0;
+}
+
+.sd-actions {
+  flex-shrink: 0;
 }
 
 .sd-badge {
@@ -245,4 +266,38 @@
   .sd-related-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.sd-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.sd-info-icon {
+  flex-shrink: 0;
+}
+
+.sd-requirements {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.sd-readmore-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  color: #2d6a4f;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline;
+}
+
+.sd-readmore-btn:hover {
+  text-decoration: underline;
 }

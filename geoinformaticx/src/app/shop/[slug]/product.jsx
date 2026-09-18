@@ -17,6 +17,8 @@ export default function ProductDetail({ slug }) {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [zoomStyle, setZoomStyle] = useState({ display: "none" });
 
   useEffect(() => {
     axios
@@ -26,7 +28,10 @@ export default function ProductDetail({ slug }) {
         const found = products.find((p) => p.sku === slug);
         setProduct(found || null);
         setRelatedProducts(products.filter((p) => p.sku !== slug).slice(0, 4));
-        if (found) setWishlisted(isWishlisted(found.name));
+        if (found) {
+          setWishlisted(isWishlisted(found.name));
+          setSelectedImage(found.image_url || null);
+        }
       })
       .catch((err) => console.error("Failed to load product:", err))
       .finally(() => setLoading(false));
@@ -46,9 +51,31 @@ export default function ProductDetail({ slug }) {
   }
 
   const sellerName = product.seller?.store_name || product.seller?.full_name || "Geoinformaticx";
-  const image = product.image_url || "https://placehold.co/600x600?text=No+Image";
+  const fallbackImage = "https://placehold.co/600x600?text=No+Image";
+  const galleryImages = [
+    product.image_url,
+    ...(product.gallery_urls ? product.gallery_urls.split(",") : []),
+  ]
+    .map((url) => (url || "").trim())
+    .filter((url, idx, arr) => url && arr.indexOf(url) === idx);
+  if (galleryImages.length === 0) galleryImages.push(fallbackImage);
+
+  const image = selectedImage || galleryImages[0];
   const price = Number(product.price);
   const stock = Number(product.stock);
+
+  const handleImageMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomStyle({
+      display: "block",
+      backgroundImage: `url(${image})`,
+      backgroundPosition: `${x}% ${y}%`,
+    });
+  };
+
+  const handleImageMouseLeave = () => setZoomStyle({ display: "none" });
 
   const toggleWishlist = () => {
     if (wishlisted) {
@@ -86,14 +113,37 @@ export default function ProductDetail({ slug }) {
       {/* Top section: image + info */}
       <div className="pd-top">
         <div className="pd-gallery">
-          <div className="pd-main-img-wrapper">
-            <button className="pd-wishlist-btn" onClick={toggleWishlist} aria-label="Toggle wishlist">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlisted ? "#e74c3c" : "none"} stroke={wishlisted ? "#e74c3c" : "#666"} strokeWidth="1.8">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
-            <img src={image} alt={product.name} className="pd-main-img" />
+          <div className="pd-image-zoom-container">
+            <div
+              className="pd-main-img-wrapper"
+              onMouseMove={handleImageMouseMove}
+              onMouseLeave={handleImageMouseLeave}
+            >
+              <button className="pd-wishlist-btn" onClick={toggleWishlist} aria-label="Toggle wishlist">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlisted ? "#e74c3c" : "none"} stroke={wishlisted ? "#e74c3c" : "#666"} strokeWidth="1.8">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+              <img src={image} alt={product.name} className="pd-main-img" />
+            </div>
+            <div className="pd-zoom-pane" style={zoomStyle} />
           </div>
+
+          {galleryImages.length > 1 && (
+            <div className="pd-thumbnails">
+              {galleryImages.map((url, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`pd-thumb ${image === url ? "active" : ""}`}
+                  onClick={() => setSelectedImage(url)}
+                  aria-label={`View image ${i + 1}`}
+                >
+                  <img src={url} alt={`${product.name} ${i + 1}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="pd-info">

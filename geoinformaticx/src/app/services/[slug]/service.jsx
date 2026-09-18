@@ -7,6 +7,44 @@ import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { useState, useEffect } from "react";
 import "./service.css";
 
+function ReadMoreText({ text, limit = 260 }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  const isLong = text.length > limit;
+  const shown = expanded || !isLong ? text : text.slice(0, limit).trimEnd() + "…";
+
+  return (
+    <p className="sd-description">
+      {shown}
+      {isLong && (
+        <button
+          type="button"
+          className="sd-readmore-btn"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {expanded ? " Read less" : " Read more"}
+        </button>
+      )}
+    </p>
+  );
+}
+
+function formatPriceLabel(service) {
+  const amount = `₹${service.price.toLocaleString("en-IN")}`;
+  switch (service.priceType) {
+    case "Starting From":
+      return `Starting from ${amount}`;
+    case "Per Unit":
+      return `${amount} ${service.priceUnit ? `/ ${service.priceUnit}` : "/ unit"}`;
+    case "Hourly":
+      return `${amount} / hour`;
+    case "Monthly":
+      return `${amount} / month`;
+    default:
+      return amount;
+  }
+}
+
 export default function ServiceDetail({ service }) {
   const router = useRouter();
   const [wishlisted, setWishlisted] = useState(false);
@@ -59,21 +97,44 @@ export default function ServiceDetail({ service }) {
         </div>
 
         <div className="sd-details">
-          <h1 className="sd-name">{service.name}</h1>
+          <div className="sd-details-scroll">
+            <h1 className="sd-name">{service.name}</h1>
 
-          <p className="sd-seller">By {service.seller}</p>
+            <p className="sd-seller">By {service.seller}</p>
 
-          <div className="sd-meta">
-            {service.location && <span className="sd-distance">📍 {service.location}</span>}
-            <span className="sd-category">{service.category}</span>
+            <div className="sd-meta">
+              {service.location && <span className="sd-distance">📍 {service.location}</span>}
+              <span className="sd-category">{service.category}</span>
+            </div>
+
+            <h3 className="sd-section-title">About This Service</h3>
+            <ReadMoreText text={service.description} />
+
+            {service.duration && (
+              <div className="sd-info-row">
+                <span className="sd-info-icon">⏱️</span>
+                <span><strong>Turnaround:</strong> {service.duration}</span>
+              </div>
+            )}
+
+            {service.coverageAreas.length > 0 && (
+              <div className="sd-info-row">
+                <span className="sd-info-icon">📍</span>
+                <span><strong>Areas Served:</strong> {service.coverageAreas.join(", ")}</span>
+              </div>
+            )}
+
+            {service.requirements && (
+              <div className="sd-requirements">
+                <h3 className="sd-section-title">What You'll Need to Provide</h3>
+                <ReadMoreText text={service.requirements} limit={150} />
+              </div>
+            )}
           </div>
-
-          <h3 className="sd-section-title">About This Service</h3>
-          <p className="sd-description">{service.description}</p>
 
           <div className="sd-price-row">
             <span className="sd-price-label">Price</span>
-            <span className="sd-price-value">₹{service.price.toLocaleString("en-IN")}</span>
+            <span className="sd-price-value">{formatPriceLabel(service)}</span>
           </div>
 
           <div className="sd-actions">

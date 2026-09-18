@@ -5,7 +5,7 @@ import { getCartCount } from "@/lib/cart";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getWishlist } from "@/lib/wishlist";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, signOut } from "@/lib/auth";
 import "./nav.css";
 
 export default function Navbar() {
@@ -76,6 +76,14 @@ const filteredSuggestions = searchQuery.trim().length > 0
     window.addEventListener("storage", updateUser);
     return () => window.removeEventListener("storage", updateUser);
   }, []);
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleLogout = () => {
+    setShowProfileMenu(false);
+    signOut();
+    router.push("/");
+  };
   const categories = [
     "All Categories",
     "Handicrafts",
@@ -282,32 +290,57 @@ const filteredSuggestions = searchQuery.trim().length > 0
             <span className="icon-label">Cart</span>
           </Link>
 
-          <Link href={user ? "/profile" : "/login"} className="nav-icon-btn">
+          <div
+            className="nav-profile-wrapper"
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) setShowProfileMenu(false);
+            }}
+          >
             {user ? (
-              <div className="profile-avatar-circle">
-                {user.name?.charAt(0).toUpperCase() || "?"}
-              </div>
-            ) : (
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#333"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <button
+                type="button"
+                className="nav-icon-btn nav-profile-trigger"
+                onClick={() => setShowProfileMenu((v) => !v)}
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+                <div className="profile-avatar-circle">
+                  {user.name?.charAt(0).toUpperCase() || "?"}
+                </div>
+                <span className="icon-label">{user.name?.split(" ")[0] || "Profile"}</span>
+              </button>
+            ) : (
+              <Link href="/login" className="nav-icon-btn">
+                <svg
+                  width="22" height="22" viewBox="0 0 24 24" fill="none"
+                  stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span className="icon-label">Login / Sign Up</span>
+              </Link>
             )}
-            <span className="icon-label">
-              {user ? user.name?.split(" ")[0] || "Profile" : "Login / Sign Up"}
-            </span>
-          </Link>
+
+            {user && showProfileMenu && (
+              <div className="nav-profile-dropdown">
+                <Link
+                  href="/profile"
+                  className="nav-profile-dropdown-item"
+                  onClick={() => setShowProfileMenu(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  className="nav-profile-dropdown-item nav-profile-logout"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </div>    
 
      
       <div className="navbar-bottom">
