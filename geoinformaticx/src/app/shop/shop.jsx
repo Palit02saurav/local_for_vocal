@@ -90,7 +90,7 @@ export default function Shop() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/products/public")
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/products/public`)
       .then((res) => {
         const products = (res.data.data?.products || []).map((p) => ({
           ...p,
