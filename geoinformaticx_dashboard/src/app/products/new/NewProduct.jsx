@@ -8,6 +8,71 @@ import api from "@/lib/api";
 import { uploadImage } from "@/lib/upload";
 import "./new-product.css";
 
+const EMPTY_FORM = {
+  name: "",
+  sku: "",
+  category: "",
+  sellerId: "",
+  description: "",
+  price: "",
+  stock: "",
+  lowStockThreshold: "",
+  status: "Active",
+  productType: "Regular",
+  brand: "",
+  weight: "",
+  length: "",
+  width: "",
+  height: "",
+};
+
+let draftCounter = 0;
+const makeDraft = (overrides = {}) => ({
+  key: `draft-${++draftCounter}`,
+  form: { ...EMPTY_FORM, ...overrides },
+  tags: [],
+  images: [],
+  sellerConsent: false,
+});
+
+const MIN_IMAGES = 3;
+const MAX_IMAGES = 5;
+const COMPRESSION_QUALITY = 0.7; // re-encode at 70% quality = 30% reduction
+
+// Re-encode in the browser before upload. PNGs go to WebP so transparency
+// survives; everything else goes to JPEG.
+async function compressImage(file) {
+  if (!file.type.startsWith("image/")) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close?.();
+
+    const outType = file.type === "image/png" ? "image/webp" : "image/jpeg";
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, outType, COMPRESSION_QUALITY)
+    );
+
+    // If the re-encode came out bigger (already-optimised source), keep the original.
+    if (!blob || blob.size >= file.size) return file;
+
+    const ext = outType === "image/webp" ? "webp" : "jpg";
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.${ext}`, {
+      type: outType,
+      lastModified: Date.now(),
+    });
+  } catch (err) {
+    console.error("Image compression failed, uploading original:", err);
+    return file;
+  }
+}
+
+const formatKb = (bytes) => `${Math.round(bytes / 1024)} KB`;
 export default function NewProduct() {
   const router = useRouter();
   const descRef = useRef(null);
@@ -35,33 +100,21 @@ const [currentUser, setCurrentUser] = useState(null);
     loadCategories();
   }, []);
 
-  const [form, setForm] = useState({
-    name: "",
-    sku: "",
-    category: "",
-    sellerId: "",
-    description: "",
-    price: "",
-    stock: "",
-    lowStockThreshold: "",
-    status: "Active",
-    productType: "Regular",
-    brand: "",
-    weight: "",
-    length: "",
-    width: "",
-    height: "",
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [sellerConsent, setSellerConsent] = useState(false);
 
   const [images, setImages] = useState([]); // { file, previewUrl }
+
+  const [drafts, setDrafts] = useState(() => [makeDraft()]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const errorBannerRef = useRef(null);
 
   const generateSku = () => `PRD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -94,6 +147,74 @@ const [currentUser, setCurrentUser] = useState(null);
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: "" }));
   };
+
+  // Fold the live fields back into the drafts array before we switch away.
+  const captureActive = (list = drafts) =>
+    list.map((d, i) =>
+      i === activeIndex ? { ...d, form, tags, images, sellerConsent } : d
+    );
+
+  const loadDraft = (draft) => {
+    setForm(draft.form);
+    setTags(draft.tags);
+    setImages(draft.images);
+    setSellerConsent(draft.sellerConsent);
+    setErrors({});
+    setTagInput("");
+  };
+
+  const switchDraft = (idx) => {
+    if (idx === activeIndex) return;
+    const snapshot = captureActive();
+    setDrafts(snapshot);
+    setActiveIndex(idx);
+    loadDraft(snapshot[idx]);
+  };
+
+  const addDraft = () => {
+    const snapshot = captureActive();
+    // carry the seller over so admins don't re-pick it for every product
+    const fresh = makeDraft({ sellerId: form.sellerId });
+    const next = [...snapshot, fresh];
+    setDrafts(next);
+    setActiveIndex(next.length - 1);
+    loadDraft(fresh);
+    setSubmitError("");
+  };
+
+  const duplicateDraft = () => {
+    const snapshot = captureActive();
+    const source = snapshot[activeIndex];
+    const copy = {
+      ...makeDraft(),
+      form: { ...source.form, name: "", sku: "" }, // name + SKU must stay unique
+      tags: [...source.tags],
+      images: [...source.images],
+      sellerConsent: source.sellerConsent,
+    };
+    const next = [...snapshot, copy];
+    setDrafts(next);
+    setActiveIndex(next.length - 1);
+    loadDraft(copy);
+    setSubmitError("");
+  };
+
+  const removeDraft = (idx) => {
+    if (drafts.length === 1) return;
+    const snapshot = captureActive();
+    const next = snapshot.filter((_, i) => i !== idx);
+    const nextActive =
+      idx === activeIndex
+        ? Math.max(0, idx - 1)
+        : idx < activeIndex
+        ? activeIndex - 1
+        : activeIndex;
+    setDrafts(next);
+    setActiveIndex(nextActive);
+    loadDraft(next[nextActive]);
+    setSubmitError("");
+  };
+  
 
   const [showRegionalConfirm, setShowRegionalConfirm] = useState(false);
 
@@ -156,83 +277,154 @@ const [currentUser, setCurrentUser] = useState(null);
     handleChange("description", newValue);
     setTimeout(() => textarea.focus(), 0);
   };
+  const handleFiles = async (fileList) => {
+    const files = Array.from(fileList).slice(0, MAX_IMAGES - images.length);
+    if (files.length === 0) return;
 
-  const handleFiles = (fileList) => {
-    const files = Array.from(fileList).slice(0, 5 - images.length);
-    const newImages = files.map((file) => ({
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-    setImages((prev) => [...prev, ...newImages].slice(0, 5));
+    setCompressing(true);
+    try {
+      const newImages = await Promise.all(
+        files.map(async (file) => {
+          const compressed = await compressImage(file);
+          return {
+            file: compressed,
+            previewUrl: URL.createObjectURL(compressed),
+            originalSize: file.size,
+            size: compressed.size,
+          };
+        })
+      );
+      setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGES));
+      setErrors((e) => ({ ...e, images: "" }));
+    } finally {
+      setCompressing(false);
+    }
   };
 
   const removeImage = (idx) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[idx]?.previewUrl);
+      return prev.filter((_, i) => i !== idx);
+    });
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
     if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
-  };
+  };  
 
-  const validate = () => {
+  const validateForm = (f, draftImages = []) => {
     const newErrors = {};
-    if (!form.name.trim()) newErrors.name = "Product name is required.";
-    if (!form.sku.trim()) newErrors.sku = "SKU is required.";
-    if (!form.category) newErrors.category = "Category is required.";
-    if (!form.sellerId) newErrors.sellerId = "Seller is required.";
-    if (!form.description.trim()) newErrors.description = "Description is required.";
-    if (!form.price || Number(form.price) <= 0) newErrors.price = "Enter a valid price.";
-    if (form.stock === "" || Number(form.stock) < 0) newErrors.stock = "Enter a valid stock quantity.";
-    if (form.lowStockThreshold === "" || Number(form.lowStockThreshold) < 0)
+    if (draftImages.length < MIN_IMAGES)
+      newErrors.images = `Add at least ${MIN_IMAGES} images (${draftImages.length} added so far).`;
+    if (!f.name.trim()) newErrors.name = "Product name is required.";
+    if (!f.sku.trim()) newErrors.sku = "SKU is required.";
+    if (!f.category) newErrors.category = "Category is required.";
+    if (!f.sellerId) newErrors.sellerId = "Seller is required.";
+    if (!f.description.trim()) newErrors.description = "Description is required.";
+    if (!f.price || Number(f.price) <= 0) newErrors.price = "Enter a valid price.";
+    if (f.stock === "" || Number(f.stock) < 0) newErrors.stock = "Enter a valid stock quantity.";
+    if (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0)
       newErrors.lowStockThreshold = "Enter a valid low stock threshold.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
+  const buildPayload = (draft, imageUrls) => ({
+    name: draft.form.name.trim(),
+    sku: draft.form.sku.trim(),
+    category: draft.form.category,
+    seller_id: draft.form.sellerId,
+    description: draft.form.description.trim(),
+    price: Number(draft.form.price),
+    stock: Number(draft.form.stock),
+    low_stock_threshold: Number(draft.form.lowStockThreshold),
+    status: draft.form.status,
+    product_type: draft.form.productType,
+    image_url: imageUrls[0] || "",       // main/cover image
+    gallery_urls: imageUrls.join(","),   // every uploaded image
+    brand: draft.form.brand.trim(),
+    tags: draft.tags.join(","),
+    seller_consent: draft.sellerConsent,
+    weight: draft.form.weight ? Number(draft.form.weight) : null,
+    dimensions: {
+      length: draft.form.length ? Number(draft.form.length) : null,
+      width: draft.form.width ? Number(draft.form.width) : null,
+      height: draft.form.height ? Number(draft.form.height) : null,
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+
+    const all = captureActive();
+    setDrafts(all);
+
+    // 1. Validate every product; jump to the first broken one.
+    for (let i = 0; i < all.length; i++) {
+      const errs = validateForm(all[i].form, all[i].images);
+      if (Object.keys(errs).length > 0) {
+        setActiveIndex(i);
+        loadDraft(all[i]);
+        setErrors(errs);
+        setSubmitError(
+          all.length === 1
+            ? "Please fix the highlighted fields."
+            : `Product ${i + 1} has missing or invalid fields.`
+        );
+        return;
+      }
+    }
+
+    // 2. SKUs must be unique inside this batch too, not just in the DB.
+    const skus = all.map((d) => d.form.sku.trim().toLowerCase());
+    const dupAt = skus.findIndex((s, i) => skus.indexOf(s) !== i);
+    if (dupAt > -1) {
+      setActiveIndex(dupAt);
+      loadDraft(all[dupAt]);
+      setErrors({ sku: "This SKU is already used by another product in this batch." });
+      setSubmitError(`Product ${dupAt + 1} reuses a SKU from another product above.`);
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError("");
 
-    try {
-      const imageUrl = images[0]?.file ? await uploadImage(images[0].file) : "";
-
-      await api.post("/products", {
-        name: form.name.trim(),
-        sku: form.sku.trim(),
-        category: form.category,
-        seller_id: form.sellerId,
-        description: form.description.trim(),
-        price: Number(form.price),
-        stock: Number(form.stock),
-        low_stock_threshold: Number(form.lowStockThreshold),
-        status: form.status,
-        product_type: form.productType,
-        image_url: imageUrl,
-        brand: form.brand.trim(),
-        tags: tags.join(","),
-        seller_consent: sellerConsent,
-        weight: form.weight ? Number(form.weight) : null,
-        dimensions: {
-          length: form.length ? Number(form.length) : null,
-          width: form.width ? Number(form.width) : null,
-          height: form.height ? Number(form.height) : null,
-        },
-      });
-
-      router.push("/products");
-    } catch (err) {
-      const message = err.response?.data?.message || "Failed to create product.";
-      setSubmitError(message);
-      if (err.response?.status === 409 && /sku/i.test(message)) {
-        setErrors((e) => ({ ...e, sku: message }));
+    // 3. Post one by one — the API has no bulk endpoint.
+    const failures = [];
+    for (let i = 0; i < all.length; i++) {
+      const draft = all[i];
+      try {
+        const imageUrls = await Promise.all(
+          draft.images.filter((img) => img.file).map((img) => uploadImage(img.file))
+        );
+        await api.post("/products", buildPayload(draft, imageUrls));
+      } catch (err) {
+        failures.push({
+          index: i,
+          draft,
+          message: err.response?.data?.message || "Failed to create product.",
+        });
       }
-      setSubmitting(false);
     }
+
+    if (failures.length === 0) {
+      router.push("/products");
+      return;
+    }
+
+    const saved = all.length - failures.length;
+    const remaining = failures.map((f) => f.draft);
+    setDrafts(remaining);
+    setActiveIndex(0);
+    loadDraft(remaining[0]);
+    setErrors(
+      /sku/i.test(failures[0].message) ? { sku: failures[0].message } : {}
+    );
+    setSubmitError(
+      `${saved} of ${all.length} products saved. Still to fix: ` +
+        failures.map((f) => `Product ${f.index + 1} — ${f.message}`).join(" | ")
+    );
+    setSubmitting(false);
   };
 
   useEffect(() => {
@@ -247,7 +439,49 @@ const [currentUser, setCurrentUser] = useState(null);
         ← Back to Products
       </Link>
       <h1 className="np-title">Add New Product</h1>
-      <p className="np-subtitle">Create a new product and add it to your marketplace.</p>
+      <p className="np-subtitle">
+        Create one or more products and add them to your marketplace.
+      </p>
+
+      <div className="np-drafts-bar">
+        <div className="np-draft-tabs">
+          {drafts.map((d, i) => {
+            const label =
+              (i === activeIndex ? form.name : d.form.name)?.trim() ||
+              `Product ${i + 1}`;
+            return (
+              <div
+                key={d.key}
+                className={`np-draft-tab ${i === activeIndex ? "active" : ""}`}
+              >
+                <button type="button" onClick={() => switchDraft(i)} title={label}>
+                  <span className="np-draft-num">{i + 1}</span>
+                  <span className="np-draft-label">{label}</span>
+                </button>
+                {drafts.length > 1 && (
+                  <button
+                    type="button"
+                    className="np-draft-remove"
+                    onClick={() => removeDraft(i)}
+                    aria-label={`Remove ${label}`}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="np-draft-actions">
+          <button type="button" className="np-draft-add" onClick={addDraft}>
+            + Add another product
+          </button>
+          <button type="button" className="np-draft-dup" onClick={duplicateDraft}>
+            ⧉ Duplicate this one
+          </button>
+        </div>
+      </div>
 
       {submitError && (
         <div className="np-submit-error" ref={errorBannerRef}>{submitError}</div>
@@ -371,36 +605,79 @@ const [currentUser, setCurrentUser] = useState(null);
                 <span className="np-card-icon">🖼️</span>
                 <h3>Product Images</h3>
               </div>
-              <p className="np-images-hint">Upload product images. You can upload up to 5 images.</p>
+              <p className="np-images-hint">
+                Upload at least {MIN_IMAGES} images (up to {MAX_IMAGES}). Images are
+                compressed automatically before upload.
+              </p>
+
+              <div className="np-image-counter">
+                <div className="np-image-counter-track">
+                  <div
+                    className="np-image-counter-fill"
+                    style={{
+                      width: `${Math.min(100, (images.length / MIN_IMAGES) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <span
+                  className={images.length >= MIN_IMAGES ? "np-count-ok" : "np-count-short"}
+                >
+                  {images.length >= MIN_IMAGES
+                    ? `${images.length} of ${MAX_IMAGES} added ✓`
+                    : `${images.length} of ${MIN_IMAGES} required`}
+                </span>
+              </div>
 
               <div
-                className={`np-dropzone ${dragActive ? "active" : ""}`}
+                className={`np-dropzone ${dragActive ? "active" : ""} ${
+                  images.length >= MAX_IMAGES ? "full" : ""
+                }`}
                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
               >
                 <span className="np-dropzone-icon">☁️</span>
-                <p>Drag & drop images here</p>
-                <p className="np-dropzone-or">or</p>
-                <label className="np-choose-files-btn">
-                  Choose Files
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    hidden
-                    onChange={(e) => handleFiles(e.target.files)}
-                  />
-                </label>
+                {compressing ? (
+                  <p>Compressing images...</p>
+                ) : images.length >= MAX_IMAGES ? (
+                  <p>Maximum {MAX_IMAGES} images reached</p>
+                ) : (
+                  <>
+                    <p>Drag & drop images here</p>
+                    <p className="np-dropzone-or">or</p>
+                    <label className="np-choose-files-btn">
+                      Choose Files
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        hidden
+                        disabled={compressing}
+                        onChange={(e) => {
+                          handleFiles(e.target.files);
+                          e.target.value = ""; // allow re-picking the same file
+                        }}
+                      />
+                    </label>
+                  </>
+                )}
                 <p className="np-dropzone-note">JPG, PNG or WEBP (Max. 5MB each)</p>
               </div>
+
+              {errors.images && <span className="np-error">{errors.images}</span>}
 
               {images.length > 0 && (
                 <div className="np-image-previews">
                   {images.map((img, i) => (
-                    <div key={i} className="np-image-preview">
+                    <div key={img.previewUrl} className="np-image-preview">
                       <img src={img.previewUrl} alt={`Preview ${i + 1}`} />
                       <button type="button" onClick={() => removeImage(i)} aria-label="Remove image">✕</button>
+                      {i === 0 && <span className="np-image-main-badge">Main</span>}
+                      {img.originalSize > img.size && (
+                        <span className="np-image-size">
+                          {formatKb(img.originalSize)} → {formatKb(img.size)}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -579,7 +856,9 @@ const [currentUser, setCurrentUser] = useState(null);
         <div className="np-actions">
           <Link href="/products" className="np-cancel-btn">Cancel</Link>
           <button type="submit" className="np-save-btn" disabled={submitting}>
-            {submitting ? "Saving..." : "💾 Save Product"}
+            {submitting
+              ? `Saving ${drafts.length} product${drafts.length > 1 ? "s" : ""}...`
+              : `💾 Save ${drafts.length > 1 ? `${drafts.length} Products` : "Product"}`}
           </button>
         </div>
       </form>

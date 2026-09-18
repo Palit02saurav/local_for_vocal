@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import api from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth";
+import { uploadImage } from "@/lib/upload";
 import "./products.css";
 
 const PER_PAGE = 10;
@@ -35,10 +38,81 @@ export default function Products({
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("All Categories");
   const [seller, setSeller] = useState("All Sellers");
-  const [status, setStatus] = useState("All Status");
-  const [currentPage, setCurrentPage] = useState(1);
+const [status, setStatus] = useState("All Status");
+const [currentPage, setCurrentPage] = useState(1);
 
-  const loadProducts = async () => {
+const [currentUser, setCurrentUser] = useState(null);
+const isSeller = currentUser?.role === "SELLER";
+useEffect(() => {
+  setCurrentUser(getCurrentUser());
+}, []);
+
+const [showFilters, setShowFilters] = useState(false);
+
+const [editingProduct, setEditingProduct] = useState(null);
+const [editForm, setEditForm] = useState(null);
+const [editImageFile, setEditImageFile] = useState(null);
+const [editSubmitting, setEditSubmitting] = useState(false);
+const [editError, setEditError] = useState("");
+const [editSuccess, setEditSuccess] = useState("");
+
+const openEditModal = (product) => {
+  setEditError("");
+  setEditSuccess("");
+  setEditImageFile(null);
+  setEditForm({
+    category: product.category || "",
+    price: product.price ?? "",
+    stock: product.stock ?? "",
+    description: product.description || "",
+    image_url: product.image_url || "",
+  });
+  setEditingProduct(product);
+};
+
+const closeEditModal = () => {
+  setEditingProduct(null);
+  setEditForm(null);
+  setEditImageFile(null);
+  setEditError("");
+};
+
+useEffect(() => {
+  document.body.style.overflow = editingProduct ? "hidden" : "";
+  return () => { document.body.style.overflow = ""; };
+}, [editingProduct]);
+
+const handleEditFieldChange = (field, value) => {
+  setEditForm((f) => ({ ...f, [field]: value }));
+};
+
+const submitEditRequest = async (e) => {
+  e.preventDefault();
+  if (!editingProduct || !editForm) return;
+  setEditSubmitting(true);
+  setEditError("");
+  try {
+    let image_url = editForm.image_url;
+    if (editImageFile) {
+      image_url = await uploadImage(editImageFile);
+    }
+    await api.patch(`/products/${editingProduct.id}/request-edit`, {
+      category: editForm.category,
+      price: Number(editForm.price),
+      stock: Number(editForm.stock),
+      description: editForm.description,
+      image_url,
+    });
+    setEditSuccess("Edit request submitted — a superadmin will review it before it goes live.");
+    setTimeout(() => closeEditModal(), 1500);
+  } catch (err) {
+    setEditError(err.response?.data?.message || err.message || "Could not submit the edit request.");
+  } finally {
+    setEditSubmitting(false);
+  }
+};
+
+const loadProducts = async () => {
     setLoading(true);
     setError("");
     try {
@@ -200,7 +274,7 @@ export default function Products({
         ))}
       </div>
 
-      <div className="pp-content">
+      <div className={`pp-content ${showFilters ? "" : "pp-no-sidebar"}`}>
         {/* Main column */}
         <div className="pp-main-col">
           {/* Search + quick filters */}
@@ -317,13 +391,21 @@ export default function Products({
                                 <circle cx="12" cy="12" r="3" />
                               </svg>
                             </button>
-                            <button aria-label="Edit">
+                            <button
+                              aria-label="Edit"
+                              onClick={() => (isSeller ? openEditModal(p) : undefined)}
+                              disabled={!isSeller}
+                              title={isSeller ? "Request an edit" : undefined}
+                            >
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.8">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                 <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
                               </svg>
                             </button>
-                            <button aria-label="More">
+                            <button
+                              aria-label="More"
+                              onClick={() => setShowFilters((v) => !v)}
+                            >
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.8">
                                 <circle cx="12" cy="5" r="1.5" fill="#666" stroke="none" />
                                 <circle cx="12" cy="12" r="1.5" fill="#666" stroke="none" />
@@ -366,6 +448,7 @@ export default function Products({
         </div>
 
         {/* Right sidebar */}
+        {showFilters && (
         <aside className="pp-sidebar">
           <div className="pp-filter-card">
             <div className="pp-filter-header">
@@ -429,7 +512,109 @@ export default function Products({
             ))}
           </div>
         </aside>
+        )}
       </div>
+
+      {editingProduct && editForm && typeof document !== "undefined" &&
+        createPortal(
+          <div className="pp-edit-overlay" onClick={closeEditModal}>
+            <div className="pp-edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="pp-edit-modal-header">
+              <h3>Edit "{editingProduct.name}"</h3>
+              <button className="pp-edit-close" onClick={closeEditModal} aria-label="Close">✕</button>
+            </div>
+            <p className="pp-edit-modal-sub">
+              Changes are sent to the superadmin for approval and won't go live until approved.
+            </p>
+
+            <form onSubmit={submitEditRequest} className="pp-edit-form">
+              <div className="pp-edit-field">
+                <label>Product Name (locked)</label>
+                <input type="text" value={editingProduct.name} disabled />
+              </div>
+
+              <div className="pp-edit-field">
+                <label>Category</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => handleEditFieldChange("category", e.target.value)}
+                  required
+                >
+                  <option value="">Select category</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pp-edit-field-row">
+                <div className="pp-edit-field">
+                  <label>Price (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editForm.price}
+                    onChange={(e) => handleEditFieldChange("price", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="pp-edit-field">
+                  <label>Stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editForm.stock}
+                    onChange={(e) => handleEditFieldChange("stock", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="pp-edit-field">
+                <label>Description</label>
+                <textarea
+                  rows={4}
+                  value={editForm.description}
+                  onChange={(e) => handleEditFieldChange("description", e.target.value)}
+                />
+              </div>
+
+              <div className="pp-edit-field">
+                <label>Product Image</label>
+                <div className="pp-edit-image-row">
+                  <img
+                    src={editImageFile ? URL.createObjectURL(editImageFile) : (editForm.image_url || "https://placehold.co/60x60?text=No+Image")}
+                    alt="Preview"
+                    className="pp-edit-image-preview"
+                  />
+                  <label className="pp-edit-upload-btn">
+                    Change Image
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      hidden
+                      onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {editError && <div className="pp-edit-error">{editError}</div>}
+              {editSuccess && <div className="pp-edit-success">{editSuccess}</div>}
+
+              <div className="pp-edit-actions">
+                <button type="button" className="pp-edit-cancel-btn" onClick={closeEditModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="pp-edit-submit-btn" disabled={editSubmitting}>
+                  {editSubmitting ? "Submitting..." : "Update Details"}
+                </button>
+              </div>
+            </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </main>
   );
 }

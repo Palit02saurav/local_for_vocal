@@ -544,3 +544,193 @@
 .np-confirm-ok:hover {
   background: #267a3b;
 }
+
+.np-drafts-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.np-draft-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.np-draft-tab {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+.np-draft-tab.active {
+  border-color: #2d6a4f;
+  background: #eaf6ee;
+}
+
+.np-draft-tab > button:first-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 190px;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+}
+
+.np-draft-tab.active > button:first-child {
+  color: #2d6a4f;
+  font-weight: 600;
+}
+
+.np-draft-num {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ddd;
+  color: #555;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.np-draft-tab.active .np-draft-num {
+  background: #2d6a4f;
+  color: #fff;
+}
+
+.np-draft-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.np-draft-remove {
+  padding: 0 8px;
+  align-self: stretch;
+  border: none;
+  border-left: 1px solid #e2e2e2;
+  background: none;
+  color: #999;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.np-draft-remove:hover {
+  color: #c0392b;
+  background: #fdecec;
+}
+
+.np-draft-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.np-draft-add,
+.np-draft-dup {
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.np-draft-add {
+  border: 1px solid #2d6a4f;
+  background: #2d6a4f;
+  color: #fff;
+}
+
+.np-draft-add:hover {
+  background: #26593f;
+}
+
+.np-draft-dup {
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #555;
+}
+
+.np-draft-dup:hover {
+  border-color: #2d6a4f;
+  color: #2d6a4f;
+}
+
+@media (max-width: 720px) {
+  .np-drafts-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .np-draft-actions button {
+    flex: 1;
+  }
+}
+
+.np-image-counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 12.5px;
+}
+
+.np-image-counter-track {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.np-image-counter-fill {
+  height: 100%;
+  background: #2d6a4f;
+  transition: width 0.25s ease;
+}
+
+.np-count-ok { color: #2d6a4f; font-weight: 600; white-space: nowrap; }
+.np-count-short { color: #b26a00; white-space: nowrap; }
+
+.np-dropzone.full {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.np-image-preview { position: relative; }
+
+.np-image-main-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #2d6a4f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.np-image-size {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 10px;
+  text-align: center;
+}

@@ -125,6 +125,9 @@
   gap: 16px;
   align-items: start;
 }
+.pp-content.pp-no-sidebar {
+  grid-template-columns: 1fr;
+}
 .pp-main-col {
   min-width: 0;
 }
@@ -505,3 +508,92 @@
   color: #666;
   font-size: 12.5px;
 }
+
+
+.pp-edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+.pp-edit-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 24px; box-sizing: border-box; }
+.pp-edit-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.pp-edit-modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+
+.pp-edit-close {
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #777;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+
+.pp-edit-modal-sub {
+  margin: 0 0 18px;
+  font-size: 12.5px;
+  color: #888;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+.pp-edit-form { display: flex; flex-direction: column; gap: 14px; }
+.pp-edit-field { display: flex; flex-direction: column; gap: 6px; }
+.pp-edit-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #444;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+.pp-edit-field input, .pp-edit-field select, .pp-edit-field textarea { border: 1px solid #ddd; border-radius: 8px; padding: 9px 11px; font-size: 13.5px; font-family: inherit; box-sizing: border-box; }
+.pp-edit-field input:disabled { background: #f2f2f2; color: #999; }
+.pp-edit-field-row { display: flex; gap: 14px; }
+.pp-edit-field-row .pp-edit-field { flex: 1; }
+.pp-edit-image-row { display: flex; align-items: center; gap: 12px; }
+.pp-edit-image-preview { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+.pp-edit-upload-btn {
+  border: 1px solid #2f8d46;
+  color: #2f8d46;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+.pp-edit-error { color: #e63946; font-size: 12.5px; background: #fdeaec; padding: 8px 10px; border-radius: 6px; }
+.pp-edit-success { color: #2f8d46; font-size: 12.5px; background: #e6f4ea; padding: 8px 10px; border-radius: 6px; }
+.pp-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.pp-edit-cancel-btn {
+  border: 1px solid #ccc;
+  background: white;
+  color: #444;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+
+.pp-edit-submit-btn {
+  border: none;
+  background: #2f8d46;
+  color: white;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+}
+.pp-edit-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.pp-action-icons button:disabled { opacity: 0.35; cursor: not-allowed; }

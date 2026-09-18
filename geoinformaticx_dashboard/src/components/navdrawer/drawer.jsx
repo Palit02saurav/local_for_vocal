@@ -41,14 +41,15 @@ const menuItems = [
     label: "Products",
     href: "/products",
     hasSubmenu: true,
-    submenu: [
-      { label: "All Products", href: "/products" },
-      { label: "Add New Product", href: "/products/new" },
-      { label: "Inventory", href: "/products/inventory" },
-      { label: "Product Requests", href: "/products/requests" },
-      { label: "Regional Famous Products", href: "/products/regional" },
-      { label: "Regional Famous Products Requests", href: "/products/regional-requests" },
-    ],
+      submenu: [
+        { label: "All Products", href: "/products" },
+        { label: "Add New Product", href: "/products/new" },
+        { label: "Inventory", href: "/products/inventory" },
+        { label: "Product Requests", href: "/products/requests" },
+        { label: "Product Edit Requests", href: "/products/edit-requests" },
+        { label: "Regional Famous Products", href: "/products/regional" },
+        { label: "Regional Famous Products Requests", href: "/products/regional-requests" },
+      ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />

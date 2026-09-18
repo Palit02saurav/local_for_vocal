@@ -76,7 +76,6 @@ function buildOrderStatusBreakdown(rawOrders, isSellerRow) {
   }));
 }
 
-// Buckets real order revenue into the last 7 calendar days (today included).
 function buildSalesSeries(rawOrders, isSellerRow) {
   const days = [];
   for (let i = 6; i >= 0; i--) {
@@ -101,6 +100,42 @@ function buildSalesSeries(rawOrders, isSellerRow) {
     labels: days.map((d) => `${MONTH_NAMES[d.getMonth()].slice(0, 3)} ${d.getDate()}`),
     data: totals,
   };
+}
+
+function flattenOrderItems(rawOrders, isSellerRow) {
+  if (isSellerRow) return rawOrders;
+  const flat = [];
+  rawOrders.forEach((order) => (order.items || []).forEach((item) => flat.push(item)));
+  return flat;
+}
+
+function buildBestSelling(rawOrders, isSellerRow, itemType, productsList = []) {
+  const items = flattenOrderItems(rawOrders, isSellerRow).filter((it) => it.item_type === itemType);
+  const stockById = new Map(productsList.map((p) => [p.id, p.stock]));
+
+  const grouped = new Map();
+  items.forEach((it) => {
+    const key = itemType === "product" ? (it.product_id ?? it.name) : (it.service_id ?? it.name);
+    const qty = Number(it.quantity) || 0;
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        name: it.name,
+        seller: it.seller_name || "—",
+        img: it.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&q=80",
+        sold: 0,
+        revenueValue: 0,
+        stock: itemType === "product" ? stockById.get(it.product_id) ?? "—" : undefined,
+      });
+    }
+    const row = grouped.get(key);
+    row.sold += qty;
+    row.revenueValue += Number(it.price) * qty;
+  });
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, 5)
+    .map((row) => ({ ...row, revenue: `₹${row.revenueValue.toLocaleString("en-IN")}` }));
 }
 
 function formatShortINR(n) {
@@ -303,21 +338,21 @@ const recentOrders = [
   { id: "#ORD12544", name: "Macrame Hanging", buyer: "Sneha Iyer", price: "₹950", status: "Pending", time: "3 hr ago", img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=100&q=80" },
 ];
 
-const bestSellers = [
-  { name: "Hand Painted Terracotta Pot", seller: "Earthy Hands Pottery", sold: 156, revenue: "₹1,32,600", stock: 45, img: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=100&q=80" },
-  { name: "Organic Wild Honey", seller: "Pure & Natural", sold: 142, revenue: "₹92,300", stock: 32, img: "https://www.dineshflourmills.com/cdn/shop/files/OrganicHoney_1.jpg?v=1770623215" },
-  { name: "Handwoven Tribal Bag", seller: "Weave Magic", sold: 98, revenue: "₹1,22,500", stock: 20, img: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=100&q=80" },
-  { name: "Macrame Wall Hanging", seller: "Home Decor Kolkata", sold: 87, revenue: "₹82,650", stock: 15, img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=100&q=80" },
-  { name: "Wooden Coaster Set", seller: "Artisan Woodcraft", sold: 76, revenue: "₹34,200", stock: 28, img: "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=100&q=80" },
-];
+// const bestSellers = [
+//   { name: "Hand Painted Terracotta Pot", seller: "Earthy Hands Pottery", sold: 156, revenue: "₹1,32,600", stock: 45, img: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=100&q=80" },
+//   { name: "Organic Wild Honey", seller: "Pure & Natural", sold: 142, revenue: "₹92,300", stock: 32, img: "https://www.dineshflourmills.com/cdn/shop/files/OrganicHoney_1.jpg?v=1770623215" },
+//   { name: "Handwoven Tribal Bag", seller: "Weave Magic", sold: 98, revenue: "₹1,22,500", stock: 20, img: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=100&q=80" },
+//   { name: "Macrame Wall Hanging", seller: "Home Decor Kolkata", sold: 87, revenue: "₹82,650", stock: 15, img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=100&q=80" },
+//   { name: "Wooden Coaster Set", seller: "Artisan Woodcraft", sold: 76, revenue: "₹34,200", stock: 28, img: "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=100&q=80" },
+// ];
 
-const bestSellingServices = [
-  { name: "Home Cleaning", seller: "SparkleClean Services", sold: 132, revenue: "₹1,18,800", img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=100&q=80" },
-  { name: "AC Repair & Servicing", seller: "CoolFix Technicians", sold: 104, revenue: "₹93,600", img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=100&q=80" },
-  { name: "Plumbing Visit", seller: "QuickFix Plumbers", sold: 89, revenue: "₹53,400", img: "https://images.unsplash.com/photo-1607472829322-4d3ae4a6b3ea?w=100&q=80" },
-  { name: "Full Home Painting", seller: "Colorworks Painters", sold: 61, revenue: "₹2,74,500", img: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=100&q=80" },
-  { name: "Pest Control", seller: "SafeHome Pest Control", sold: 54, revenue: "₹32,400", img: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=100&q=80" },
-];
+// const bestSellingServices = [
+//   { name: "Home Cleaning", seller: "SparkleClean Services", sold: 132, revenue: "₹1,18,800", img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=100&q=80" },
+//   { name: "AC Repair & Servicing", seller: "CoolFix Technicians", sold: 104, revenue: "₹93,600", img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=100&q=80" },
+//   { name: "Plumbing Visit", seller: "QuickFix Plumbers", sold: 89, revenue: "₹53,400", img: "https://images.unsplash.com/photo-1607472829322-4d3ae4a6b3ea?w=100&q=80" },
+//   { name: "Full Home Painting", seller: "Colorworks Painters", sold: 61, revenue: "₹2,74,500", img: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=100&q=80" },
+//   { name: "Pest Control", seller: "SafeHome Pest Control", sold: 54, revenue: "₹32,400", img: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=100&q=80" },
+// ];
 
 // const lowStock = [
 //   { name: "Handwoven Tribal Bag", stock: 20, low: 25, img: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=100&q=80" },
@@ -481,6 +516,11 @@ export default function Dashboard() {
   const [salesSeries, setSalesSeries] = useState({ labels: salesLabels, data: salesData });
   const [orderStatusBreakdown, setOrderStatusBreakdown] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [rawOrders, setRawOrders] = useState([]);
+  const [isSellerRow, setIsSellerRow] = useState(false);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [bestSellingServices, setBestSellingServices] = useState([]);
 
   
   useEffect(() => {
@@ -506,9 +546,10 @@ export default function Dashboard() {
         const res = await fetch(`${API_BASE}/products`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          const products = data.data?.products || [];
-          setProductCount(products.length);
-          setProductGrowth(computeGrowth(products));
+          const productsList = data.data?.products || [];
+          setProductCount(productsList.length);
+          setProductGrowth(computeGrowth(productsList));
+          setProducts(productsList);
         }
       } catch (err) {
         console.error("Failed to load product count:", err);
@@ -572,6 +613,8 @@ export default function Dashboard() {
         setRecentOrders(orders.slice(0, 5).map((o) => normalizeRecentOrder(o, isSellerRow)));
         setSalesSeries(buildSalesSeries(orders, isSellerRow));
         setOrderStatusBreakdown(buildOrderStatusBreakdown(orders, isSellerRow));
+        setRawOrders(orders);
+        setIsSellerRow(isSellerRow);
       } catch (err) {
         console.error("Failed to load order stats:", err);
       }
@@ -597,8 +640,16 @@ export default function Dashboard() {
     loadCustomerCount();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    setBestSellers(buildBestSelling(rawOrders, isSellerRow, "product", products));
+    setBestSellingServices(buildBestSelling(rawOrders, isSellerRow, "service", products));
+  }, [rawOrders, products, isSellerRow, user]);
+
   const isSeller = user?.role === "SELLER";
   const regionalSpecialty = isSeller ? findDistrictSpecialty(sellerLocation) : null;
+  const showProductsCard = !isSeller || sellerType !== "service";
+  const showServicesCard = !isSeller || sellerType !== "product";
   const allStatCards = buildStatCards(productCount, sellerCount, serviceCount, orderCount, orderRevenue, isSeller, productGrowth, sellerGrowth, serviceGrowth);
   const statCards = isSeller
     ? allStatCards.filter((c) => {
@@ -763,9 +814,10 @@ export default function Dashboard() {
 
       {/* Best sellers + Low stock */}
       <div className="dash-bottom-grid">
+        {showProductsCard && (
         <div className="dash-card dash-bestsellers-card">
           <div className="dash-card-title-row">
-            <h3>Best Selling Products</h3>
+            <h3>Best Selling Products</h3>  
             <a href="/products" className="dash-view-all-link">View All →</a>
           </div>
           <table className="dash-bestsellers-table">
@@ -818,7 +870,9 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+        )}
 
+        {showServicesCard && (
         <div className="dash-card dash-bestsellers-card">
           <div className="dash-card-title-row">
             <h3>Best Selling Services</h3>
@@ -872,6 +926,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* <div className="dash-card dash-lowstock-card">
           <h3>Low Stock Alerts</h3>

@@ -41,6 +41,18 @@ export const REQUEST_CATEGORIES = [
     notifTitle: "New service request",
     notifSubtitle: (r) => r.name,
   },
+  {
+    key: "productEditRequests",
+    endpoint: "/products/edit-requests",
+    dataKey: "requests",
+    parentLabel: "Products",
+    submenuLabel: "Product Edit Requests",
+    pagePath: "/products/edit-requests",
+    storageKey: "seen_product_edit_request_ids",
+    notifType: "productEdit",
+    notifTitle: "New product edit request",
+    notifSubtitle: (r) => r.product?.name,
+  },
 ];
 
 /**
@@ -125,7 +137,7 @@ export function useRequestNotifications(enabled = true) {
     const seenIds = seenIdsByCategory[cat.key] || [];
     const unseenRecords = records.filter((r) => !seenIds.includes(r.id));
 
-    countByLabel[cat.parentLabel] = unseenRecords.length;
+    countByLabel[cat.parentLabel] = (countByLabel[cat.parentLabel] || 0) + unseenRecords.length;
     countByLabel[cat.submenuLabel] = unseenRecords.length;
 
     unseenRecords.forEach((record) => {
