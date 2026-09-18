@@ -60,3 +60,46 @@ exports.reject = async (req, res) => {
     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error rejecting product.');
   }
 };
+
+exports.requestEdit = async (req, res) => {
+  try {
+    if (req.userRole !== 'SELLER') {
+      return CommonService.sendResponse(res, 403, false, 'Only sellers can request product edits.');
+    }
+    const request = await ProductService.submitEditRequest(req.params.id, req.userId, req.body);
+    CommonService.sendResponse(res, 201, true, 'Edit request submitted for approval.', { request });
+  } catch (err) {
+    console.error('Submit edit request error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error submitting edit request.');
+  }
+};
+
+exports.listEditRequests = async (req, res) => {
+  try {
+    const requests = await ProductService.listEditRequests(req.userRole);
+    CommonService.sendResponse(res, 200, true, 'Edit requests fetched successfully', { requests });
+  } catch (err) {
+    console.error('List edit requests error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching edit requests.');
+  }
+};
+
+exports.approveEditRequest = async (req, res) => {
+  try {
+    const result = await ProductService.approveEditRequest(req.params.id, req.userRole);
+    CommonService.sendResponse(res, 200, true, 'Edit request approved.', result);
+  } catch (err) {
+    console.error('Approve edit request error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error approving edit request.');
+  }
+};
+
+exports.rejectEditRequest = async (req, res) => {
+  try {
+    const request = await ProductService.rejectEditRequest(req.params.id, req.userRole);
+    CommonService.sendResponse(res, 200, true, 'Edit request rejected.', { request });
+  } catch (err) {
+    console.error('Reject edit request error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error rejecting edit request.');
+  }
+};

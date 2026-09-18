@@ -35,6 +35,7 @@ const Product = sequelize.define(
       defaultValue: 'Pending',
     },
     image_url: { type: DataTypes.STRING(500) },
+    gallery_urls: { type: DataTypes.TEXT }, 
     description: { type: DataTypes.TEXT },
   },
   {

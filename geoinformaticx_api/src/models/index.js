@@ -2,6 +2,7 @@ const sequelize = require('../config/database');
 const Admin = require('./Admin');
 const Seller = require('./Seller');
 const Product = require('./Product');
+const ProductEditRequest = require('./Producteditrequest');
 const Category = require('./Category');
 const Service = require('./Service');
 const Banner = require('./Banner');
@@ -34,6 +35,7 @@ module.exports = {
   Admin,
   Seller,
   Product,
+  Producteditrequest: ProductEditRequest,
   Category,
   Service,
   Banner,

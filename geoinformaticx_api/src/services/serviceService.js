@@ -32,7 +32,10 @@ exports.listServices = async (userId, userRole) => {
 };
 
 exports.createService = async (body, userId, userRole) => {
-  const { name, category, price, status, image_url, description } = body;
+  const {
+    name, category, price, status, image_url, description,
+    price_type, price_unit, duration, coverage_areas, requirements,
+  } = body;
 
   if (!name || !category || !price) {
     const err = new Error('Required fields are missing.');
@@ -58,6 +61,11 @@ exports.createService = async (body, userId, userRole) => {
     status: status || 'Active',
     image_url: image_url || null,
     description: description || null,
+    price_type: price_type || 'Fixed',
+    price_unit: price_unit || null,
+    duration: duration || null,
+    coverage_areas: coverage_areas || null,
+    requirements: requirements || null,
   });
 };
 

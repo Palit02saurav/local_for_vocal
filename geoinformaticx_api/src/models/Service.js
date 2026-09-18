@@ -26,6 +26,15 @@ const Service = sequelize.define(
     },
     image_url: { type: DataTypes.STRING, allowNull: true },
     description: { type: DataTypes.TEXT, allowNull: true },
+    price_type: {
+      type: DataTypes.ENUM('Fixed', 'Starting From', 'Per Unit', 'Hourly', 'Monthly'),
+      allowNull: false,
+      defaultValue: 'Fixed',
+    },
+    price_unit: { type: DataTypes.STRING, allowNull: true },
+    duration: { type: DataTypes.STRING, allowNull: true },
+    coverage_areas: { type: DataTypes.TEXT, allowNull: true },
+    requirements: { type: DataTypes.TEXT, allowNull: true },
   },
   {
     tableName: 'services',

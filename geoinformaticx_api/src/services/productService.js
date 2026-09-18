@@ -1,5 +1,7 @@
-const { Product, Seller } = require('../models');
+const { Product, Seller, Producteditrequest: ProductEditRequest } = require('../models');
 const { Op } = require('sequelize');
+
+const EDITABLE_FIELDS = ['category', 'price', 'stock', 'image_url', 'gallery_urls', 'description'];
 
 function resolveStatus(stock) {
   if (stock <= 0) return 'Out of Stock';
@@ -34,7 +36,7 @@ exports.listProducts = async (userId, userRole, productType, approvalStatus) => 
 };
 
 exports.createProduct = async (body, userId, userRole) => {
-  const { name, sku, category, price, stock, image_url, description, product_type } = body;
+  const { name, sku, category, price, stock, image_url, gallery_urls, description, product_type } = body;
   let { seller_id } = body;
 
   let admin_id = null;
@@ -91,6 +93,7 @@ exports.createProduct = async (body, userId, userRole) => {
     stock: stockNum,
     status: resolveStatus(stockNum),
     image_url: image_url || null,
+    gallery_urls: gallery_urls || null,
     description: description || null,
   });
 };
@@ -156,4 +159,129 @@ exports.listPublicProducts = () => {
     include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude'] }],
     order: [['created_at', 'DESC']],
   });
+};
+
+// ── Seller edit requests for already-approved products ────────────────────
+
+exports.submitEditRequest = async (productId, sellerId, body) => {
+  const product = await Product.findByPk(productId);
+  if (!product) {
+    const err = new Error('Product not found.');
+    err.status = 404;
+    throw err;
+  }
+  if (product.seller_id !== sellerId) {
+    const err = new Error('You can only edit your own products.');
+    err.status = 403;
+    throw err;
+  }
+  if (product.approval_status !== 'Approved') {
+    const err = new Error('Only approved products can be edited.');
+    err.status = 400;
+    throw err;
+  }
+
+  const changes = {};
+  for (const field of EDITABLE_FIELDS) {
+    if (body[field] === undefined) continue;
+    const newValue = field === 'price' || field === 'stock' ? Number(body[field]) : body[field];
+    const oldValue = product[field];
+    if (String(newValue) !== String(oldValue)) {
+      changes[field] = { old: oldValue, new: newValue };
+    }
+  }
+
+  if (Object.keys(changes).length === 0) {
+    const err = new Error('No changes detected.');
+    err.status = 400;
+    throw err;
+  }
+
+  // Only one pending edit request per product at a time — replace if one exists.
+  const existing = await ProductEditRequest.findOne({
+    where: { product_id: productId, status: 'Pending' },
+  });
+  if (existing) {
+    existing.changes = changes;
+    await existing.save();
+    return existing;
+  }
+
+  return ProductEditRequest.create({
+    product_id: productId,
+    seller_id: sellerId,
+    changes,
+    status: 'Pending',
+  });
+};
+
+exports.listEditRequests = async (userRole) => {
+  if (userRole !== 'SUPER_ADMIN') {
+    const err = new Error('Not authorized.');
+    err.status = 403;
+    throw err;
+  }
+  return ProductEditRequest.findAll({
+    where: { status: 'Pending' },
+    include: [
+      { model: Product, as: 'product', attributes: ['id', 'name', 'sku', 'category', 'price', 'stock', 'image_url', 'gallery_urls', 'description'] },
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
+    ],
+    order: [['created_at', 'DESC']],
+  });
+};
+
+exports.approveEditRequest = async (id, userRole) => {
+  if (userRole !== 'SUPER_ADMIN') {
+    const err = new Error('Not authorized.');
+    err.status = 403;
+    throw err;
+  }
+  const request = await ProductEditRequest.findByPk(id, { include: [{ model: Product, as: 'product' }] });
+  if (!request) {
+    const err = new Error('Edit request not found.');
+    err.status = 404;
+    throw err;
+  }
+  if (request.status !== 'Pending') {
+    const err = new Error('This request has already been reviewed.');
+    err.status = 400;
+    throw err;
+  }
+
+  const product = request.product;
+  const updates = {};
+  for (const [field, { new: newValue }] of Object.entries(request.changes)) {
+    updates[field] = newValue;
+  }
+  if (updates.stock !== undefined) {
+    updates.status = resolveStatus(Number(updates.stock));
+  }
+  await product.update(updates);
+
+  request.status = 'Approved';
+  await request.save();
+  return { request, product };
+};
+
+exports.rejectEditRequest = async (id, userRole) => {
+  if (userRole !== 'SUPER_ADMIN') {
+    const err = new Error('Not authorized.');
+    err.status = 403;
+    throw err;
+  }
+  const request = await ProductEditRequest.findByPk(id);
+  if (!request) {
+    const err = new Error('Edit request not found.');
+    err.status = 404;
+    throw err;
+  }
+  if (request.status !== 'Pending') {
+    const err = new Error('This request has already been reviewed.');
+    err.status = 400;
+    throw err;
+  }
+  request.status = 'Rejected';
+  await request.save();
+  return request;
 };
