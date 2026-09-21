@@ -69,10 +69,16 @@ exports.createBanner = async (body, userId, userRole) => {
 
 const Razorpay = require('razorpay');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getRazorpay = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error('Razorpay is not configured.');
+  }
+
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
 
 // POST /api/banners/:id/create-payment-order — Seller only
 exports.createPaymentOrder = async (id, userId, userRole) => {
@@ -104,7 +110,9 @@ exports.createPaymentOrder = async (id, userId, userRole) => {
     throw err;
   }
 
-  const order = await razorpay.orders.create({
+const razorpay = getRazorpay();
+
+const order = await razorpay.orders.create({
     amount: Math.round(Number(banner.payment_amount) * 100), // paise
     currency: 'INR',
     receipt: `banner_${banner.id}`,
