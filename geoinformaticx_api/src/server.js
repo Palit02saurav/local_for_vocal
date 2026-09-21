@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  process.env.DASHBOARD_URL,
   'http://localhost:3000',
   'http://localhost:3001',
 ].filter(Boolean);
