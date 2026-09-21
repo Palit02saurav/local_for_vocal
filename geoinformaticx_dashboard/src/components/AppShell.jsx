@@ -16,21 +16,33 @@ export default function AppShell({ children }) {
   const [role, setRole] = useState(null);
   const isPublic = PUBLIC_ROUTES.includes(pathname);
 
-  useEffect(() => {
-    let cancelled = false;
-    checkAuth().then((user) => {
-      if (cancelled) return;
-      if (!user && !isPublic) {
-        router.replace("/login");
-      } else if (user && isPublic) {
-        router.replace("/");
-      } else {
-        setRole(user?.role || null);
-        setReady(true);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [pathname]);
+useEffect(() => {
+  let cancelled = false;
+
+  if (isPublic) {
+    setReady(true);
+
+    return () => {
+      cancelled = true;
+    };
+  }
+
+  checkAuth().then((user) => {
+    if (cancelled) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    setRole(user.role || null);
+    setReady(true);
+  });
+
+  return () => {
+    cancelled = true;
+  };
+}, [pathname, isPublic, router]);
 
   if (isPublic) {
     return <>{children}</>;

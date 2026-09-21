@@ -97,7 +97,7 @@ export default function AuthPage() {
       setSignInError(result.error);
       return;
     }
-    router.push("/");
+router.replace("/");
   };
 
   const handleSignUp = async (e) => {

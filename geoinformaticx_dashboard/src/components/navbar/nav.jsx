@@ -63,11 +63,11 @@ export default function AdminNavbar() {
     router.push(n.href);
   };
 
-  const handleLogout = () => {
-    setProfileOpen(false);
-    logout();
-    router.push("/login");
-  };
+const handleLogout = async () => {
+  setProfileOpen(false);
+  await logout();
+  router.replace("/login");
+};
 
   return (
     <header className="admin-navbar">
