@@ -7,8 +7,9 @@ import api from "@/lib/api";
 import { uploadImage } from "@/lib/upload";
 import "../../products/new/new-product.css";
 
-export default function NewCategory() {
+export default function NewCategory({ type = "product" }) {
   const router = useRouter();
+  const listPath = type === "fresh" ? "/categories/fresh" : "/categories";
   const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -65,9 +66,10 @@ export default function NewCategory() {
         description: form.description.trim(),
         status: form.status,
         image_url: imageUrl,
+        type,
       });
 
-      router.push("/categories");
+      router.push(listPath);
     } catch (err) {
       setSubmitError(err.response?.data?.message || "Failed to create category.");
       setSubmitting(false);
@@ -76,11 +78,17 @@ export default function NewCategory() {
 
   return (
     <div className="np-page">
-      <Link href="/categories" className="np-back-link">
-        ← Back to Categories
+      <Link href={listPath} className="np-back-link">
+        ← Back to {type === "fresh" ? "Fresh Delivery Categories" : "Categories"}
       </Link>
-      <h1 className="np-title">Add New Category</h1>
-      <p className="np-subtitle">Create a new product category for your marketplace.</p>
+      <h1 className="np-title">
+        {type === "fresh" ? "Add Fresh Delivery Category" : "Add New Category"}
+      </h1>
+      <p className="np-subtitle">
+        {type === "fresh"
+          ? "Create a category sellers can choose from when adding Fresh Delivery products."
+          : "Create a new product category for your marketplace."}
+      </p>
 
       {submitError && <div className="np-submit-error">{submitError}</div>}
 
@@ -177,7 +185,7 @@ export default function NewCategory() {
         </div>
 
         <div className="np-actions">
-          <Link href="/categories" className="np-cancel-btn">Cancel</Link>
+          <Link href={listPath} className="np-cancel-btn">Cancel</Link>
           <button type="submit" className="np-save-btn" disabled={submitting}>
             {submitting ? "Saving..." : "💾 Save Category"}
           </button>

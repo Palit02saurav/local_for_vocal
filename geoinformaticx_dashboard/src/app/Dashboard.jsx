@@ -102,6 +102,85 @@ function buildSalesSeries(rawOrders, isSellerRow) {
   };
 }
 
+const SALES_FILTERS = [
+  { value: "today", label: "Today" },
+  { value: "last_week", label: "Last Week" },
+  { value: "last_month", label: "Last Month" },
+  { value: "last_year", label: "Last Year" },
+  { value: "custom", label: "Custom Date" },
+];
+
+function parseInputDate(s) {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// Super admin only: sums order totals into hourly / daily / monthly buckets
+function buildSalesSeriesByFilter(rawOrders, filter, customFrom, customTo) {
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const mon = (d) => MONTH_NAMES[d.getMonth()].slice(0, 3);
+  const buckets = [];
+
+  const hourly = (day) => {
+    for (let h = 0; h < 24; h++) {
+      const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h);
+      const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h + 1);
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      buckets.push({ start, end, label: `${h12} ${h < 12 ? "AM" : "PM"}` });
+    }
+  };
+  const daily = (from, to) => {
+    for (let d = from; d <= to; d = addDays(d, 1)) {
+      buckets.push({ start: d, end: addDays(d, 1), label: `${mon(d)} ${d.getDate()}` });
+    }
+  };
+  const monthly = (from, to) => {
+    let d = new Date(from.getFullYear(), from.getMonth(), 1);
+    while (d <= to) {
+      const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      buckets.push({ start: d, end: next, label: `${mon(d)} '${String(d.getFullYear()).slice(2)}` });
+      d = next;
+    }
+  };
+
+  const today = startOfDay(new Date());
+  if (filter === "today") {
+    hourly(today);
+  } else if (filter === "last_week") {
+    daily(addDays(today, -6), today);
+  } else if (filter === "last_month") {
+    daily(addDays(today, -29), today);
+  } else if (filter === "last_year") {
+    monthly(new Date(today.getFullYear(), today.getMonth() - 11, 1), today);
+  } else {
+    const valid = customFrom && customTo && customTo >= customFrom;
+    const from = startOfDay(valid ? customFrom : today);
+    const to = startOfDay(valid ? customTo : today);
+    const days = Math.round((to - from) / 86400000) + 1;
+    if (days <= 1) hourly(from);
+    else if (days <= 62) daily(from, to);
+    else monthly(from, to);
+  }
+
+  const totals = buckets.map(() => 0);
+  rawOrders.forEach((raw) => {
+    const t = new Date(raw.created_at).getTime();
+    const amount = Number(raw.total);
+    if (Number.isNaN(t) || Number.isNaN(amount)) return;
+    const idx = buckets.findIndex((b) => t >= b.start.getTime() && t < b.end.getTime());
+    if (idx !== -1) totals[idx] += amount;
+  });
+
+  // Show at most ~8 labels so the axis doesn't get crowded
+  const every = Math.ceil(buckets.length / 8);
+  return {
+    labels: buckets.map((b, i) => (i % every === 0 ? b.label : "")),
+    data: totals,
+  };
+}
+
 function flattenOrderItems(rawOrders, isSellerRow) {
   if (isSellerRow) return rawOrders;
   const flat = [];
@@ -500,6 +579,9 @@ export default function Dashboard() {
     start: new Date(2024, 4, 18),
     end: new Date(2024, 4, 24),
   });
+  const [salesFilter, setSalesFilter] = useState("today");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   const [user, setUser] = useState(null);
   const [sellerType, setSellerType] = useState(null);
@@ -509,6 +591,7 @@ export default function Dashboard() {
   const [serviceCount, setServiceCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [orderRevenue, setOrderRevenue] = useState(0);
+  const [openOrderCount, setOpenOrderCount] = useState(0);
   const [productGrowth, setProductGrowth] = useState("0%");
   const [sellerGrowth, setSellerGrowth] = useState("0%");
   const [serviceGrowth, setServiceGrowth] = useState("0%");
@@ -543,7 +626,8 @@ export default function Dashboard() {
 
     const loadProductCount = async () => {
       try {
-        const res = await fetch(`${API_BASE}/products`, { credentials: "include" });
+        const qs = currentUser?.role === "VENDOR" ? "?deliveryType=All&productType=All" : "";
+        const res = await fetch(`${API_BASE}/products${qs}`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
           const productsList = data.data?.products || [];
@@ -593,17 +677,28 @@ export default function Dashboard() {
         const orders = data.data?.orders || [];
         const currentUser = getCurrentUser();
 
-        const isSellerRow = currentUser?.role === "SELLER";
+        const isSellerRow = currentUser?.role === "SELLER" || currentUser?.role === "VENDOR";
 
         if (isSellerRow) {
-          // For sellers this list is order ITEMS already scoped to their products/services.
           const distinctOrderIds = new Set(orders.map((item) => item.order_id));
           const revenue = orders.reduce(
             (sum, item) => sum + Number(item.price) * item.quantity,
             0
           );
+          if (currentUser?.role === "VENDOR") {
+            const live = orders.filter((item) => item.order?.status !== "Cancelled");
+            setOrderRevenue(live.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0));
+            setOpenOrderCount(
+              new Set(
+                orders
+                  .filter((item) => !["Delivered", "Cancelled"].includes(item.order?.status))
+                  .map((item) => item.order_id)
+              ).size
+            );
+          } else {
+            setOrderRevenue(revenue);
+          }
           setOrderCount(distinctOrderIds.size);
-          setOrderRevenue(revenue);
         } else {
           // For admins this list is full Order records with a precomputed total.
           const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
@@ -647,25 +742,51 @@ export default function Dashboard() {
   }, [rawOrders, products, isSellerRow, user]);
 
   const isSeller = user?.role === "SELLER";
+  const isVendor = user?.role === "VENDOR";
   const regionalSpecialty = isSeller ? findDistrictSpecialty(sellerLocation) : null;
   const showProductsCard = !isSeller || sellerType !== "service";
   const showServicesCard = !isSeller || sellerType !== "product";
   const allStatCards = buildStatCards(productCount, sellerCount, serviceCount, orderCount, orderRevenue, isSeller, productGrowth, sellerGrowth, serviceGrowth);
-  const statCards = isSeller
+  const baseStatCards = (isSeller || isVendor)
     ? allStatCards.filter((c) => {
         if (c.label === "Total Sellers") return false;
-        if (c.label === "Total Products" && sellerType === "service") return false;
-        if (c.label === "Total Services" && sellerType === "product") return false;
+        if (isSeller && c.label === "Total Products" && sellerType === "service") return false;
+        if (isSeller && c.label === "Total Services" && sellerType === "product") return false;
         return true;
       })
     : allStatCards;
 
+  const statCards = isVendor
+    ? baseStatCards.map((c) =>
+        c.label === "Total Services"
+          ? {
+              ...c,
+              label: "Open Orders",
+              value: openOrderCount.toLocaleString("en-IN"),
+              change: "",
+              sub: "awaiting delivery",
+              icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2ec4c6" strokeWidth="1.8">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              ),
+            }
+          : c
+      )
+    : baseStatCards;
+
   const toggleRevenue = (name) => {
     setHiddenRevenue((prev) => ({ ...prev, [name]: !prev[name] }));
   };
-  const chartMax = niceMax(Math.max(...salesSeries.data, 0));
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const activeSales = isSuperAdmin
+    ? buildSalesSeriesByFilter(rawOrders, salesFilter, parseInputDate(customFrom), parseInputDate(customTo))
+    : salesSeries;
+
+  const chartMax = niceMax(Math.max(...activeSales.data, 0));
   const { linePath, areaPath, points, gridLines, leftPad, rightPad } = buildLinePath(
-    salesSeries.data,
+    activeSales.data,
     chartW,
     chartH,
     chartMax
@@ -691,10 +812,10 @@ export default function Dashboard() {
       <div className="dash-header">
         <div>
           <h1>
-                        Welcome back, {user?.name || (user?.role === "SELLER" ? (user?.seller_type === "service" ? "Service Provider" : "Seller") : "Admin")}! 👋
+                        Welcome back, {user?.name || (user?.role === "SELLER" ? (user?.seller_type === "service" ? "Service Provider" : "Seller") : user?.role === "VENDOR" ? "Vendor" : "Admin")}! 👋
           </h1>
           <p>
-            {user?.role === "SELLER"
+            {user?.role === "SELLER" || user?.role === "VENDOR"
               ? "Here's what's happening with your store today."
               : "Here's what's happening with your marketplace today."}
           </p>
@@ -745,7 +866,42 @@ export default function Dashboard() {
             <div className="dash-card dash-sales-card">
               <div className="dash-card-title-row">
                 <h3>Sales Overview</h3>
-                <select className="dash-mini-select"><option>This Week</option></select>
+                {isSuperAdmin ? (
+                  <div className="dash-sales-filter">
+                    <select
+                      className="dash-mini-select"
+                      value={salesFilter}
+                      onChange={(e) => setSalesFilter(e.target.value)}
+                    >
+                      {SALES_FILTERS.map((f) => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                    {salesFilter === "custom" && (
+                      <>
+                        <input
+                          type="date"
+                          className="dash-mini-select"
+                          aria-label="From date"
+                          value={customFrom}
+                          max={customTo || undefined}
+                          onChange={(e) => setCustomFrom(e.target.value)}
+                        />
+                        <span>to</span>
+                        <input
+                          type="date"
+                          className="dash-mini-select"
+                          aria-label="To date"
+                          value={customTo}
+                          min={customFrom || undefined}
+                          onChange={(e) => setCustomTo(e.target.value)}
+                        />
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <select className="dash-mini-select"><option>This Week</option></select>
+                )}
               </div>
               <svg viewBox={`0 0 ${chartW} ${chartH}`} className="dash-line-chart" preserveAspectRatio="none">
                 <defs>
@@ -777,7 +933,7 @@ export default function Dashboard() {
                 ))}
               </svg>
               <div className="dash-chart-labels" style={{ marginLeft: `${(leftPad / chartW) * 100}%` }}>
-                {salesSeries.labels.map((l, i) => (
+                {activeSales.labels.map((l, i) => (
                   <span key={`${l}-${i}`}>{l}</span>
                 ))}
               </div>

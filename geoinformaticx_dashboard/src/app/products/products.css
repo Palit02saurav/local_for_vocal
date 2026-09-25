@@ -597,3 +597,41 @@
 }
 .pp-edit-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .pp-action-icons button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.pp-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pp-filter-close {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 50%;
+  background: #fff;
+  color: #555;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pp-filter-close:hover {
+  background: #f3f3f3;
+  color: #111;
+}
+
+.pp-action-icons .pp-delete-btn:hover {
+  background: #fdecec;
+}
+.pp-action-icons .pp-delete-btn:hover svg {
+  stroke: #d92d20;
+}
+.pp-action-icons .pp-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -24,6 +24,9 @@ const EMPTY_FORM = {
   length: "",
   width: "",
   height: "",
+  unit: "",
+  shelfLife: "",
+  prepTime: "",
 };
 
 let draftCounter = 0;
@@ -35,12 +38,12 @@ const makeDraft = (overrides = {}) => ({
   sellerConsent: false,
 });
 
-const MIN_IMAGES = 3;
-const MAX_IMAGES = 5;
-const COMPRESSION_QUALITY = 0.7; // re-encode at 70% quality = 30% reduction
+const STANDARD_MIN_IMAGES = 3;
+const STANDARD_MAX_IMAGES = 5;
+const FRESH_MIN_IMAGES = 1; 
+const FRESH_MAX_IMAGES = 3;
+const COMPRESSION_QUALITY = 0.7; 
 
-// Re-encode in the browser before upload. PNGs go to WebP so transparency
-// survives; everything else goes to JPEG.
 async function compressImage(file) {
   if (!file.type.startsWith("image/")) return file;
 
@@ -73,12 +76,16 @@ async function compressImage(file) {
 }
 
 const formatKb = (bytes) => `${Math.round(bytes / 1024)} KB`;
-export default function NewProduct() {
+export default function NewProduct({ fresh = false }) {
   const router = useRouter();
+  const MIN_IMAGES = fresh ? FRESH_MIN_IMAGES : STANDARD_MIN_IMAGES;
+  const MAX_IMAGES = fresh ? FRESH_MAX_IMAGES : STANDARD_MAX_IMAGES;
+  const basePath = fresh ? "/fresh-delivery" : "/products";
   const descRef = useRef(null);
 
 const [currentUser, setCurrentUser] = useState(null);
   const isSeller = currentUser?.role === "SELLER";
+  const isVendor = currentUser?.role === "VENDOR";
 
   const [sellers, setSellers] = useState([]);
   const [loadingSellers, setLoadingSellers] = useState(true);
@@ -89,7 +96,9 @@ const [currentUser, setCurrentUser] = useState(null);
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const res = await api.get("/categories");
+        const res = await api.get("/categories", {
+          params: { type: fresh ? "fresh" : "product" },
+        });
         setCategories(res.data.data?.categories || []);
       } catch (err) {
         console.error("Failed to load categories:", err);
@@ -98,7 +107,7 @@ const [currentUser, setCurrentUser] = useState(null);
       }
     };
     loadCategories();
-  }, []);
+  }, [fresh]);
 
   const [form, setForm] = useState({ ...EMPTY_FORM });
 
@@ -124,7 +133,7 @@ const [currentUser, setCurrentUser] = useState(null);
     setCurrentUser(user);
 
    
-    if (user?.role === "SELLER") {
+    if (user?.role === "SELLER" || user?.role === "VENDOR") {
       setForm((f) => ({ ...f, sellerId: user.id }));
       setLoadingSellers(false);
       return;
@@ -314,32 +323,48 @@ const [currentUser, setCurrentUser] = useState(null);
     if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
   };  
 
-  const validateForm = (f, draftImages = []) => {
+const validateForm = (f, draftImages = [], consent = false) => {
     const newErrors = {};
     if (draftImages.length < MIN_IMAGES)
-      newErrors.images = `Add at least ${MIN_IMAGES} images (${draftImages.length} added so far).`;
+      newErrors.images = `Add at least ${MIN_IMAGES} image${MIN_IMAGES > 1 ? "s" : ""} (${draftImages.length} added so far).`;
+    if (fresh) {
+      if (!f.unit.trim()) newErrors.unit = "Pack size / unit is required (e.g. 500 g).";
+      if (!isVendor) {
+        const prep = Number(f.prepTime);
+        if (!f.prepTime || prep < 1 || prep > 5)
+          newErrors.prepTime = "Enter a packing time between 1 and 5 minutes.";
+      }
+      if (!consent)
+        newErrors.consent = "Please confirm you can deliver within 10 minutes.";
+    }
     if (!f.name.trim()) newErrors.name = "Product name is required.";
-    if (!f.sku.trim()) newErrors.sku = "SKU is required.";
+    if (!isVendor && !f.sku.trim()) newErrors.sku = "SKU is required.";
     if (!f.category) newErrors.category = "Category is required.";
     if (!f.sellerId) newErrors.sellerId = "Seller is required.";
     if (!f.description.trim()) newErrors.description = "Description is required.";
     if (!f.price || Number(f.price) <= 0) newErrors.price = "Enter a valid price.";
-    if (f.stock === "" || Number(f.stock) < 0) newErrors.stock = "Enter a valid stock quantity.";
-    if (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0)
+    if (!isVendor && (f.stock === "" || Number(f.stock) < 0)) newErrors.stock = "Enter a valid stock quantity.";
+    if (!isVendor && (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0))
       newErrors.lowStockThreshold = "Enter a valid low stock threshold.";
     return newErrors;
   };
   const buildPayload = (draft, imageUrls) => ({
     name: draft.form.name.trim(),
-    sku: draft.form.sku.trim(),
+    ...(!isVendor && { sku: draft.form.sku.trim() }),
     category: draft.form.category,
     seller_id: draft.form.sellerId,
     description: draft.form.description.trim(),
     price: Number(draft.form.price),
-    stock: Number(draft.form.stock),
-    low_stock_threshold: Number(draft.form.lowStockThreshold),
+    ...(!isVendor && { stock: Number(draft.form.stock) }),
+    ...(!isVendor && { low_stock_threshold: Number(draft.form.lowStockThreshold) }),
     status: draft.form.status,
-    product_type: draft.form.productType,
+    product_type: fresh ? "Regular" : draft.form.productType,
+    delivery_type: fresh ? "Fresh" : "Standard",
+    ...(fresh && {
+      unit: draft.form.unit.trim(),
+      shelf_life: draft.form.shelfLife.trim(),
+      ...(!isVendor && { prep_time_minutes: Number(draft.form.prepTime) }),
+    }),
     image_url: imageUrls[0] || "",       // main/cover image
     gallery_urls: imageUrls.join(","),   // every uploaded image
     brand: draft.form.brand.trim(),
@@ -361,7 +386,7 @@ const [currentUser, setCurrentUser] = useState(null);
 
     // 1. Validate every product; jump to the first broken one.
     for (let i = 0; i < all.length; i++) {
-      const errs = validateForm(all[i].form, all[i].images);
+      const errs = validateForm(all[i].form, all[i].images, all[i].sellerConsent);
       if (Object.keys(errs).length > 0) {
         setActiveIndex(i);
         loadDraft(all[i]);
@@ -408,7 +433,9 @@ const [currentUser, setCurrentUser] = useState(null);
     }
 
     if (failures.length === 0) {
-      router.push("/products");
+      router.push(
+        fresh ? (isVendor ? "/fresh-delivery" : "/fresh-delivery/in-progress") : "/products"
+      );
       return;
     }
 
@@ -435,13 +462,22 @@ const [currentUser, setCurrentUser] = useState(null);
 
   return (
     <div className="np-page">
-      <Link href="/products" className="np-back-link">
-        ← Back to Products
+      <Link href={basePath} className="np-back-link">
+        ← Back to {fresh ? "Fresh Delivery" : "Products"}
       </Link>
-      <h1 className="np-title">Add New Product</h1>
+      <h1 className="np-title">{fresh ? "Add Fresh Delivery Product" : "Add New Product"}</h1>
       <p className="np-subtitle">
-        Create one or more products and add them to your marketplace.
+        {fresh
+          ? "Add products you can deliver within 10 minutes. You can add several at once."
+          : "Create one or more products and add them to your marketplace."}
       </p>
+      {fresh && (
+        <div className="np-fresh-banner">
+          ⚡ These products appear in the <strong>10 Min Fresh Delivery</strong> section on the
+          storefront, for customers within <strong>3 km</strong> of your store. Add at least{" "}
+          <strong>1 image</strong> (up to 3).
+        </div>
+      )}
 
       <div className="np-drafts-bar">
         <div className="np-draft-tabs">
@@ -509,26 +545,28 @@ const [currentUser, setCurrentUser] = useState(null);
                   {errors.name && <span className="np-error">{errors.name}</span>}
                 </div>
 
-                <div className="np-field">
-                  <label>SKU *</label>
-                  <div className="np-sku-row">
-                    <input
-                      type="text"
-                      placeholder="Enter SKU"
-                      value={form.sku}
-                      onChange={(e) => handleChange("sku", e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="np-sku-generate-btn"
-                      onClick={() => handleChange("sku", generateSku())}
-                    >
-                      Generate
-                    </button>
+                {!isVendor && (
+                  <div className="np-field">
+                    <label>SKU *</label>
+                    <div className="np-sku-row">
+                      <input
+                        type="text"
+                        placeholder="Enter SKU"
+                        value={form.sku}
+                        onChange={(e) => handleChange("sku", e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="np-sku-generate-btn"
+                        onClick={() => handleChange("sku", generateSku())}
+                      >
+                        Generate
+                      </button>
+                    </div>
+                    <span className="np-hint">Unique identifier for inventory — must not match any existing product</span>
+                    {errors.sku && <span className="np-error">{errors.sku}</span>}
                   </div>
-                  <span className="np-hint">Unique identifier for inventory — must not match any existing product</span>
-                  {errors.sku && <span className="np-error">{errors.sku}</span>}
-                </div>
+                )}
               </div>
 
               <div className="np-field-row">
@@ -552,7 +590,32 @@ const [currentUser, setCurrentUser] = useState(null);
                   )}
                 </div>  
 
-                <div className="np-field">
+                                <div className="np-field">
+                  <label>Seller *</label>
+                  {isSeller || isVendor ? (
+                    <input
+                      type="text"
+                      value={currentUser?.store_name || currentUser?.full_name || "You"}
+                      disabled
+                      className="np-locked-input"
+                    />
+                  ) : (
+                    <select
+                      value={form.sellerId}
+                      onChange={(e) => handleChange("sellerId", e.target.value)}
+                      disabled={loadingSellers}
+                    >
+                      <option value="">{loadingSellers ? "Loading sellers..." : "Select Seller"}</option>
+                      {sellers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.store_name || s.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {errors.sellerId && <span className="np-error">{errors.sellerId}</span>}
+                </div>
+                {/* <div className="np-field">
                   <label>Seller *</label>
                   {isSeller ? (
                     <input
@@ -576,7 +639,7 @@ const [currentUser, setCurrentUser] = useState(null);
                     </select>
                   )}
                   {errors.sellerId && <span className="np-error">{errors.sellerId}</span>}
-                </div>
+                </div> */}
               </div>
 
               <div className="np-field">
@@ -708,32 +771,81 @@ const [currentUser, setCurrentUser] = useState(null);
                 {errors.price && <span className="np-error">{errors.price}</span>}
               </div>
 
-              <div className="np-field-row">
-                <div className="np-field">
-                  <label>Stock *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Enter stock quantity"
-                    value={form.stock}
-                    onChange={(e) => handleChange("stock", e.target.value)}
-                  />
-                  {errors.stock && <span className="np-error">{errors.stock}</span>}
+              {!isVendor && (
+                <div className="np-field-row">
+                  <div className="np-field">
+                    <label>Stock *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Enter stock quantity"
+                      value={form.stock}
+                      onChange={(e) => handleChange("stock", e.target.value)}
+                    />
+                    {errors.stock && <span className="np-error">{errors.stock}</span>}
+                  </div>
+
+                  <div className="np-field">
+                    <label>Low Stock Threshold *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Enter low stock alert"
+                      value={form.lowStockThreshold}
+                      onChange={(e) => handleChange("lowStockThreshold", e.target.value)}
+                    />
+                    {errors.lowStockThreshold && <span className="np-error">{errors.lowStockThreshold}</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {fresh && (
+              <div className="np-card">
+                <div className="np-card-title">
+                  <span className="np-card-icon">⚡</span>
+                  <h3>Fresh Delivery Details</h3>
                 </div>
 
                 <div className="np-field">
-                  <label>Low Stock Threshold *</label>
+                  <label>Pack Size / Unit *</label>
                   <input
-                    type="number"
-                    min="0"
-                    placeholder="Enter low stock alert"
-                    value={form.lowStockThreshold}
-                    onChange={(e) => handleChange("lowStockThreshold", e.target.value)}
+                    type="text"
+                    placeholder="e.g. 500 g, 1 L, 6 pcs"
+                    value={form.unit}
+                    onChange={(e) => handleChange("unit", e.target.value)}
                   />
-                  {errors.lowStockThreshold && <span className="np-error">{errors.lowStockThreshold}</span>}
+                  {errors.unit && <span className="np-error">{errors.unit}</span>}
                 </div>
+
+                {!isVendor && (
+                  <div className="np-field-row">
+                    <div className="np-field">
+                      <label>Packing Time (min) *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        placeholder="1 - 5"
+                        value={form.prepTime}
+                        onChange={(e) => handleChange("prepTime", e.target.value)}
+                      />
+                      {errors.prepTime && <span className="np-error">{errors.prepTime}</span>}
+                    </div>
+
+                    <div className="np-field">
+                      <label>Shelf Life</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 2 days"
+                        value={form.shelfLife}
+                        onChange={(e) => handleChange("shelfLife", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             <div className="np-card">
               <div className="np-card-title">
@@ -749,14 +861,16 @@ const [currentUser, setCurrentUser] = useState(null);
                 <span className="np-hint">Inactive products will not be visible to customers</span>
               </div>
 
-              <div className="np-field">
-                <label>Product Type *</label>
-                <select value={form.productType} onChange={(e) => handleProductTypeChange(e.target.value)}>
-                  <option value="Regular">Regular Product</option>
-                  <option value="Regional Famous">Regional Famous Product</option>
-                </select>
-                <span className="np-hint">Regional Famous Products are reviewed separately by the admin</span>
-              </div>
+              {!fresh && (
+                <div className="np-field">
+                  <label>Product Type *</label>
+                  <select value={form.productType} onChange={(e) => handleProductTypeChange(e.target.value)}>
+                    <option value="Regular">Regular Product</option>
+                    <option value="Regional Famous">Regional Famous Product</option>
+                  </select>
+                  <span className="np-hint">Regional Famous Products are reviewed separately by the admin</span>
+                </div>
+              )}
             </div>  
 
             <div className="np-card">
@@ -765,15 +879,17 @@ const [currentUser, setCurrentUser] = useState(null);
                 <h3>Additional Details</h3>
               </div>
 
-              <div className="np-field">
-                <label>Brand</label>
-                <input
-                  type="text"
-                  placeholder="Enter brand name"
-                  value={form.brand}
-                  onChange={(e) => handleChange("brand", e.target.value)}
-                />
-              </div>
+              {!isVendor && (
+                <div className="np-field">
+                  <label>Brand</label>
+                  <input
+                    type="text"
+                    placeholder="Enter brand name"
+                    value={form.brand}
+                    onChange={(e) => handleChange("brand", e.target.value)}
+                  />
+                </div>
+              )}
 
               <div className="np-field">
                 <label>Tags</label>
@@ -808,32 +924,34 @@ const [currentUser, setCurrentUser] = useState(null);
                 />
               </div>
 
-              <div className="np-field">
-                <label>Dimensions (L x W x H) (cm)</label>
-                <div className="np-dimensions-row">
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Length"
-                    value={form.length}
-                    onChange={(e) => handleChange("length", e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Width"
-                    value={form.width}
-                    onChange={(e) => handleChange("width", e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Height"
-                    value={form.height}
-                    onChange={(e) => handleChange("height", e.target.value)}
-                  />
+              {!isVendor && (
+                <div className="np-field">
+                  <label>Dimensions (L x W x H) (cm)</label>
+                  <div className="np-dimensions-row">
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Length"
+                      value={form.length}
+                      onChange={(e) => handleChange("length", e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Width"
+                      value={form.width}
+                      onChange={(e) => handleChange("width", e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Height"
+                      value={form.height}
+                      onChange={(e) => handleChange("height", e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -843,18 +961,27 @@ const [currentUser, setCurrentUser] = useState(null);
             <input
               type="checkbox"
               checked={sellerConsent}
-              onChange={(e) => setSellerConsent(e.target.checked)}
+              onChange={(e) => {
+                setSellerConsent(e.target.checked);
+                setErrors((er) => ({ ...er, consent: "" }));
+              }}
             />
             <span>
               I confirm that the seller can deliver this product within{" "}
               <strong>10 minutes</strong> to customers located within a{" "}
-              <strong>3 km</strong> range. <span className="np-optional-tag">(Optional)</span>
+              <strong>3 km</strong> range.{" "}
+              {fresh ? (
+                <span className="np-required-tag">(Required)</span>
+              ) : (
+                <span className="np-optional-tag">(Optional)</span>
+              )}
             </span>
           </label>
+          {errors.consent && <span className="np-error">{errors.consent}</span>}
         </div>
 
         <div className="np-actions">
-          <Link href="/products" className="np-cancel-btn">Cancel</Link>
+          <Link href={basePath} className="np-cancel-btn">Cancel</Link>
           <button type="submit" className="np-save-btn" disabled={submitting}>
             {submitting
               ? `Saving ${drafts.length} product${drafts.length > 1 ? "s" : ""}...`

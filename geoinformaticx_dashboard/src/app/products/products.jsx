@@ -21,12 +21,13 @@ function statusPillClass(status) {
 }
 
 function getSellerName(p) {
-  return p.Seller?.store_name || p.Seller?.full_name || p.seller?.store_name || p.seller?.full_name || p.seller_name || "—";
+  return p.Seller?.store_name || p.Seller?.full_name || p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || p.seller_name || "—";
 }
 
 export default function Products({
   productType = null,
   approvalStatus = null,
+  deliveryType = null,
   title = "Products",
   subtitle = "Manage all products in your marketplace.",
 }) {
@@ -48,6 +49,7 @@ useEffect(() => {
 }, []);
 
 const [showFilters, setShowFilters] = useState(false);
+const [deletingId, setDeletingId] = useState(null);
 
 const [editingProduct, setEditingProduct] = useState(null);
 const [editForm, setEditForm] = useState(null);
@@ -112,6 +114,19 @@ const submitEditRequest = async (e) => {
   }
 };
 
+const handleDelete = async (product) => {
+  if (!window.confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+  setDeletingId(product.id);
+  try {
+    await api.delete(`/products/${product.id}`);
+    setProducts((prev) => prev.filter((x) => x.id !== product.id));
+  } catch (err) {
+    alert(err.response?.data?.message || err.message || "Could not delete the product.");
+  } finally {
+    setDeletingId(null);
+  }
+};
+
 const loadProducts = async () => {
     setLoading(true);
     setError("");
@@ -119,6 +134,7 @@ const loadProducts = async () => {
       const params = {};
       if (productType) params.productType = productType;
       if (approvalStatus) params.approvalStatus = approvalStatus;
+      if (deliveryType) params.deliveryType = deliveryType;
       const res = await api.get("/products", { params });
       setProducts(res.data.data?.products || []);
     } catch (err) {
@@ -130,7 +146,7 @@ const loadProducts = async () => {
 
   useEffect(() => {
     loadProducts();
-  }, [productType, approvalStatus]);
+ }, [productType, approvalStatus, deliveryType]);
 
   const categories = useMemo(
     () => Array.from(new Set(products.map((p) => p.category).filter(Boolean))),
@@ -257,7 +273,12 @@ const loadProducts = async () => {
             </svg>
             Export
           </button>
-          <Link href="/products/new" className="pp-add-btn">+ Add New Product</Link>
+         <Link
+            href={deliveryType === "Fresh" ? "/fresh-delivery/new" : "/products/new"}
+            className="pp-add-btn"
+          >
+            {deliveryType === "Fresh" ? "+ Add Fresh Product" : "+ Add New Product"}
+          </Link>
         </div>
       </div>
 
@@ -403,6 +424,20 @@ const loadProducts = async () => {
                               </svg>
                             </button>
                             <button
+                              aria-label="Delete"
+                              className="pp-delete-btn"
+                              title="Delete product"
+                              disabled={deletingId === p.id}
+                              onClick={() => handleDelete(p)}
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.8">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6M14 11v6" />
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                              </svg>
+                            </button>
+                            <button
                               aria-label="More"
                               onClick={() => setShowFilters((v) => !v)}
                             >
@@ -458,7 +493,17 @@ const loadProducts = async () => {
                 </svg>
                 Filters
               </h3>
-              <button className="pp-clear-all" onClick={handleReset}>Clear All</button>
+              <div className="pp-filter-actions">
+                <button className="pp-clear-all" onClick={handleReset}>Clear All</button>
+                <button
+                  type="button"
+                  className="pp-filter-close"
+                  aria-label="Close filters"
+                  onClick={() => setShowFilters(false)}
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
             <div className="pp-filter-group">

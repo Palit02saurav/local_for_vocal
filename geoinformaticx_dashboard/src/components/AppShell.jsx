@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import AdminNavbar from "@/components/navbar/nav";
 import NavDrawer from "@/components/navdrawer/drawer";
 import SellerDrawer from "@/components/navdrawer/sellerDrawer";
+import VendorDrawer from "@/components/navdrawer/vendorDrawer";
 import { checkAuth } from "@/lib/auth";
 
 const PUBLIC_ROUTES = ["/login", "/signup"];
@@ -19,30 +20,37 @@ export default function AppShell({ children }) {
 useEffect(() => {
   let cancelled = false;
 
-  if (isPublic) {
-    setReady(true);
+  const handleAuthChange = async () => {
+    if (isPublic) {
+      setReady(false);
+      setRole(null);
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }
+    const user = await checkAuth();
 
-  checkAuth().then((user) => {
     if (cancelled) return;
 
     if (!user) {
+      setReady(false);
+      setRole(null);
       router.replace("/login");
       return;
     }
 
     setRole(user.role || null);
     setReady(true);
-  });
+  };
+
+  handleAuthChange();
+
+  window.addEventListener("auth:changed", handleAuthChange);
 
   return () => {
     cancelled = true;
+    window.removeEventListener("auth:changed", handleAuthChange);
   };
-}, [pathname, isPublic, router]);
+}, [isPublic, router]);
 
   if (isPublic) {
     return <>{children}</>;
@@ -53,7 +61,7 @@ useEffect(() => {
   return (
     <>
       <AdminNavbar />
-      {role === "SUPER_ADMIN" ? <NavDrawer /> : <SellerDrawer />}
+      {role === "SUPER_ADMIN" ? <NavDrawer /> : role === "VENDOR" ? <VendorDrawer /> : <SellerDrawer />}
       <main className="app-main-content">{children}</main>
     </>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import api from "@/lib/api";
+import { uploadImage } from "@/lib/upload";
 import "./store.css";
 
 export default function Store() {
@@ -13,10 +14,16 @@ export default function Store() {
     email: "",
     phone: "",
     location: "",
+    seller_type: "",
+    gst_number: "",
+    business_registration_number: "",
+    pan_number: "",
     business_address: "",
+    profile_image_url: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
 
@@ -32,7 +39,12 @@ export default function Store() {
           email: s.email || "",
           phone: s.phone || "",
           location: s.location || "",
+          seller_type: s.seller_type || "",
+          gst_number: s.gst_number || "",
+          business_registration_number: s.business_registration_number || "",
+          pan_number: s.pan_number || "",
           business_address: s.business_address || "",
+          profile_image_url: s.profile_image_url || "",
         });
       } catch (err) {
         console.error("Failed to load store profile:", err);
@@ -47,19 +59,9 @@ export default function Store() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setSaveMessage("");
-    setSaveError("");
+  const persist = async (payload, successMessage) => {
     try {
-      const res = await api.patch("/sellers/me", {
-        store_name: form.store_name,
-        full_name: form.full_name,
-        phone: form.phone,
-        location: form.location,
-        business_address: form.business_address,
-      });
+      const res = await api.patch("/sellers/me", payload);
       const updatedSeller = res.data.data?.seller;
       if (updatedSeller) {
         const mergedUser = { ...getCurrentUser(), ...updatedSeller };
@@ -67,12 +69,39 @@ export default function Store() {
         window.dispatchEvent(new Event("storage"));
         setSeller(mergedUser);
       }
-      setSaveMessage("Store details updated successfully.");
+      setSaveMessage(successMessage);
+      setSaveError("");
     } catch (err) {
       setSaveError(err.response?.data?.message || err.message || "Failed to save changes.");
-    } finally {
-      setSaving(false);
+      setSaveMessage("");
     }
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    setSaveMessage("");
+    setSaveError("");
+    try {
+      const url = await uploadImage(file);
+      handleChange("profile_image_url", url);
+      await persist({ profile_image_url: url }, "Business picture updated.");
+    } catch (err) {
+      setSaveError(err.response?.data?.message || err.message || "Failed to upload picture.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    await persist(
+      { business_address: form.business_address },
+      "Store details updated successfully."
+    );
+    setSaving(false);
   };
 
   if (loading) {
@@ -91,6 +120,37 @@ export default function Store() {
       {saveMessage && <div className="store-success">{saveMessage}</div>}
       {saveError && <div className="store-error">{saveError}</div>}
 
+      <div className="store-card store-profile-card">
+        <div className="store-card-title">
+          <span>🖼️</span>
+          <h3>Profile</h3>
+        </div>
+        <div className="store-profile-row">
+          <div className="store-avatar">
+            {form.profile_image_url ? (
+              <img src={form.profile_image_url} alt="Business" />
+            ) : (
+              <span className="store-avatar-placeholder">
+                {(form.store_name || "S").charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <label className="store-upload-btn">
+              {uploadingPhoto ? "Uploading…" : "Upload Business Picture"}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handlePhotoChange}
+                disabled={uploadingPhoto}
+              />
+            </label>
+            <p className="store-hint">Shown on your store profile and listings.</p>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSave}>
         <div className="store-grid">
           <div>
@@ -102,27 +162,33 @@ export default function Store() {
 
               <div className="store-field">
                 <label>Business Name</label>
-                <input
-                  type="text"
-                  value={form.store_name}
-                  onChange={(e) => handleChange("store_name", e.target.value)}
-                />
+                <input type="text" value={form.store_name} disabled className="store-locked-input" />
               </div>
 
               <div className="store-field">
                 <label>Full Name</label>
-                <input
-                  type="text"
-                  value={form.full_name}
-                  onChange={(e) => handleChange("full_name", e.target.value)}
-                />
+                <input type="text" value={form.full_name} disabled className="store-locked-input" />
               </div>
 
               <div className="store-field">
                 <label>Email</label>
                 <input type="email" value={form.email} disabled className="store-locked-input" />
-                <span className="store-hint">Email cannot be changed. Contact support if needed.</span>
               </div>
+
+              <div className="store-field">
+                <label>Seller Type</label>
+                <input
+                  type="text"
+                  value={form.seller_type === "service" ? "Service Seller" : "Product Seller"}
+                  disabled
+                  className="store-locked-input"
+                />
+              </div>
+
+              <span className="store-hint">
+                These details were set during signup and cannot be edited here. Contact support if
+                any of them need to change.
+              </span>
             </div>
           </div>
 
@@ -135,20 +201,12 @@ export default function Store() {
 
               <div className="store-field">
                 <label>Phone Number</label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                />
+                <input type="tel" value={form.phone} disabled className="store-locked-input" />
               </div>
 
               <div className="store-field">
                 <label>Location</label>
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => handleChange("location", e.target.value)}
-                />
+                <input type="text" value={form.location} disabled className="store-locked-input" />
               </div>
 
               <div className="store-field">
@@ -157,6 +215,43 @@ export default function Store() {
                   rows={4}
                   value={form.business_address}
                   onChange={(e) => handleChange("business_address", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="store-card">
+              <div className="store-card-title">
+                <span>🧾</span>
+                <h3>Registration Details</h3>
+              </div>
+
+              <div className="store-field">
+                <label>GST Number</label>
+                <input
+                  type="text"
+                  value={form.gst_number || "—"}
+                  disabled
+                  className="store-locked-input"
+                />
+              </div>
+
+              <div className="store-field">
+                <label>Business Registration Number</label>
+                <input
+                  type="text"
+                  value={form.business_registration_number || "—"}
+                  disabled
+                  className="store-locked-input"
+                />
+              </div>
+
+              <div className="store-field">
+                <label>PAN Number</label>
+                <input
+                  type="text"
+                  value={form.pan_number || "—"}
+                  disabled
+                  className="store-locked-input"
                 />
               </div>
             </div>

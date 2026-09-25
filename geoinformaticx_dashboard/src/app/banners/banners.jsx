@@ -12,36 +12,36 @@ function getSellerName(b) {
 
 export default function Banners() {
 
-  const handlePay = async (bannerId) => {
-  try {
-    const res = await api.post(`/banners/${bannerId}/create-payment-order`);
-    const { orderId, amount, currency, keyId } = res.data.data;
+//   const handlePay = async (bannerId) => {
+//   try {
+//     const res = await api.post(`/banners/${bannerId}/create-payment-order`);
+//     const { orderId, amount, currency, keyId } = res.data.data;
 
-    const options = {
-      key: keyId,
-      amount,
-      currency,
-      name: "Geoinformaticx",
-      description: "Banner Publishing Fee",
-      order_id: orderId,
-      handler: async (response) => {
-        await api.post(`/banners/${bannerId}/verify-payment`, {
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-        });
-        alert("Payment successful! Your banner is now live.");
-        window.location.reload();
-      },
-      theme: { color: "#2f8d46" },
-    };
+//     const options = {
+//       key: keyId,
+//       amount,
+//       currency,
+//       name: "Geoinformaticx",
+//       description: "Banner Publishing Fee",
+//       order_id: orderId,
+//       handler: async (response) => {
+//         await api.post(`/banners/${bannerId}/verify-payment`, {
+//           razorpay_order_id: response.razorpay_order_id,
+//           razorpay_payment_id: response.razorpay_payment_id,
+//           razorpay_signature: response.razorpay_signature,
+//         });
+//         alert("Payment successful! Your banner is now live.");
+//         window.location.reload();
+//       },
+//       theme: { color: "#2f8d46" },
+//     };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  } catch (err) {
-    alert(err.response?.data?.message || "Payment failed to start.");
-  }
-};
+//     const rzp = new window.Razorpay(options);
+//     rzp.open();
+//   } catch (err) {
+//     alert(err.response?.data?.message || "Payment failed to start.");
+//   }
+// };
   const [user, setUser] = useState(null);
   const isAdmin = user?.role === "SUPER_ADMIN";
   const isSeller = user?.role === "SELLER";
@@ -101,7 +101,6 @@ export default function Banners() {
                 <th>Link</th>
                 <th>Date Added</th>
                 <th>Status</th>
-                {isSeller && <th>Payment</th>}
               </tr>
             </thead>
             <tbody>
@@ -123,29 +122,6 @@ export default function Banners() {
                       {b.is_published ? "Live" : "Not Published"}
                     </span>
                   </td>
-                  {isSeller && (
-                    <td>
-                      {b.payment_status === "Paid" ? (
-                        <span className="pp-pill pp-pill-active">Paid</span>
-                      ) : (
-                        <button
-                          onClick={() => handlePay(b.id)}
-                          style={{
-                            color: "#2f8d46",
-                            fontWeight: 700,
-                            fontSize: 12,
-                            border: "1px solid #2f8d46",
-                            borderRadius: 6,
-                            padding: "5px 10px",
-                            background: "white",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Pay ₹{b.payment_amount || 10} to Publish
-                        </button>
-                      )}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>

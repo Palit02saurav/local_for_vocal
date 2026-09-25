@@ -80,6 +80,8 @@ const handleLogout = async () => {
           <span className="admin-navbar-subtitle">
             {user?.role === "SUPER_ADMIN"
               ? "Super Admin Panel"
+              : user?.role === "VENDOR"
+              ? "Vendor Panel"
               : user?.seller_type === "service"
               ? "Service Provider Panel"
               : "Seller Panel"}
@@ -180,6 +182,8 @@ const handleLogout = async () => {
               <span className="admin-navbar-profile-role">
                 {user?.role === "SUPER_ADMIN"
                   ? "Super Admin"
+                  : user?.role === "VENDOR"
+                  ? "Vendor"
                   : user?.seller_type === "service"
                   ? "Service Provider"
                   : "Seller"}

@@ -49,6 +49,7 @@ const menuItems = [
         { label: "Product Edit Requests", href: "/products/edit-requests" },
         { label: "Regional Famous Products", href: "/products/regional" },
         { label: "Regional Famous Products Requests", href: "/products/regional-requests" },
+        { label: "Fresh Delivery Requests", href: "/products/fresh-requests" },
       ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -82,6 +83,8 @@ const menuItems = [
       { label: "Add New Category", href: "/categories/new" },
       { label: "All Service Categories", href: "/categories/services" },
       { label: "Add New Service Category", href: "/categories/new-service" },
+      { label: "Fresh Delivery Categories", href: "/categories/fresh" },
+      { label: "Add Fresh Delivery Category", href: "/categories/new-fresh" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -110,6 +113,8 @@ const menuItems = [
     submenu: [
       { label: "All Sellers", href: "/sellers" },
       { label: "Seller Requests", href: "/sellers/requests" },
+      { label: "All Street Vendors", href: "/vendors" },
+      { label: "Street Vendor Requests", href: "/vendors/requests" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -149,22 +154,22 @@ const menuItems = [
   //     </svg>
   //   ),
   // },
-  // {
-  //   label: "Banners",
-  //   href: "/banners",
-  //   hasSubmenu: true,
-  //   submenu: [
-  //     { label: "All Banners", href: "/banners" },
-  //     { label: "Add New Banner", href: "/banners/new" },
-  //     { label: "Banner Requests", href: "/banners/requests" },
-  //   ],
-  //   icon: (
-  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-  //       <rect x="3" y="3" width="18" height="14" rx="2" />
-  //       <path d="m3 13 5-5 4 4 5-5 4 4" />
-  //     </svg>
-  //   ),
-  // },
+  {
+    label: "Banners",
+    href: "/banners",
+    hasSubmenu: true,
+    submenu: [
+      { label: "All Banners", href: "/banners" },
+      { label: "Add New Banner", href: "/banners/new" },
+      { label: "Banner Requests", href: "/banners/requests" },
+    ],
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="3" width="18" height="14" rx="2" />
+        <path d="m3 13 5-5 4 4 5-5 4 4" />
+      </svg>
+    ),
+  },
   {
     label: "Reports",
     href: "/reports",
@@ -206,10 +211,10 @@ export default function NavDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+const handleLogout = async () => {
+  await logout();
+  router.replace("/login");
+};
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 

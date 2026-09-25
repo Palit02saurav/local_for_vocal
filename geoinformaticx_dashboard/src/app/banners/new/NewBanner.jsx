@@ -115,6 +115,9 @@ export default function NewBanner() {
 
             <div className="np-field">
               <label>Banner Image *</label>
+                <p style={{ fontSize: 12, color: "#777", margin: "2px 0 8px" }}>
+                  Recommended size: 1600×480px (or the same ratio) so it fills the homepage banner without cropping.
+                </p>
               <div className="np-dropzone">
                 <span className="np-dropzone-icon">☁️</span>
                 <p>Drag & drop image here</p>

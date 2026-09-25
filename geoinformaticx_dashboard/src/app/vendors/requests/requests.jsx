@@ -2,14 +2,9 @@
 
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
-import "../products.css"; // reuse existing Products page styling
+import "../../products/products.css";
 
-export default function ProductRequests({
-  productType = null,
-  deliveryType = null,
-  title = "Product Requests",
-  subtitle = "Review and approve products submitted by sellers.",
-}) {
+export default function VendorRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actioningId, setActioningId] = useState(null);
@@ -17,28 +12,25 @@ export default function ProductRequests({
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (productType) params.productType = productType;
-      if (deliveryType) params.deliveryType = deliveryType;
-      const res = await api.get("/products/requests", { params });
-      setRequests(res.data.data?.products || []);
+      const res = await api.get("/vendors/requests");
+      setRequests(res.data.data?.vendors || []);
     } catch (err) {
-      console.error("Failed to load product requests:", err);
+      console.error("Failed to load vendor requests:", err);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchRequests();
- }, [productType, deliveryType]);
+  }, []);
 
   const handleDecision = async (id, action) => {
     setActioningId(id);
     try {
-      await api.patch(`/products/${id}/${action}`);
-      setRequests((prev) => prev.filter((p) => p.id !== id));
+      await api.patch(`/vendors/${id}/${action}`);
+      setRequests((prev) => prev.filter((v) => v.id !== id));
     } catch (err) {
-      console.error(`Failed to ${action} product:`, err);
+      console.error(`Failed to ${action} vendor:`, err);
     }
     setActioningId(null);
   };
@@ -47,8 +39,8 @@ export default function ProductRequests({
     <main className="pp-page">
       <div className="pp-header">
         <div>
-          <h1>{title}</h1>
-          <p>{subtitle}</p>
+          <h1>Street Vendor Requests</h1>
+          <p>Review and approve new street vendor signup requests.</p>
         </div>
       </div>
 
@@ -56,11 +48,11 @@ export default function ProductRequests({
         <table className="pp-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>Seller</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>ID Type</th>
+              <th>ID Number</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -68,30 +60,27 @@ export default function ProductRequests({
             {loading ? (
               <tr><td colSpan={6} style={{ textAlign: "center", padding: 24 }}>Loading...</td></tr>
             ) : requests.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, color: "#888" }}>No pending product requests.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, color: "#888" }}>No pending vendor requests.</td></tr>
             ) : (
-              requests.map((p) => (
-                <tr key={p.id}>
-                  <td className="pp-product-cell">
-                    <img src={p.image_url} alt={p.name} />
-                    <span className="pp-product-name">{p.name}</span>
-                  </td>
-                  <td>{p.seller?.store_name || p.seller?.full_name || "—"}</td>
-                  <td>{p.category}</td>
-                  <td>₹{Number(p.price).toLocaleString("en-IN")}</td>
-                  <td>{p.stock}</td>
+              requests.map((v) => (
+                <tr key={v.id}>
+                  <td>{v.full_name}</td>
+                  <td>{v.phone}</td>
+                  <td>{v.address}</td>
+                  <td>{v.id_type === "pan" ? "PAN" : "Aadhaar"}</td>
+                  <td>{v.id_number}</td>
                   <td>
                     <div className="pp-action-icons">
                       <button
-                        onClick={() => handleDecision(p.id, "approve")}
-                        disabled={actioningId === p.id}
+                        onClick={() => handleDecision(v.id, "approve")}
+                        disabled={actioningId === v.id}
                         style={{ color: "#2f8d46", fontWeight: 700, fontSize: 12, border: "1px solid #2f8d46", borderRadius: 6, padding: "5px 10px", background: "white", cursor: "pointer" }}
                       >
                         Approve
                       </button>
                       <button
-                        onClick={() => handleDecision(p.id, "reject")}
-                        disabled={actioningId === p.id}
+                        onClick={() => handleDecision(v.id, "reject")}
+                        disabled={actioningId === v.id}
                         style={{ color: "#e63946", fontWeight: 700, fontSize: 12, border: "1px solid #e63946", borderRadius: 6, padding: "5px 10px", background: "white", cursor: "pointer" }}
                       >
                         Reject
