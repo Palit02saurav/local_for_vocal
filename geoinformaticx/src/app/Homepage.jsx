@@ -98,23 +98,69 @@ function WishlistCard({ item, onViewDetails, type = "product" }) {
 }
 export default function HomePage() {
   const router = useRouter();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 3;
+ const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  const fallbackPanels = [
+    {
+      id: "fallback-1",
+      image_url: "https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/0002e0158d58e0a0ae0f389bae072984.png",
+      alt: "Pottery craftsman",
+      link_url: null,
+    },
+    {
+      id: "fallback-2",
+      image_url: "https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/452384b5efee555f144495d5a830803d.png",
+      alt: "Local spices and jars",
+      link_url: null,
+    },
+    {
+      id: "fallback-3",
+      image_url: "https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/25fa2f7b6908cadf1c448a9b7b48aaa8.png",
+      alt: "Local textiles",
+      link_url: null,
+    },
+  ];
 
 const [liveProducts, setLiveProducts] = useState([]);
 const [liveServices, setLiveServices] = useState([]);
 const [regionalProducts, setRegionalProducts] = useState([]);
+const [freshProducts, setFreshProducts] = useState([]); 
 const [productsLoading, setProductsLoading] = useState(true);
 const [servicesLoading, setServicesLoading] = useState(true);
 const [liveSellers, setLiveSellers] = useState([]);
 const [sellersLoading, setSellersLoading] = useState(true);
+const [banners, setBanners] = useState([]);
+
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE}/banners/public`);
+        setBanners(data.data?.banners || []);
+      } catch (err) {
+        console.error("Failed to load banners:", err);
+      }
+    };
+    loadBanners();
+  }, []);
+
+  const activeBanners = banners.length > 0 ? banners : fallbackPanels;
+
+  useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [activeBanners.length]);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const { data } = await axios.get(`${API_BASE}/products/public`);
-        const rawProducts = data.data?.products || [];
+        const allRaw = data.data?.products || [];
+        const rawProducts = allRaw.filter((p) => p.delivery_type !== "Fresh");
+        const freshRaw = allRaw.filter((p) => p.delivery_type === "Fresh");
         const products = rawProducts.map((p) => ({
           id: p.id,
           name: p.name,
@@ -136,7 +182,7 @@ const [sellersLoading, setSellersLoading] = useState(true);
               id: p.id,
               name: p.name,
               slug: p.sku,
-              seller: p.seller?.store_name || p.seller?.full_name || "Geoinformaticx",
+              seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geoinformaticx",
               price: `₹${Number(p.price).toLocaleString("en-IN")}`,
               rating: 4.7,
               reviews: 0,
@@ -146,6 +192,20 @@ const [sellersLoading, setSellersLoading] = useState(true);
             };
           });
         setRegionalProducts(regional);
+
+        setFreshProducts(
+          freshRaw.map((p) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.sku,
+            seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geoinformaticx",
+            price: `₹${Number(p.price).toLocaleString("en-IN")}`,
+            rating: 4.7,
+            reviews: 0,
+            badge: "⚡ 10 min",
+            img: p.image_url || "https://placehold.co/300x300?text=No+Image",
+          }))
+        );
       } catch (err) {
         console.error("Failed to load products:", err);
       } finally {
@@ -247,13 +307,45 @@ loadSellers();
  
 
   const [prodAtStart, setProdAtStart] = useState(true);
-  const [prodAtEnd, setProdAtEnd] = useState(false);
+  const [prodAtEnd, setProdAtEnd] = useState(true);
   const [regAtStart, setRegAtStart] = useState(true);
-  const [regAtEnd, setRegAtEnd] = useState(false);
+  const [regAtEnd, setRegAtEnd] = useState(true);
   const [bizAtStart, setBizAtStart] = useState(true);
-  const [bizAtEnd, setBizAtEnd] = useState(false);
+  const [bizAtEnd, setBizAtEnd] = useState(true);
   const [servAtStart, setServAtStart] = useState(true);
-  const [servAtEnd, setServAtEnd] = useState(false);
+  const [servAtEnd, setServAtEnd] = useState(true);
+
+  // Show the arrows only when a row has more cards than fit on screen
+  useEffect(() => {
+    const check = (id, setStart, setEnd) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      setStart(el.scrollLeft <= 0);
+      setEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
+    };
+    const checkAll = () => {
+      check("regional-grid", setRegAtStart, setRegAtEnd);
+      check("products-grid", setProdAtStart, setProdAtEnd);
+      check("services-grid", setServAtStart, setServAtEnd);
+      check("businesses-grid", setBizAtStart, setBizAtEnd);
+    };
+
+    checkAll();
+    const timer = setTimeout(checkAll, 300); // re-check once cards/images settle
+    window.addEventListener("resize", checkAll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", checkAll);
+    };
+  }, [
+    regionalProducts,
+    liveProducts,
+    liveServices,
+    liveSellers,
+    productsLoading,
+    servicesLoading,
+    sellersLoading,
+  ]);
 
   const handleServScroll = (e) => {
     const el = e.target;
@@ -303,7 +395,7 @@ loadSellers();
     setBizAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
   };
 
-  const popularSearches = ["Handicrafts", "Organic", "Handmade", "Local Food"];
+  // const popularSearches = ["Handicrafts", "Organic", "Handmade", "Local Food"];
 
   return (
     <main>
@@ -383,7 +475,7 @@ loadSellers();
               Explore Businesses
             </Link>
           </div>
-          <div className="hero-popular">
+          {/* <div className="hero-popular">
             <span className="popular-label">Popular Searches:</span>
             {popularSearches.map((term, i) => (
               <span key={term}>
@@ -391,33 +483,44 @@ loadSellers();
                 {i < popularSearches.length - 1 && <span className="popular-dot"> • </span>}
               </span>
             ))}
+          </div> */}
+        </div>
+
+        <div className="hero-right">
+          <div className="hero-banner-rotator">
+            {activeBanners.map((b, i) => {
+              const img = (
+                <img
+                  src={b.image_url || b.img}
+                  alt={b.title || b.alt || "Banner"}
+                  className={`hero-banner-slide ${i === currentSlide ? "active" : ""}`}
+                />
+              );
+              return b.link_url ? (
+                <Link href={b.link_url} key={b.id || i} className={`hero-banner-slide-link ${i === currentSlide ? "active" : ""}`}>
+                  {img}
+                </Link>
+              ) : (
+                <div key={b.id || i} className={`hero-banner-slide-link ${i === currentSlide ? "active" : ""}`}>
+                  {img}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hero-dots">
+            {activeBanners.map((_, i) => (
+              <button
+                key={i}
+                className={`hero-dot ${i === currentSlide ? "active" : ""}`}
+                onClick={() => setCurrentSlide(i)}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Right Images - diagonal panels */}
-        <div className="hero-right">
-          <div className="hero-panels">
-            <div className="hero-panel panel-1">
-              <img
-                src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/0002e0158d58e0a0ae0f389bae072984.png"
-                alt="Pottery craftsman"
-              />
-            </div>
-            <div className="hero-panel panel-2">
-              <img
-                src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/452384b5efee555f144495d5a830803d.png"
-                alt="Local spices and jars"
-              />
-            </div>
-            <div className="hero-panel panel-3">
-              <img
-                src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/25fa2f7b6908cadf1c448a9b7b48aaa8.png"
-                alt="Local textiles"
-              />
-            </div>
-          </div>
-
-          <div className="hero-map-card">
+          {/* <div className="hero-map-card">
             <div className="map-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d6a4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -430,19 +533,9 @@ loadSellers();
                 View on Map →
               </Link>
             </div>
-          </div>
-        </div>
+          </div> */}
 
-        <div className="hero-dots">
-          {Array.from({ length: totalSlides }).map((_, i) => (
-            <button
-              key={i}
-              className={`hero-dot ${i === currentSlide ? "active" : ""}`}
-              onClick={() => setCurrentSlide(i)}
-              aria-label={`Slide ${i + 1}`}
-            />
-          ))}
-        </div>
+
       </section>
 
 
@@ -494,6 +587,33 @@ loadSellers();
           </div>
         </section>
       )}  
+
+      {/* ===== 10 Min Fresh Delivery ===== */}
+      <section className="featured-section fresh-section">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">
+              ⚡ 10 Min Fresh Delivery
+            </h2>
+            <p className="fresh-subtitle">
+              Fresh products from nearby sellers, delivered in minutes
+            </p>
+          </div>
+        </div>
+        <div className="products-grid" id="fresh-grid">
+          {freshProducts.length === 0 ? (
+            <p className="fresh-empty">No fresh products available yet.</p>
+          ) : (
+            freshProducts.map((product) => (
+              <WishlistCard
+                key={product.slug || product.name}
+                item={product}
+                onViewDetails={setSelectedItem}
+              />
+            ))
+          )}
+        </div>
+      </section>
 
       <section className="featured-section">
         <div className="section-header">

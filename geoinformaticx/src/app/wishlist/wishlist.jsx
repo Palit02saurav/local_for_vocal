@@ -7,7 +7,7 @@ import { getWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { addToCart } from "@/lib/cart";
 import "./wishlist.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Wishlist() {
   const [items, setItems] = useState([]);

@@ -63,9 +63,9 @@ export default function Cart() {
     router.push("/checkout");
   };
 
-  const productItems = items.filter((item) => (item.type || "product") === "product");
+  const productItems = items.filter((item) => (item.type || "product") === "product" && !item.isFreshDelivery);
   const serviceItems = items.filter((item) => item.type === "service");
-  const tenMinItems = items.filter((item) => item.type === "10min-delivery");
+  const tenMinItems = items.filter((item) => item.isFreshDelivery);
   return (
     <main className="cart-page">
       {/* Breadcrumb */}
@@ -211,7 +211,7 @@ export default function Cart() {
             {tenMinItems.length > 0 && (
               <>
                 <h3 className="cart-section-title cart-section-10min">
-                  🛵 10-Min Delivery ({tenMinItems.reduce((s, i) => s + i.quantity, 0)})
+                  ⚡ 10-Min Fresh Delivery ({tenMinItems.reduce((s, i) => s + i.quantity, 0)})
                 </h3>
                 <div className="cart-table">
                   <div className="cart-table-header">

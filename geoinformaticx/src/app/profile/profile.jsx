@@ -7,7 +7,7 @@ import Link from "next/link";
 import { getCurrentUser, signOut } from "@/lib/auth";
 import { getProductOrders } from "@/lib/orders";
 import "./profile.css";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const sidebarItems = [
   { key: "profile", label: "My Profile", icon: "user" },
   { key: "orders", label: "My Orders", icon: "bag", href: "/trackorder" },
@@ -105,10 +105,10 @@ export default function Profile() {
       setSaving(false);
     }
   };
-  const handleLogout = () => {
-    signOut();
-    router.push("/");
-  };
+const handleLogout = async () => {
+  await signOut();
+  router.replace("/");
+};
 
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [orders, setOrders] = useState([]);

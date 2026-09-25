@@ -39,38 +39,38 @@ export default function Explore({
   setListingType = () => {},
   selectedCategory,
   setSelectedCategory,
+  categories, // optional override: pass real DB categories to bypass the hardcoded lists
   businessType = "All",
   setBusinessType = () => {},
   minRating = 0,
   setMinRating = () => {},
-  distanceKm = 20,
+  distanceKm = 5,
   setDistanceKm = () => {},
   searchQuery = "",
   setSearchQuery = () => {},
   onLocate = () => {},
 }) {
-  // Which categories the "Category" dropdown and "Top Categories" list show
-  // depends entirely on whether Products, Services, or All is selected.
   const categoryOptions =
-    listingType === "Products"
+    categories ??
+    (listingType === "Products"
       ? PRODUCT_CATEGORIES
       : listingType === "Services"
       ? SERVICE_CATEGORIES
-      : [...PRODUCT_CATEGORIES, ...SERVICE_CATEGORIES];
+      : [...PRODUCT_CATEGORIES, ...SERVICE_CATEGORIES]);
 
   const hasActiveFilters =
     listingType !== "All" ||
     selectedCategory !== "All" ||
     businessType !== "All" ||
     minRating !== 0 ||
-    distanceKm !== 20;
+    distanceKm !== 5;
 
   function clearAll() {
     setListingType("All");
     setSelectedCategory("All");
     setBusinessType("All");
     setMinRating(0);
-    setDistanceKm(20);
+    setDistanceKm(5);
   }
 
   function handleListingTypeChange(value) {
@@ -90,7 +90,7 @@ export default function Explore({
         <FaSearch className="search-icon" />
         <input
           type="text"
-          placeholder="Search location..."
+          placeholder="Search local sellers..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -114,7 +114,7 @@ export default function Explore({
           )}
         </div>
 
-        <div className="filter-row">
+        {/* <div className="filter-row">
           <label htmlFor="filter-listing-type">Type</label>
           <select
             id="filter-listing-type"
@@ -127,7 +127,7 @@ export default function Explore({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         <div className="filter-row">
           <label htmlFor="filter-category">Category</label>
@@ -145,7 +145,7 @@ export default function Explore({
           </select>
         </div>
 
-        <div className="filter-row">
+        {/* <div className="filter-row">
           <label htmlFor="filter-type">Business Type</label>
           <select
             id="filter-type"
@@ -159,7 +159,7 @@ export default function Explore({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         <div className="filter-row">
           <label htmlFor="filter-rating">Rating</label>
@@ -182,22 +182,21 @@ export default function Explore({
             id="filter-distance"
             type="range"
             min={1}
-            max={20}
+            max={5}
             value={distanceKm}
             onChange={(e) => setDistanceKm(Number(e.target.value))}
           />
           <div className="distance-labels">
             <span>1 km</span>
-            <span>20 km+</span>
+            <span>5 km+</span>
           </div>
         </div>
-
-        <button type="button" className="more-filters-btn">
-          <FaSlidersH /> More Filters
+        <button type="button" className="more-filters-btn" onClick={clearAll}>
+          <FaSlidersH /> Reset Filters
         </button>
       </div>
 
-      <div className="top-categories">
+      {/* <div className="top-categories">
         <div className="top-categories-header">
           <h3>Top Categories</h3>
           <Link href="#" className="view-all-link">
@@ -222,7 +221,7 @@ export default function Explore({
             );
           })}
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }

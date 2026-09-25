@@ -79,11 +79,11 @@ const filteredSuggestions = searchQuery.trim().length > 0
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const handleLogout = () => {
-    setShowProfileMenu(false);
-    signOut();
-    router.push("/");
-  };
+const handleLogout = async () => {
+  setShowProfileMenu(false);
+  await signOut();
+  router.replace("/");
+};
   const categories = [
     "All Categories",
     "Handicrafts",

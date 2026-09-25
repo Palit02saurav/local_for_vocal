@@ -157,35 +157,49 @@
 /* Google Maps InfoWindow content (rendered outside the React tree,
    these classes are referenced directly in the template string) */
 .map-info-card {
-  width: 200px;
+  width: 150px;
+  padding: 8px;
   font-family: "Segoe UI", Arial, sans-serif;
 }
-
 .map-info-img {
   width: 100%;
-  height: 90px;
+  height: 60px;
   object-fit: cover;
   border-radius: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   display: block;
+}
+
+.map-info-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 5px;
+  row-gap: 2px;
+  margin-bottom: 4px;
+}
+
+.map-info-meta-row > * + *::before {
+  content: "·";
+  margin-right: 5px;
+  color: #bbb;
 }
 
 .map-info-name {
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 12px;
   color: #1a1a1a;
 }
 
 .map-info-category {
-  font-size: 11.5px;
+  font-size: 10px;
   color: #888;
-  margin-bottom: 6px;
 }
 
 .map-info-rating,
 .map-info-address,
 .map-info-distance {
-  font-size: 11.5px;
+  font-size: 10px;
   color: #555;
   margin-bottom: 2px;
 }
@@ -200,8 +214,8 @@
   color: #e07b2a;
   border: 1.5px solid #e07b2a;
   border-radius: 6px;
-  padding: 7px 0;
-  font-size: 12px;
+  padding: 5px 0;
+  font-size: 10.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -226,15 +240,20 @@
   color: #e63946;
 }
 
+.map-info-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .map-info-add-cart-btn {
-  width: 100%;
-  margin-top: 8px;
+  flex: 1;
   background: #2f8d46;
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 8px 0;
-  font-size: 12px;
+  padding: 6px 0;
+  font-size: 9px;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
@@ -250,14 +269,13 @@
 }
 
 .map-info-btn {
-  width: 100%;
-  margin-top: 8px;
+  flex: 1;
   background: #2d6a4f;
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 7px 0;
-  font-size: 12px;
+  padding: 5px 0;
+  font-size: 9px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -480,4 +498,420 @@
     grid-column: 1;
     grid-template-columns: 1fr;
   }
+}
+
+/* "Your Location" hover card on the red pin */
+.user-loc-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 6px 2px 4px;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.user-loc-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ea4335;
+  flex-shrink: 0;
+}
+
+.user-loc-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: rgba(234, 67, 53, 0.3);
+  animation: userLocPulse 1.8s ease-out infinite;
+}
+
+@keyframes userLocPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.user-loc-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.user-loc-sub {
+  font-size: 11px;
+  color: #777;
+  margin-top: 2px;
+}
+
+.gm-style-iw-c {
+  padding: 0 !important;
+}
+
+.gm-style-iw-d {
+  overflow: hidden !important;
+}
+
+/* Google's own close button is positioned relative to its outer wrapper,
+   not the visible card, so it ends up floating outside the box. Hide it
+   and use our own close button drawn inside .map-info-card instead. */
+.gm-ui-hover-effect {
+  display: none !important;
+}
+
+.map-info-card {
+  position: relative;
+}
+
+.map-info-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: #333;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
+.map-info-close:hover {
+  background: #fff;
+}
+
+
+.map-category-overlay {
+  position: absolute;
+  pointer-events: none;
+}
+
+.map-category-line {
+  position: absolute;
+  overflow: visible;
+}
+
+.map-category-line line {
+  stroke: #4a90d9;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.map-category-chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1px dashed #4a90d9;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #1a3a5c;
+  white-space: nowrap;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.business-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.business-detail-modal {
+  width: 400px;
+  max-width: 90vw;
+  height: 100%;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.18);
+  animation: slideInRight 0.25s ease-out;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+.business-detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.business-detail-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.business-detail-body {
+  padding: 16px 20px 20px;
+}
+
+.business-detail-name {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.business-detail-location {
+  margin: 0 0 12px;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pd-main-img-wrap {
+  position: relative;
+  padding-top: 50px;
+}
+.pd-main-img {
+  width: calc(100% - 32px);
+  height: 240px;
+  object-fit: cover;
+  display: block;
+  margin: 0 16px;
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  box-sizing: border-box;
+} 
+.pd-wishlist-btn {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  color: #333;
+}
+.pd-img-counter {
+  position: absolute;
+  bottom: 22px;
+  right: 28px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.pd-thumb-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+.pd-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.pd-thumb.active {
+  border-color: #14532d;
+}
+.pd-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.pd-rating {
+  font-size: 13px;
+  white-space: nowrap;
+  background: #fff7e0;
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+.pd-reviews {
+  color: #888;
+}
+.pd-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+.pd-price {
+  font-size: 24px;
+  font-weight: 700;
+}
+.pd-unit {
+  margin-left: 8px;
+  background: #eee;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.pd-tax-note {
+  font-size: 11.5px;
+  color: #888;
+  margin: 2px 0 0;
+}
+.pd-qty-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.pd-qty-stepper button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+.pd-qty-stepper span {
+  min-width: 24px;
+  text-align: center;
+}
+.pd-action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.pd-add-cart-btn, .pd-buy-now-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pd-add-cart-btn {
+  background: #fff;
+  border: 1px solid #14532d;
+  color: #14532d;
+}
+.pd-buy-now-btn {
+  background: #14532d;
+  border: none;
+  color: #fff;
+}
+
+.pd-feature-row {
+  display: flex;
+  justify-content: space-between;
+  background: #f3f7fb;
+  border-radius: 12px;
+  padding: 12px 8px;
+  margin: 14px 0;
+}
+.pd-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #333;
+  flex: 1;
+  padding: 0 6px;
+  border-right: 1px solid #dbe4ee;
+}
+.pd-feature-item:last-child {
+  border-right: none;
+}
+.pd-feature-item svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.pd-feature-row--veg {
+  background: #eef7ef;
+}
+.pd-feature-item--veg {
+  color: #1a1a1a;
+}
+.pd-feature-item--veg svg {
+  color: #2f8d46;
+}
+.pd-feature-row--fruit {
+  background: #fef6e7;
+}
+.pd-feature-item--fruit {
+  color: #1a1a1a;
+}
+.pd-feature-item--fruit svg {
+  color: #e8730c;
+}
+
+.pd-feature-row--fish {
+  background: #eaf1fb;
+}
+.pd-feature-item--fish {
+  color: #1a1a1a;
+}
+.pd-feature-item--fish svg {
+  color: #1e56a8;
+}
+
+.map-info-qty-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  border: 1px solid #2f8d46;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.map-info-qty-btn {
+  border: none;
+  background: transparent;
+  color: #2f8d46;
+  font-size: 13px;
+  font-weight: 700;
+  width: 16px;
+  cursor: pointer;
+}
+.map-info-qty-value {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.map-info-remove-btn {
+  border: none;
+  background: #fdecea;
+  color: #e63946;
+  border-radius: 6px;
+  width: 26px;
+  font-size: 11px;
+  cursor: pointer;
 }

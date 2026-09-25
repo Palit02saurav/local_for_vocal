@@ -1,6 +1,6 @@
 import { showToast } from "./toast";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 const normalizeItem = (raw) => {
   const source = raw.item_type === "service" ? raw.service : raw.product;

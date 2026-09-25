@@ -8,7 +8,7 @@ import { addToCart } from "@/lib/cart";
 import { addToWishlist, removeFromWishlist, isWishlisted } from "@/lib/wishlist";
 import "./product.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ProductDetail({ slug }) {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function ProductDetail({ slug }) {
     );
   }
 
-  const sellerName = product.seller?.store_name || product.seller?.full_name || "Geoinformaticx";
+  const sellerName = product.seller?.store_name || product.seller?.full_name || product.vendor?.full_name || "Geoinformaticx";
   const fallbackImage = "https://placehold.co/600x600?text=No+Image";
   const galleryImages = [
     product.image_url,

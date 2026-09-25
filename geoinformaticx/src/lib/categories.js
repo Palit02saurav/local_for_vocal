@@ -33,6 +33,7 @@ export const ALL_LEGEND_CATEGORIES = [
 export const LISTING_TYPES = ["All", "Products", "Services"];
 
 export const BUSINESS_TYPES = [
+  "Fresh Delivery",
   "Retail Shop",
   "Home-based",
   "Farm / Producer",

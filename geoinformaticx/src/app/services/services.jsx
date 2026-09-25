@@ -21,19 +21,21 @@ export default function Services() {
 
   const [allServices, setAllServices] = useState([]);
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/services/public")
-      .then((res) => {
-        const services = (res.data.data?.products || res.data.data?.services || []).map((s) => ({
-          ...s,
-          slug: s.sku,
-          img: s.image_url || "https://placehold.co/300x300?text=No+Image",
-        }));
-        setAllServices(services);
-      })
-      .catch((err) => console.error("Failed to load services:", err));
-  }, []);
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+useEffect(() => {
+  axios
+    .get(`${API_BASE}/services/public`)
+    .then((res) => {
+      const services = (res.data.data?.products || res.data.data?.services || []).map((s) => ({
+        ...s,
+        slug: s.sku,
+        img: s.image_url || "https://placehold.co/300x300?text=No+Image",
+      }));
+      setAllServices(services);
+    })
+    .catch((err) => console.error("Failed to load services:", err));
+}, []);
 
   const syncWishlist = async () => {
     const list = await getWishlist();
@@ -244,12 +246,12 @@ export default function Services() {
               }} style={{ width: "100%", height: "100%" }} />
             </div>
             <div className="map-legend">
-              <div className="legend-item"><img src="/images/maplogo1.png" alt="" /><span>Handicrafts</span></div>
-              <div className="legend-item"><img src="/images/maplogo2.png" alt="" /><span>Local Food</span></div>
-              <div className="legend-item"><img src="/images/maplogo3.png" alt="" /><span>Organic</span></div>
-              <div className="legend-item"><img src="/images/maplogo4.png" alt="" /><span>Clothing</span></div>
-              <div className="legend-item"><img src="/images/maplogo5.png" alt="" /><span>Home Decor</span></div>
-              <div className="legend-item"><img src="/images/maplogo6.png" alt="" /><span>Other Shops</span></div>
+              <div className="legend-item"><img src="/images/handic.png" alt="" /><span>Handicrafts</span></div>
+              <div className="legend-item"><img src="/images/local.png" alt="" /><span>Local Food</span></div>
+              <div className="legend-item"><img src="/images/organic.png" alt="" /><span>Organic</span></div>
+              <div className="legend-item"><img src="/images/clothing.png" alt="" /><span>Clothing</span></div>
+              <div className="legend-item"><img src="/images/home.png" alt="" /><span>Home Decor</span></div>
+              <div className="legend-item"><img src="/images/others.png" alt="" /><span>Other Shops</span></div>
             </div>
           </div>
 
@@ -260,7 +262,7 @@ export default function Services() {
                 <p>Find trusted local service providers near you.</p>
               </div>
               <div className="support-right">
-                <img src="/images/support_local.png" alt="Support" />
+                <img src="/images/hand.png" alt="Support" />
               </div>
             </div>
           </div>

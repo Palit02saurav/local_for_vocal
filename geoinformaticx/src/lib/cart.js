@@ -7,8 +7,8 @@ const client = axios.create({ baseURL: API_BASE, withCredentials: true });
 const normalizeItem = (raw) => {
   const source = raw.item_type === "service" ? raw.service : raw.product;
   return {
-    cartItemId: raw.id,                 // use this for update/remove calls
-    id: source?.id,                     // underlying product/service id
+    cartItemId: raw.id,                
+    id: source?.id,                  
     name: source?.name,
     seller: source?.seller?.store_name,
     verified: source?.verified ?? false,
@@ -16,6 +16,8 @@ const normalizeItem = (raw) => {
     image: source?.image_url || "https://placehold.co/300x300?text=No+Image",
     quantity: raw.quantity,
     type: raw.item_type,
+
+    isFreshDelivery: raw.item_type === "product" && source?.delivery_type === "Fresh",
   };
 };
 

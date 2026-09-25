@@ -276,7 +276,7 @@ export default function Shop() {
                 <div className="product-info">
                   <p className="product-name">{product.name}</p>
                   <p className="product-seller">
-                    {product.seller?.store_name}
+                    {product.seller?.store_name || product.vendor?.full_name}
                     <img src="/images/verified.png" alt="" className="product-verified-icon" />
                   </p>
                   <div className="product-meta">
@@ -342,27 +342,27 @@ export default function Shop() {
 
             <div className="map-legend">
               <div className="legend-item">
-                <img src="/images/maplogo1.png" alt="" />
+                <img src="/images/handic.png" alt="Handicrafts" />
                 <span>Handicrafts</span>
               </div>
               <div className="legend-item">
-                <img src="/images/maplogo2.png" alt="" />
+                <img src="/images/local.png" alt="Local Food" />
                 <span>Local Food</span>
               </div>
               <div className="legend-item">
-                <img src="/images/maplogo3.png" alt="" />
+                <img src="/images/organic.png" alt="Organic" />
                 <span>Organic</span>
               </div>
               <div className="legend-item">
-                <img src="/images/maplogo4.png" alt="" />
+                <img src="/images/clothing.png" alt="Clothing" />
                 <span>Clothing</span>
               </div>
               <div className="legend-item">
-                <img src="/images/maplogo5.png" alt="" />
+                <img src="/images/home.png" alt="Home Decor" />
                 <span>Home Decor</span>
               </div>
               <div className="legend-item">
-                <img src="/images/maplogo6.png" alt="" />
+                <img src="/images/others.png" alt="Other Shops" />
                 <span>Other Shops</span>
               </div>
             </div>
@@ -400,7 +400,7 @@ export default function Shop() {
                 </p>
               </div>
               <div className="support-right">
-                <img src="/images/support_local.png" alt="Support Local" />
+                <img src="/images/hand.png" alt="Support Local" />
               </div>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function Shop() {
             <div className="details-body">
               <h2 className="details-name">{selectedProduct.name}</h2>
               <p className="details-seller">
-                By {selectedProduct.seller?.store_name}
+                By {selectedProduct.seller?.store_name || selectedProduct.vendor?.full_name}
                 {selectedProduct.verified && (
                   <img src="/images/verified.png" alt="" className="details-verified-icon" />
                 )}
@@ -432,7 +432,7 @@ export default function Shop() {
               </div>
               <h3 className="details-section-title">About This Product</h3>
               <p className="details-about">
-                {selectedProduct.name} from {selectedProduct.seller?.store_name}, a trusted local
+                {selectedProduct.name} from {selectedProduct.seller?.store_name || selectedProduct.vendor?.full_name}, a trusted local
                 seller in the {selectedProduct.category} category. Every purchase supports
                 local artisans and small businesses in your community.
               </p>
