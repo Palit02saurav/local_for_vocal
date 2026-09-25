@@ -97,6 +97,7 @@ exports.getMe = async (userId, userRole) => {
       'id', 'full_name', 'email', 'store_name', 'phone', 'location',
       'business_address', 'seller_type', 'gst_number',
       'business_registration_number', 'pan_number', 'approval_status',
+      'profile_image_url',
     ],
   });
 
@@ -151,13 +152,10 @@ exports.updateMe = async (userId, userRole, body) => {
     throw err;
   }
 
-  const { store_name, full_name, phone, location, business_address } = body;
+  const { business_address, profile_image_url } = body;
 
-  if (store_name !== undefined) seller.store_name = store_name;
-  if (full_name !== undefined) seller.full_name = full_name;
-  if (phone !== undefined) seller.phone = phone;
-  if (location !== undefined) seller.location = location;
   if (business_address !== undefined) seller.business_address = business_address;
+  if (profile_image_url !== undefined) seller.profile_image_url = profile_image_url;
 
   await seller.save();
 

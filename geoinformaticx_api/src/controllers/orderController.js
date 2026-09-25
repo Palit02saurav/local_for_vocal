@@ -38,6 +38,8 @@ exports.listAll = async (req, res) => {
     let orders;
     if (req.userRole === 'SELLER') {
       orders = await OrderService.listSellerOrders(req.userId);
+    } else if (req.userRole === 'VENDOR') {
+      orders = await OrderService.listVendorOrders(req.userId);
     } else if (req.userRole === 'SUPER_ADMIN') {
       orders = await OrderService.listAllOrders();
     } else {

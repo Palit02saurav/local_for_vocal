@@ -1,9 +1,13 @@
 const bcrypt = require('bcrypt');
-const { Admin, Seller } = require('../models');
+const { Admin, Seller, Vendor } = require('../models');
 const { generateToken, setAuthCookie } = require('../utils/tokenUtils');
 const NotificationService = require('./notificationService');
 
 exports.signup = async (body) => {
+  if (body.account_type === 'vendor') {
+    return exports.vendorSignup(body);
+  }
+
   const {
     full_name, email, store_name, phone, location, seller_type,
     gst_number, business_registration_number, pan_number,
@@ -92,6 +96,11 @@ exports.login = async (body, res) => {
   }
 
   if (!account) {
+    account = await Vendor.findOne({ where: { phone: email } });
+    resolvedRole = 'VENDOR';
+  }
+
+  if (!account) {
     const err = new Error('Invalid email or password.');
     err.status = 401;
     throw err;
@@ -110,17 +119,86 @@ exports.login = async (body, res) => {
   return {
     id: account.id,
     full_name: account.full_name,
-    email: account.email,
+    email: account.email || account.phone,
     role: resolvedRole,
     seller_type: resolvedRole === 'SELLER' ? account.seller_type : null,
   };
 };
 
+exports.vendorSignup = async (body) => {
+  const { full_name, phone, address, id_type, id_number, latitude, longitude } = body;
+
+  if (!full_name || !phone || !address || !id_type || !id_number) {
+    const err = new Error('All fields are required.');
+    err.status = 400;
+    throw err;
+  }
+
+  if (!/^\d{10}$/.test(phone)) {
+    const err = new Error('Mobile number must be exactly 10 digits.');
+    err.status = 400;
+    throw err;
+  }
+
+  if (!['aadhaar', 'pan'].includes(id_type)) {
+    const err = new Error('Invalid ID type.');
+    err.status = 400;
+    throw err;
+  }
+
+  if (id_type === 'aadhaar' && !/^\d{12}$/.test(id_number)) {
+    const err = new Error('Aadhaar number must be 12 digits.');
+    err.status = 400;
+    throw err;
+  }
+
+  if (id_type === 'pan' && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(id_number)) {
+    const err = new Error('Enter a valid PAN number.');
+    err.status = 400;
+    throw err;
+  }
+
+  const existing = await Vendor.findOne({ where: { phone } });
+  if (existing) {
+    const err = new Error('An account with this mobile number already exists.');
+    err.status = 409;
+    throw err;
+  }
+
+  const vendor = await Vendor.create({
+    full_name,
+    phone,
+    address,
+    latitude: latitude || null,
+    longitude: longitude || null,
+    id_type,
+    id_number,
+    password_hash: null,
+    approval_status: 'Pending',
+  });
+
+  await NotificationService.create({
+    type: 'VENDOR_SIGNUP',
+    title: 'New street vendor signup request',
+    message: `${vendor.full_name} applied to register as a street vendor.`,
+    link: '/vendors/requests',
+    recipientRole: 'SUPER_ADMIN',
+  });
+
+  return { id: vendor.id, full_name: vendor.full_name, phone: vendor.phone };
+};
+
 exports.me = async (userId, userRole) => {
-  const Model = userRole === 'SUPER_ADMIN' ? Admin : Seller;
+  const Model = userRole === 'SUPER_ADMIN' ? Admin : userRole === 'VENDOR' ? Vendor : Seller;
   const attrs = userRole === 'SUPER_ADMIN'
     ? ['id', 'full_name', 'email']
-    : ['id', 'full_name', 'email', 'seller_type', 'store_name', 'phone', 'location', 'business_address'];
+    : userRole === 'VENDOR'
+    ? ['id', 'full_name', 'phone', 'address', 'id_type', 'id_number', 'approval_status']
+    : [
+        'id', 'full_name', 'email', 'seller_type', 'store_name', 'phone', 'location',
+        'business_address', 'gst_number', 'business_registration_number', 'pan_number',
+        'profile_image_url',
+      ];
 
   const account = await Model.findByPk(userId, { attributes: attrs });
   if (!account) {

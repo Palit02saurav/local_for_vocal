@@ -30,6 +30,10 @@ const Seller = sequelize.define('Seller', {
   business_address: {
     type: DataTypes.TEXT,
   },
+  profile_image_url: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
   status: {
     type: DataTypes.ENUM('Pending', 'Active', 'Suspended'),
     defaultValue: 'Pending',

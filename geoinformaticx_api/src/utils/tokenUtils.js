@@ -1,5 +1,16 @@
 const jwt = require('jsonwebtoken');
 
+const isProd = process.env.NODE_ENV === 'production';
+
+// The SAME options must be used when setting and clearing a cookie.
+// Prod (dashboard and API on different domains): SameSite=None + Secure
+// Local dev (localhost, same-site): Lax works and needs no HTTPS
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
+};
+
 exports.generateToken = (account, role) =>
   jwt.sign(
     { id: account.id, email: account.email, role },
@@ -9,11 +20,13 @@ exports.generateToken = (account, role) =>
 
 exports.setAuthCookie = (res, token) => {
   res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+};
+
+exports.clearAuthCookie = (res) => {
+  res.clearCookie('token', cookieOptions);
 };
 
 exports.generateCustomerToken = (customer) =>
@@ -25,9 +38,11 @@ exports.generateCustomerToken = (customer) =>
 
 exports.setCustomerAuthCookie = (res, token) => {
   res.cookie('customer_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    ...cookieOptions,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
+};
+
+exports.clearCustomerAuthCookie = (res) => {
+  res.clearCookie('customer_token', cookieOptions);
 };

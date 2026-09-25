@@ -13,6 +13,8 @@ exports.listServices = async (userId, userRole) => {
   if (userRole === 'SELLER') {
     where.seller_id = userId;
     where.approval_status = 'Approved';
+  } else if (userRole === 'VENDOR') {
+    where.vendor_id = userId;
   } else if (userRole === 'SUPER_ADMIN') {
     where[Op.or] = [
       { created_by_role: 'ADMIN' },

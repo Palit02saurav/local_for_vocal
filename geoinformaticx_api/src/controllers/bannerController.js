@@ -21,6 +21,16 @@ exports.listMine = async (req, res) => {
   }
 };
 
+exports.listPublic = async (req, res) => {
+  try {
+    const banners = await BannerService.listPublicBanners();
+    CommonService.sendResponse(res, 200, true, 'Banners fetched successfully', { banners });
+  } catch (err) {
+    console.error('List public banners error:', err);
+    CommonService.sendResponse(res, 500, false, 'Server error fetching banners.');
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     const banner = await BannerService.createBanner(req.body, req.userId, req.userRole);
@@ -61,22 +71,22 @@ exports.reject = async (req, res) => {
   }
 };
 
-exports.createPaymentOrder = async (req, res) => {
-  try {
-    const order = await BannerService.createPaymentOrder(req.params.id, req.userId, req.userRole);
-    CommonService.sendResponse(res, 200, true, 'Payment order created.', order);
-  } catch (err) {
-    console.error('Create payment order error:', err);
-    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error creating payment order.');
-  }
-};
+// exports.createPaymentOrder = async (req, res) => {
+//   try {
+//     const order = await BannerService.createPaymentOrder(req.params.id, req.userId, req.userRole);
+//     CommonService.sendResponse(res, 200, true, 'Payment order created.', order);
+//   } catch (err) {
+//     console.error('Create payment order error:', err);
+//     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error creating payment order.');
+//   }
+// };
 
-exports.verifyPayment = async (req, res) => {
-  try {
-    const banner = await BannerService.verifyPayment(req.params.id, req.userId, req.userRole, req.body);
-    CommonService.sendResponse(res, 200, true, 'Payment verified. Banner published!', { banner });
-  } catch (err) {
-    console.error('Verify payment error:', err);
-    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Payment verification failed.');
-  }
-};
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const banner = await BannerService.verifyPayment(req.params.id, req.userId, req.userRole, req.body);
+//     CommonService.sendResponse(res, 200, true, 'Payment verified. Banner published!', { banner });
+//   } catch (err) {
+//     console.error('Verify payment error:', err);
+//     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Payment verification failed.');
+//   }
+// };

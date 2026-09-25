@@ -1,4 +1,4 @@
-const { Product, Seller, Producteditrequest: ProductEditRequest } = require('../models');
+const { Product, Seller, Vendor, Producteditrequest: ProductEditRequest } = require('../models');
 const { Op } = require('sequelize');
 
 const EDITABLE_FIELDS = ['category', 'price', 'stock', 'image_url', 'gallery_urls', 'description'];
@@ -9,12 +9,14 @@ function resolveStatus(stock) {
   return 'Active';
 }
 
-exports.listProducts = async (userId, userRole, productType, approvalStatus) => {
+exports.listProducts = async (userId, userRole, productType, approvalStatus, deliveryType) => {
   const where = {};
 
   if (userRole === 'SELLER') {
     where.seller_id = userId;
     where.approval_status = approvalStatus === 'Pending' ? 'Pending' : 'Approved';
+  } else if (userRole === 'VENDOR') {
+    where.vendor_id = userId;
   } else if (userRole === 'SUPER_ADMIN') {
     where[Op.or] = [
       { created_by_role: 'ADMIN' },
@@ -26,25 +28,38 @@ exports.listProducts = async (userId, userRole, productType, approvalStatus) => 
     throw err;
   }
 
-  where.product_type = productType || 'Regular';
+  if (productType !== 'All') where.product_type = productType || 'Regular';
+  if (deliveryType !== 'All') where.delivery_type = deliveryType === 'Fresh' ? 'Fresh' : 'Standard';  
 
   return Product.findAll({
     where,
-    include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] }],
+    include: [
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
+      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] },
+    ],
     order: [['created_at', 'DESC']],
   });
 };
 
-exports.createProduct = async (body, userId, userRole) => {
-  const { name, sku, category, price, stock, image_url, gallery_urls, description, product_type } = body;
+exports.createProduct= async (body, userId, userRole) => {
+ const {
+    name, sku, category, price, stock, image_url, gallery_urls, description, product_type,
+    delivery_type, unit, shelf_life, prep_time_minutes,
+  } = body;
   let { seller_id } = body;
 
   let admin_id = null;
   let created_by_role;
 
+    let vendor_id = null;
+
   if (userRole === 'SELLER') {
     created_by_role = 'SELLER';
     seller_id = userId;
+  } else if (userRole === 'VENDOR') {
+    created_by_role = 'VENDOR';
+    vendor_id = userId;
+    seller_id = null;
   } else if (userRole === 'SUPER_ADMIN') {
     created_by_role = 'ADMIN';
     admin_id = userId;
@@ -55,13 +70,40 @@ exports.createProduct = async (body, userId, userRole) => {
     throw err;
   }
 
-  if (!name || !sku || !category || price == null) {
-    const err = new Error('Name, SKU, category, and price are required.');
+  if (!name || !category || price == null) {
+    const err = new Error('Name, category, and price are required.');
+    err.status = 400;
+    throw err;
+  }
+  if (created_by_role !== 'VENDOR' && !sku) {
+    const err = new Error('SKU is required.');
     err.status = 400;
     throw err;
   }
 
-  const existingSku = await Product.findOne({ where: { sku } });
+const isFresh = delivery_type === 'Fresh';
+  if (isFresh) {
+    if (!image_url) {
+      const err = new Error('At least one image is required for Fresh Delivery products.');
+      err.status = 400;
+      throw err;
+    }
+    if (!unit) {
+      const err = new Error('Unit is required for Fresh Delivery products.');
+      err.status = 400;
+      throw err;
+    }
+    if (created_by_role !== 'VENDOR' && !prep_time_minutes) {
+      const err = new Error('Packing time is required for Fresh Delivery products.');
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  // Vendors don't enter a SKU on the form — generate one server-side.
+  const finalSku = sku || `VND-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  const existingSku = await Product.findOne({ where: { sku: finalSku } });
   if (existingSku) {
     const err = new Error('A product with this SKU already exists.');
     err.status = 409;
@@ -77,17 +119,28 @@ exports.createProduct = async (body, userId, userRole) => {
     }
   }
 
-  const stockNum = Number(stock) || 0;
-  const approval_status = created_by_role === 'ADMIN' ? 'Approved' : 'Pending';
+const VENDOR_DEFAULT_STOCK = 100; // change as you like
+  const stockNum =
+    created_by_role === 'VENDOR' && (stock === undefined || stock === null || stock === '')
+      ? VENDOR_DEFAULT_STOCK
+      : Number(stock) || 0;
+  const approval_status = created_by_role === 'ADMIN' || created_by_role === 'VENDOR'
+    ? 'Approved'
+    : 'Pending';
 
   return Product.create({
     name,
-    sku,
+    sku: finalSku,
     category,
     seller_id,
     admin_id,
+    vendor_id,
     created_by_role,
-    product_type: product_type === 'Regional Famous' ? 'Regional Famous' : 'Regular',
+  product_type: !isFresh && product_type === 'Regional Famous' ? 'Regional Famous' : 'Regular',
+    delivery_type: isFresh ? 'Fresh' : 'Standard',
+    unit: isFresh ? unit : null,
+    shelf_life: isFresh ? shelf_life || null : null,
+    prep_time_minutes: isFresh && prep_time_minutes ? Number(prep_time_minutes) : null,
     approval_status,
     price: Number(price),
     stock: stockNum,
@@ -98,7 +151,81 @@ exports.createProduct = async (body, userId, userRole) => {
   });
 };
 
-exports.listRequests = async (userRole, productType) => {
+//   if (userRole === 'SELLER') {
+//     created_by_role = 'SELLER';
+//     seller_id = userId;
+//   } else if (userRole === 'SUPER_ADMIN') {
+//     created_by_role = 'ADMIN';
+//     admin_id = userId;
+//     seller_id = null;
+//   } else {
+//     const err = new Error('Not authorized to create products.');
+//     err.status = 403;
+//     throw err;
+//   }
+
+//   if (!name || !sku || !category || price == null) {
+//     const err = new Error('Name, SKU, category, and price are required.');
+//     err.status = 400;
+//     throw err;
+//   }
+
+// const isFresh = delivery_type === 'Fresh';
+//   if (isFresh) {
+//     if (!image_url) {
+//       const err = new Error('At least one image is required for Fresh Delivery products.');
+//       err.status = 400;
+//       throw err;
+//     }
+//     if (!unit || !prep_time_minutes) {
+//       const err = new Error('Unit and packing time are required for Fresh Delivery products.');
+//       err.status = 400;
+//       throw err;
+//     }
+//   }
+
+//   const existingSku = await Product.findOne({ where: { sku } });
+//   if (existingSku) {
+//     const err = new Error('A product with this SKU already exists.');
+//     err.status = 409;
+//     throw err;
+//   }
+
+//   if (created_by_role === 'SELLER') {
+//     const seller = await Seller.findByPk(seller_id);
+//     if (!seller) {
+//       const err = new Error('Seller account not found.');
+//       err.status = 400;
+//       throw err;
+//     }
+//   }
+
+//   const stockNum = Number(stock) || 0;
+//   const approval_status = created_by_role === 'ADMIN' ? 'Approved' : 'Pending';
+
+//   return Product.create({
+//     name,
+//     sku,
+//     category,
+//     seller_id,
+//     admin_id,
+//     created_by_role,
+//   product_type: !isFresh && product_type === 'Regional Famous' ? 'Regional Famous' : 'Regular',
+//     delivery_type: isFresh ? 'Fresh' : 'Standard',
+//     unit: isFresh ? unit : null,
+//     shelf_life: isFresh ? shelf_life || null : null,
+//     prep_time_minutes: isFresh ? Number(prep_time_minutes) : null,
+//     approval_status,
+//     price: Number(price),
+//     stock: stockNum,
+//     status: resolveStatus(stockNum),
+//     image_url: image_url || null,
+//     gallery_urls: gallery_urls || null,
+//     description: description || null,
+//   });
+// };
+
+exports.listRequests = async (userRole, productType, deliveryType) => {
   if (userRole !== 'SUPER_ADMIN') {
     const err = new Error('Not authorized.');
     err.status = 403;
@@ -108,6 +235,7 @@ exports.listRequests = async (userRole, productType) => {
     created_by_role: 'SELLER',
     approval_status: 'Pending',
     product_type: productType || 'Regular',
+    delivery_type: deliveryType === 'Fresh' ? 'Fresh' : 'Standard',
   };
   return Product.findAll({
     where,
@@ -150,13 +278,37 @@ exports.rejectProduct = async (id, userRole) => {
   return product;
 };
 
+exports.deleteProduct = async (id, userId, userRole) => {
+  const product = await Product.findByPk(id);
+  if (!product) {
+    const err = new Error('Product not found.');
+    err.status = 404;
+    throw err;
+  }
+
+  const isOwner =
+    (userRole === 'VENDOR' && product.vendor_id === userId) ||
+    (userRole === 'SELLER' && product.seller_id === userId);
+
+  if (userRole !== 'SUPER_ADMIN' && !isOwner) {
+    const err = new Error('You can only delete your own products.');
+    err.status = 403;
+    throw err;
+  }
+
+  await product.destroy();
+};
+
 exports.listPublicProducts = () => {
   return Product.findAll({
     where: {
       approval_status: 'Approved',
-      status: { [Op.ne]: 'Out of Stock' }, 
+      status: { [Op.ne]: 'Out of Stock' },
     },
-    include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude'] }],
+    include: [
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude'] },
+      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name', 'address', 'latitude', 'longitude'] },
+    ],
     order: [['created_at', 'DESC']],
   });
 };

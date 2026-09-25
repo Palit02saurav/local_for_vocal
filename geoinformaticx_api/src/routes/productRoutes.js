@@ -5,6 +5,7 @@ const verifyToken = require('../middlewares/auth');
 
 router.get('/', verifyToken, productController.list);
 router.post('/', verifyToken, productController.create);
+router.delete('/:id', verifyToken, productController.remove);
 
 router.get('/requests', verifyToken, productController.listRequests);
 router.patch('/:id/approve', verifyToken, productController.approve);

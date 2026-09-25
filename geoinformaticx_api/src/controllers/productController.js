@@ -3,7 +3,7 @@ const CommonService = require('../services/commonService');
 
 exports.list = async (req, res) => {
   try {
-    const products = await ProductService.listProducts(req.userId, req.userRole, req.query.productType, req.query.approvalStatus);
+    const products = await ProductService.listProducts(req.userId, req.userRole, req.query.productType, req.query.approvalStatus, req.query.deliveryType);
     CommonService.sendResponse(res, 200, true, 'Products fetched successfully', { products });
   } catch (err) {
     console.error('List products error:', err);
@@ -33,7 +33,7 @@ exports.create = async (req, res) => {
 
 exports.listRequests = async (req, res) => {
   try {
-    const products = await ProductService.listRequests(req.userRole, req.query.productType);
+    const products = await ProductService.listRequests(req.userRole, req.query.productType, req.query.deliveryType);
     CommonService.sendResponse(res, 200, true, 'Product requests fetched successfully', { products });
   } catch (err) {
     console.error('List product requests error:', err);
@@ -101,5 +101,17 @@ exports.rejectEditRequest = async (req, res) => {
   } catch (err) {
     console.error('Reject edit request error:', err);
     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error rejecting edit request.');
+  }
+};
+
+
+
+exports.remove = async (req, res) => {
+  try {
+    await ProductService.deleteProduct(req.params.id, req.userId, req.userRole);
+    CommonService.sendResponse(res, 200, true, 'Product deleted successfully.');
+  } catch (err) {
+    console.error('Delete product error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error deleting product.');
   }
 };

@@ -172,3 +172,26 @@ exports.listSellerOrders = async (sellerId) => {
     return false;
   });
 };
+
+
+
+
+exports.listVendorOrders = async (vendorId) => {
+  return OrderItem.findAll({
+    where: { item_type: 'product' },
+    include: [
+      {
+        model: Order,
+        as: 'order',
+        include: [{ model: Customer, as: 'customer' }],
+      },
+      {
+        model: Product,
+        as: 'product',
+        required: true,
+        where: { vendor_id: vendorId },
+      },
+    ],
+    order: [['created_at', 'DESC']],
+  });
+};

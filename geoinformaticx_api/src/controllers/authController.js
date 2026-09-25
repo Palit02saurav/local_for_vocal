@@ -1,5 +1,6 @@
 const AuthService = require('../services/authService');
 const CommonService = require('../services/commonService');
+const { clearAuthCookie } = require('../utils/tokenUtils');
 
 exports.signup = async (req, res) => {
   try {
@@ -22,7 +23,7 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.clearCookie('token');
+  clearAuthCookie(res);
   CommonService.sendResponse(res, 200, true, 'Logged out successfully.');
 };
 

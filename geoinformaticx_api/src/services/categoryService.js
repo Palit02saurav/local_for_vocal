@@ -2,7 +2,7 @@ const { Category } = require('../models');
 
 exports.listCategories = (userRole, queryType) => {
   const where = userRole === 'SUPER_ADMIN' ? {} : { status: 'Active' };
-  if (queryType === 'product' || queryType === 'service') {
+  if (['product', 'service', 'fresh'].includes(queryType)) {
     where.type = queryType;
   }
   return Category.findAll({
@@ -36,7 +36,7 @@ exports.createCategory = async (body, userRole) => {
     name: name.trim(),
     description: description?.trim() || null,
     image_url: image_url || null,
-    type: type === 'service' ? 'service' : 'product',
+    type: ['service', 'fresh'].includes(type) ? type : 'product',
   });
 };
 

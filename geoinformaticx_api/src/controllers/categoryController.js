@@ -40,3 +40,13 @@ exports.remove = async (req, res) => {
     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error deleting category.');
   }
 };
+
+exports.listPublic = async (req, res) => {
+  try {
+    const categories = await CategoryService.listCategories(null, req.query.type);
+    CommonService.sendResponse(res, 200, true, 'Categories fetched successfully', { categories });
+  } catch (err) {
+    console.error('List public categories error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching categories.');
+  }
+};

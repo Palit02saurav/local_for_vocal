@@ -5,6 +5,7 @@ router.use('/auth', require('./authRoutes'));
 router.use('/customer/auth', require('./customerAuthRoutes'));
 router.use('/products', require('./productRoutes'));
 router.use('/sellers', require('./sellerRoutes'));
+router.use('/vendors', require('./vendorRoutes'));
 router.use('/categories', require('./categoryRoutes'));
 router.use('/services', require('./serviceRoutes'));
 router.use('/banners', require('./bannerRoutes'));
