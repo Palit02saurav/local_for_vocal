@@ -1,5 +1,5 @@
-const { Product, Seller, Vendor, Producteditrequest: ProductEditRequest } = require('../models');
-const { Op } = require('sequelize');
+const { Product, Seller, Vendor, Review, Producteditrequest: ProductEditRequest } = require('../models');
+const { Op, fn, col } = require('sequelize');
 
 const EDITABLE_FIELDS = ['category', 'price', 'stock', 'image_url', 'gallery_urls', 'description'];
 
@@ -299,8 +299,8 @@ exports.deleteProduct = async (id, userId, userRole) => {
   await product.destroy();
 };
 
-exports.listPublicProducts = () => {
-  return Product.findAll({
+exports.listPublicProducts = async () => {
+  const products = await Product.findAll({
     where: {
       approval_status: 'Approved',
       status: { [Op.ne]: 'Out of Stock' },
@@ -311,6 +311,30 @@ exports.listPublicProducts = () => {
     ],
     order: [['created_at', 'DESC']],
   });
+
+  // One grouped query for all ratings: average + count per product
+  const stats = await Review.findAll({
+    attributes: [
+      'product_id',
+      [fn('AVG', col('rating')), 'avg_rating'],
+      [fn('COUNT', col('id')), 'review_count'],
+    ],
+    group: ['product_id'],
+    raw: true,
+  });
+  const statsByProduct = {};
+  stats.forEach((s) => {
+    statsByProduct[s.product_id] = {
+      avg_rating: Number(Number(s.avg_rating).toFixed(1)),
+      review_count: Number(s.review_count),
+    };
+  });
+
+  return products.map((p) => ({
+    ...p.toJSON(),
+    avg_rating: statsByProduct[p.id]?.avg_rating || 0,
+    review_count: statsByProduct[p.id]?.review_count || 0,
+  }));
 };
 
 // ── Seller edit requests for already-approved products ────────────────────

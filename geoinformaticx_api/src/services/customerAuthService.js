@@ -94,7 +94,7 @@ exports.updateProfile = async (customerId, body) => {
   const { name, phone, dob, address, city, state, pincode } = body;
   if (name !== undefined) customer.name = name;
   if (phone !== undefined) customer.phone = phone;
-  if (dob !== undefined) customer.dob = dob;
+  if (dob !== undefined) customer.dob = dob === "" ? null : dob;
   if (address !== undefined) customer.address = address;
   if (city !== undefined) customer.city = city;
   if (state !== undefined) customer.state = state;
@@ -177,14 +177,14 @@ exports.resendOtp = async (email) => {
   );
 };
 
-exports.me = async (customerId) => {
-  const customer = await Customer.findByPk(customerId, {
-    attributes: ['id', 'name', 'email', 'phone', 'is_active'],
-  });
-  if (!customer || !customer.is_active) {
-    const err = new Error('Not authenticated.');
-    err.status = 401;
-    throw err;
-  }
-  return customer;
-};
+// exports.me = async (customerId) => {
+//   const customer = await Customer.findByPk(customerId, {
+//     attributes: ['id', 'name', 'email', 'phone', 'is_active'],
+//   });
+//   if (!customer || !customer.is_active) {
+//     const err = new Error('Not authenticated.');
+//     err.status = 401;
+//     throw err;
+//   }
+//   return customer;
+// };

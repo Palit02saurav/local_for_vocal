@@ -14,7 +14,7 @@ exports.listServices = async (userId, userRole) => {
     where.seller_id = userId;
     where.approval_status = 'Approved';
   } else if (userRole === 'VENDOR') {
-    where.vendor_id = userId;
+    where.admin_id = userId;
   } else if (userRole === 'SUPER_ADMIN') {
     where[Op.or] = [
       { created_by_role: 'ADMIN' },

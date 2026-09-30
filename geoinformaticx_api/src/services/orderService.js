@@ -1,5 +1,34 @@
-const { Order, OrderItem, Customer, Product, Service } = require('../models');
+const { Order, OrderItem, Customer, Product, Service, Seller, Review } = require('../models');
 const { Op } = require('sequelize');
+const { sendServiceBookingEmail } = require('../utils/otpUtils');
+
+const notifyServiceSellers = async (serviceItems, order, form) => {
+  const services = await Service.findAll({
+    where: { id: serviceItems.map((i) => i.id) },
+    include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'email'] }],
+  });
+
+  const bySeller = {};
+  for (const item of serviceItems) {
+    const svc = services.find((s) => s.id === item.id);
+    if (!svc?.seller?.email) continue; 
+    const key = svc.seller.id;
+    if (!bySeller[key]) bySeller[key] = { seller: svc.seller, items: [] };
+    bySeller[key].items.push(item);
+  }
+
+  for (const { seller, items } of Object.values(bySeller)) {
+    await sendServiceBookingEmail({
+      to: seller.email,
+      sellerName: seller.full_name,
+      orderId: order.id,
+      customer: { name: form.name, phone: form.phone, email: form.email, address: form.address },
+      items,
+      total: items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0),
+      paymentMethod: form.paymentMethod,
+    });
+  }
+};
 
 exports.createOrder = async (customerId, cartItems, form) => {
   if (!cartItems || cartItems.length === 0) {
@@ -8,48 +37,79 @@ exports.createOrder = async (customerId, cartItems, form) => {
     throw err;
   }
 
-  const total = cartItems.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+  const productItems = cartItems.filter((i) => (i.type || 'product') === 'product');
+  const serviceItems = cartItems.filter((i) => i.type === 'service');
 
-  const order = await Order.create({
-    customer_id: customerId,
-    full_name: form.name,
-    phone: form.phone,
-    email: form.email,
-    address: form.address,
-    payment_method: form.paymentMethod || 'cod',
-    status: 'Processing',
-    total,
-  });
+  const createGroup = async (items, status) => {
+    const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
 
-  const itemsToCreate = cartItems.map((item) => ({
-    order_id: order.id,
-    item_type: item.type || 'product',
-    product_id: item.type === 'service' ? null : item.id,
-    service_id: item.type === 'service' ? item.id : null,
-    name: item.name,
-    seller_name: item.seller || null,
-    image_url: item.image || null,
-    price: Number(item.price),
-    quantity: item.quantity,
-  }));
+    const order = await Order.create({
+      customer_id: customerId,
+      full_name: form.name,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      payment_method: form.paymentMethod || 'cod',
+      status,
+      total,
+    });
 
-  await OrderItem.bulkCreate(itemsToCreate);
+    await OrderItem.bulkCreate(
+      items.map((item) => ({
+        order_id: order.id,
+        item_type: item.type || 'product',
+        product_id: item.type === 'service' ? null : item.id,
+        service_id: item.type === 'service' ? item.id : null,
+        name: item.name,
+        seller_name: item.seller || null,
+        image_url: item.image || null,
+        price: Number(item.price),
+        quantity: item.quantity,
+      }))
+    );
 
-  const hasProducts = cartItems.some((i) => (i.type || 'product') === 'product');
-  const hasServices = cartItems.some((i) => i.type === 'service');
+    return order;
+  };
 
-  return { order, hasProducts, hasServices };
+  const productOrder = productItems.length ? await createGroup(productItems, 'Processing') : null;
+  const serviceOrder = serviceItems.length ? await createGroup(serviceItems, 'Confirmed') : null;
+
+  if (serviceOrder) {
+    notifyServiceSellers(serviceItems, serviceOrder, form).catch((e) =>
+      console.error('Service booking mail error:', e.message)
+    );
+  }
+
+  return {
+    order: productOrder || serviceOrder,
+    hasProducts: productItems.length > 0,
+    hasServices: serviceItems.length > 0,
+  };
 };
 
 exports.listProductOrders = async (customerId) => {
   const items = await OrderItem.findAll({
     where: { item_type: 'product' },
-    include: [{
-      model: Order,
-      as: 'order',
-      where: { customer_id: customerId },
-      attributes: ['id', 'status', 'created_at'],
-    }],
+    include: [
+      {
+        model: Order,
+        as: 'order',
+        where: { customer_id: customerId },
+        attributes: ['id', 'status', 'created_at'],
+      },
+      {
+        model: Product,
+        as: 'product',
+        required: false,
+        attributes: ['id', 'delivery_type'],
+      },
+      {
+        model: Review,
+        as: 'review',
+        required: false,
+        attributes: ['id', 'rating'],
+      },
+    ],
     order: [['created_at', 'DESC']],
   });
   return items;
