@@ -34,6 +34,21 @@ export const cancelOrder = async (orderId) => {
   }
 };
 
+export const submitReview = async (orderItemId, rating, comment) => {
+  try {
+    const res = await fetch(`${API_BASE}/reviews`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ orderItemId, rating, comment }),
+    });
+    const data = await res.json();
+    return { success: res.ok, message: data.message };
+  } catch (err) {
+    return { success: false, message: "Could not reach the server." };
+  }
+};
+
 const normalizeOrder = (raw) => ({
   orderId: raw.id,
   groupId: raw.order?.id,
@@ -44,6 +59,8 @@ const normalizeOrder = (raw) => ({
   quantity: raw.quantity,
   status: raw.order?.status || "Pending",
   date: raw.order?.created_at || raw.created_at,
+  isFreshDelivery: raw.product?.delivery_type === "Fresh",
+  isRated: !!raw.review,
 });
 
 export const getProductOrders = async () => {

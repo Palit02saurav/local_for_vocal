@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { showToast } from "@/lib/toast";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -91,7 +92,7 @@ export default function Profile() {
       const { data } = await axios.patch(`${API_BASE}/customer/auth/me`, {
         name: form.name,
         phone: form.phone,
-        dob: form.dob,
+        dob: form.dob || null,
         address: form.address,
         city: form.city,
         state: form.state,
@@ -99,6 +100,7 @@ export default function Profile() {
       }, { withCredentials: true });
       setUser(data.data?.user);
       setEditing(false);
+      showToast("Profile updated successfully!");
     } catch (err) {
       setSaveError("Could not reach the server.");
     } finally {
@@ -227,8 +229,8 @@ const handleLogout = async () => {
                   <input
                     type="email"
                     value={form.email}
-                    disabled={!editing}
-                    onChange={(e) => handleChange("email", e.target.value)}
+                    disabled
+                    readOnly
                   />
                 </div>
               </div>
@@ -240,8 +242,8 @@ const handleLogout = async () => {
                     type="tel"
                     placeholder="+91 00000 00000"
                     value={form.phone}
-                    disabled={!editing}
-                    onChange={(e) => handleChange("phone", e.target.value)}
+                    disabled
+                    readOnly
                   />
                 </div>
                 <div className="prf-field">

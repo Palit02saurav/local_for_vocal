@@ -255,3 +255,92 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.track-rate-btn {
+  margin-top: 12px;
+  padding: 9px 18px;
+  border: 1px solid #2d6a4f;
+  background: #fff;
+  color: #2d6a4f;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.track-rate-btn:hover {
+  background: #f0f7f3;
+}
+
+.track-rated-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #2d6a4f;
+  font-weight: 600;
+}
+
+.track-rate-form {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.track-rate-stars {
+  font-size: 26px;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+
+.track-star {
+  color: #ddd;
+  cursor: pointer;
+}
+
+.track-star.filled {
+  color: #f5a623;
+}
+
+.track-rate-comment {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.track-rate-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.track-rate-submit-btn {
+  padding: 8px 16px;
+  border: none;
+  background: #2d6a4f;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.track-rate-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.track-rate-cancel-btn {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #444;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}

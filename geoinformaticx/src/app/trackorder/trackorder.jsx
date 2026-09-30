@@ -3,12 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getProductOrders, cancelOrder } from "@/lib/orders";
+import { getProductOrders, cancelOrder, submitReview } from "@/lib/orders";
 import "./trackorder.css";
 
 const STAGES = ["Ordered", "Shipped", "Out for Delivery", "Delivered"];
+const FRESH_STAGES = ["Ordered", "Out For Delivery", "Delivered"];
 
-function stageIndex(status) {
+function stageIndex(status, isFreshDelivery) {
+  if (isFreshDelivery) {
+    if (status === "Pending" || status === "Confirmed" || status === "Processing") return 0;
+    if (status === "Out for Delivery") return 1;
+    if (status === "Delivered") return 2;
+    return -1; // Cancelled or unknown
+  }
   if (status === "Pending" || status === "Confirmed" || status === "Processing") return 0;
   if (status === "Shipped") return 1;
   if (status === "Out for Delivery") return 2;
@@ -22,6 +29,10 @@ export default function TrackOrder() {
   const [orders, setOrders] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [ratingId, setRatingId] = useState(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   const loadOrders = async () => setOrders(await getProductOrders());
 
@@ -39,6 +50,21 @@ export default function TrackOrder() {
       await loadOrders();
     } else {
       alert(result.message || "Could not cancel this order.");
+    }
+  };
+
+  const handleRateSubmit = async (orderId) => {
+    if (ratingValue < 1) return;
+    setSubmittingRating(true);
+    const result = await submitReview(orderId, ratingValue, ratingComment);
+    setSubmittingRating(false);
+    if (result.success) {
+      setRatingId(null);
+      setRatingValue(0);
+      setRatingComment("");
+      await loadOrders();
+    } else {
+      alert(result.message || "Could not submit your rating.");
     }
   };
 
@@ -69,7 +95,8 @@ export default function TrackOrder() {
         <div className="track-list">
           {orders.map((order) => {
             const isExpanded = expandedId === order.orderId;
-            const idx = stageIndex(order.status);
+            const stages = order.isFreshDelivery ? FRESH_STAGES : STAGES;
+            const idx = stageIndex(order.status, order.isFreshDelivery);
             const isCancelled = order.status === "Cancelled";
             const canCancel = !isCancelled && idx < 1; // only before Shipped
 
@@ -108,11 +135,11 @@ export default function TrackOrder() {
                       <p className="track-cancelled-note">This order was cancelled.</p>
                     ) : (
                       <div className="track-stepper">
-                        {STAGES.map((stage, i) => (
+                        {stages.map((stage, i) => (
                           <div key={stage} className={`track-step ${i <= idx ? "done" : ""}`}>
                             <span className="track-step-dot" />
                             <span className="track-step-label">{stage}</span>
-                            {i < STAGES.length - 1 && <span className={`track-step-line ${i < idx ? "done" : ""}`} />}
+                            {i < stages.length - 1 && <span className={`track-step-line ${i < idx ? "done" : ""}`} />}
                           </div>
                         ))}
                       </div>
@@ -129,6 +156,56 @@ export default function TrackOrder() {
                       >
                         {cancellingId === order.groupId ? "Cancelling..." : "Cancel Order"}
                       </button>
+                    )}
+
+                    {order.status === "Delivered" && !order.isRated && (
+                      ratingId === order.orderId ? (
+                        <div className="track-rate-form" onClick={(e) => e.stopPropagation()}>
+                          <div className="track-rate-stars">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <span
+                                key={n}
+                                className={`track-star ${n <= ratingValue ? "filled" : ""}`}
+                                onClick={() => setRatingValue(n)}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <textarea
+                            className="track-rate-comment"
+                            placeholder="Say something about this product (optional)"
+                            value={ratingComment}
+                            onChange={(e) => setRatingComment(e.target.value)}
+                          />
+                          <div className="track-rate-actions">
+                            <button
+                              className="track-rate-submit-btn"
+                              disabled={ratingValue < 1 || submittingRating}
+                              onClick={() => handleRateSubmit(order.orderId)}
+                            >
+                              {submittingRating ? "Submitting..." : "Submit Rating"}
+                            </button>
+                            <button
+                              className="track-rate-cancel-btn"
+                              onClick={() => { setRatingId(null); setRatingValue(0); setRatingComment(""); }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          className="track-rate-btn"
+                          onClick={(e) => { e.stopPropagation(); setRatingId(order.orderId); }}
+                        >
+                          Rate This Product
+                        </button>
+                      )
+                    )}
+
+                    {order.status === "Delivered" && order.isRated && (
+                      <p className="track-rated-note">✓ You've rated this product.</p>
                     )}
                   </div>
                 )}

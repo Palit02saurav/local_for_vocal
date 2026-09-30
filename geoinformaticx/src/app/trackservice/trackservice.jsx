@@ -48,7 +48,7 @@ export default function TrackService() {
               </div>
               <div className="track-card-right">
                 <span className={`track-status track-status-${order.status.toLowerCase()}`}>
-                  {order.status}
+                  {order.status === "Confirmed" ? "Booked" : order.status}
                 </span>
                 <p className="track-card-qty">Qty: {order.quantity}</p>
                 <p className="track-card-price">

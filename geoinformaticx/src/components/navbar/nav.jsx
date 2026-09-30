@@ -97,7 +97,7 @@ const handleLogout = async () => {
     { label: "Home", href: "/" },
     { label: "Region Famous", href: "/map" },
     { label: "10-Min Fresh Delivery", href: "/business" },  
-    { label: "Shop", href: "/shop" },
+    { label: "Products", href: "/shop" },
     { label: "Services", href: "/services" },
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },

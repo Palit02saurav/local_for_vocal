@@ -130,6 +130,8 @@
 .track-status-placed { background: #fdf3de; color: #b9840e; }
 .track-status-shipped { background: #e8f1fb; color: #4a90d9; }
 .track-status-delivered { background: #e6f4ea; color: #2d6a4f; }
+.track-status-confirmed { background: #e6f4ea; color: #2d6a4f; }
+.track-status-cancelled { background: #fdeaea; color: #c0392b; }
 
 .track-card-qty {
   font-size: 12px;

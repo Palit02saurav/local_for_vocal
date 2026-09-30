@@ -19,22 +19,29 @@ export default function Services() {
   const [sortBy, setSortBy] = useState("Popularity");
   const [selectedService, setSelectedService] = useState(null);
 
-  const [allServices, setAllServices] = useState([]);
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+const [allServices, setAllServices] = useState([]);
 
 useEffect(() => {
   axios
     .get(`${API_BASE}/services/public`)
     .then((res) => {
-      const services = (res.data.data?.products || res.data.data?.services || []).map((s) => ({
+      const services = (
+        res.data.data?.products ||
+        res.data.data?.services ||
+        []
+      ).map((s) => ({
         ...s,
         slug: s.sku,
         img: s.image_url || "https://placehold.co/300x300?text=No+Image",
       }));
+
       setAllServices(services);
     })
-    .catch((err) => console.error("Failed to load services:", err));
+    .catch((err) => {
+      console.error("Failed to load services:", err);
+    });
 }, []);
 
   const syncWishlist = async () => {

@@ -167,8 +167,8 @@ const [banners, setBanners] = useState([]);
           slug: p.sku,
           seller: p.seller?.store_name || p.seller?.full_name || "Geoinformaticx",
           price: `₹${Number(p.price).toLocaleString("en-IN")}`,
-          rating: 4.7,
-          reviews: 0,
+          rating: p.avg_rating ?? 0,
+          reviews: p.review_count ?? 0,
           badge: null,
           img: p.image_url || "https://placehold.co/300x300?text=No+Image",
         }));
@@ -184,8 +184,8 @@ const [banners, setBanners] = useState([]);
               slug: p.sku,
               seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geoinformaticx",
               price: `₹${Number(p.price).toLocaleString("en-IN")}`,
-              rating: 4.7,
-              reviews: 0,
+              rating: p.avg_rating ?? 0,
+              reviews: p.review_count ?? 0,
               badge: "Regional Specialty",
               district: specialty?.district || p.seller?.location || null,
               img: p.image_url || "https://placehold.co/300x300?text=No+Image",
@@ -200,8 +200,8 @@ const [banners, setBanners] = useState([]);
             slug: p.sku,
             seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geoinformaticx",
             price: `₹${Number(p.price).toLocaleString("en-IN")}`,
-            rating: 4.7,
-            reviews: 0,
+            rating: p.avg_rating ?? 0,
+            reviews: p.review_count ?? 0,
             badge: "⚡ 10 min",
             img: p.image_url || "https://placehold.co/300x300?text=No+Image",
           }))
@@ -222,7 +222,7 @@ const [banners, setBanners] = useState([]);
           slug: s.sku,
           seller: s.seller?.store_name || s.seller?.full_name || "Geoinformaticx",
           price: `₹${Number(s.price).toLocaleString("en-IN")}`,
-          rating: 4.7,
+          rating: 0,
           reviews: 0,
           badge: null,
           img: s.image_url || "https://placehold.co/300x300?text=No+Image",
@@ -496,8 +496,10 @@ loadSellers();
                   className={`hero-banner-slide ${i === currentSlide ? "active" : ""}`}
                 />
               );
-              return b.link_url ? (
-                <Link href={b.link_url} key={b.id || i} className={`hero-banner-slide-link ${i === currentSlide ? "active" : ""}`}>
+              // Seller banner -> that seller's store page. Admin banner -> its link_url (if any).
+              const bannerHref = b.seller_id ? `/store/${b.seller_id}` : b.link_url;
+              return bannerHref ? (
+                <Link href={bannerHref} key={b.id || i} className={`hero-banner-slide-link ${i === currentSlide ? "active" : ""}`}>
                   {img}
                 </Link>
               ) : (

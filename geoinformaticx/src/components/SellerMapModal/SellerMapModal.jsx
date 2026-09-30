@@ -59,7 +59,7 @@ function ProductRow({ p }) {
   );
 }
 
-export default function SellerMapModal({ seller, onClose }) {
+export default function SellerMapModal({ seller, onClose, regionalOnly = false }) {
   if (!seller) return null;
 
   return (
@@ -105,18 +105,20 @@ export default function SellerMapModal({ seller, onClose }) {
           )}
         </div>
 
-        <div className="seller-map-modal-body seller-map-modal-body-secondary">
-          <h4>More from this seller</h4>
-          {seller.otherProducts.length === 0 ? (
-            <p className="seller-map-modal-empty">No other listings from this seller yet.</p>
-          ) : (
-            <div className="seller-map-modal-products">
-              {seller.otherProducts.map((p, i) => (
-                <ProductRow p={p} key={`other-${i}`} />
-              ))}
-            </div>
-          )}
-        </div>
+        {!regionalOnly && (
+          <div className="seller-map-modal-body seller-map-modal-body-secondary">
+            <h4>More from this seller</h4>
+            {seller.otherProducts.length === 0 ? (
+              <p className="seller-map-modal-empty">No other listings from this seller yet.</p>
+            ) : (
+              <div className="seller-map-modal-products">
+                {seller.otherProducts.map((p, i) => (
+                  <ProductRow p={p} key={`other-${i}`} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

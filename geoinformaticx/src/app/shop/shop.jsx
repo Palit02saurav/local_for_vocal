@@ -95,8 +95,8 @@ export default function Shop() {
         const products = (res.data.data?.products || []).map((p) => ({
           ...p,
           slug: p.sku,
-          rating: p.rating ?? 4.7,
-          reviews: p.reviews ?? 0,
+          rating: p.avg_rating ?? 0,
+          reviews: p.review_count ?? 0,
           distance: p.distance ?? "Nearby",
           verified: p.verified ?? false,
           img: p.image_url || "https://placehold.co/300x300?text=No+Image",
@@ -254,6 +254,9 @@ export default function Shop() {
                     <span className={`product-badge ${product.badge === "Bestseller" ? "badge-orange" : "badge-green"}`}>
                       {product.badge}
                     </span>
+                  )}
+                  {product.delivery_type === "Fresh" && (
+                    <span className="product-10min-badge">⚡ 10-Min Delivery</span>
                   )}
                   <button
                     className="product-wishlist-btn"

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { showToast } from "./toast";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const client = axios.create({ baseURL: API_BASE, withCredentials: true });
 
 const normalizeItem = (raw) => {

@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar/nav";
 import Footer from "@/components/footer/footer";
 import Toast from "@/components/toast/toast";
+import SplashScreen from "@/components/splash/SplashScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body style={{ display: "flex", flexDirection: "column", minHeight: "100vh", margin: 0 }}>
+        <SplashScreen />
         <Navbar />
         <main style={{ flex: 1 }}>
           {children}

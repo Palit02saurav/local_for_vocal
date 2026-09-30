@@ -37,6 +37,7 @@ function mapProductToBusiness(p) {
   };
 }
 import { ALL_LEGEND_CATEGORIES } from "@/lib/categories";
+import { useRouter } from "next/navigation";
 import { addToCart, getCart, updateCartQuantity, removeFromCart } from "@/lib/cart";
 import { FaHeart, FaRegHeart, FaExpand, FaMapMarkedAlt, FaThList } from "react-icons/fa";
 import "./local.css";
@@ -148,6 +149,7 @@ function loadGoogleMaps(onLoad) {
 }
 
 export default function LocalBusinesses() {
+  const router = useRouter();
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const mapInstance = useRef(null);
@@ -168,6 +170,7 @@ export default function LocalBusinesses() {
   const [searchQuery, setSearchQuery] = useState("");
   const [detailsBiz, setDetailsBiz] = useState(null);
   const [detailsQty, setDetailsQty] = useState(1);
+  const [detailsCartItemId, setDetailsCartItemId] = useState(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -722,8 +725,10 @@ const businessesWithDistance = useMemo(() => {
       const viewBtn = document.getElementById(`view-details-${biz.slug}`);
       if (viewBtn) {
         viewBtn.addEventListener("click", () => {
+          const existing = addedProductIdsRef.current.get(biz.id);
           setDetailsBiz(biz);
-          setDetailsQty(1);
+          setDetailsQty(existing?.quantity || 1);
+          setDetailsCartItemId(existing?.cartItemId || null);
           setActiveImgIdx(0);
           infoWindowRef.current?.close();
         });
@@ -1216,11 +1221,44 @@ const businessesWithDistance = useMemo(() => {
               <div className="pd-action-row">
                 <button
                   className="pd-add-cart-btn"
-                  onClick={() => addToCart({ productId: detailsBiz.id, type: "product", quantity: detailsQty })}
+                  onClick={async () => {
+                    if (detailsCartItemId) {
+                      await updateCartQuantity(detailsCartItemId, detailsQty);
+                      addedProductIdsRef.current.set(detailsBiz.id, {
+                        cartItemId: detailsCartItemId,
+                        quantity: detailsQty,
+                      });
+                    } else {
+                      const result = await addToCart({ productId: detailsBiz.id, type: "product", quantity: detailsQty });
+                      if (result.success) {
+                        const items = await getCart();
+                        const match = items.find((i) => i.id === detailsBiz.id && (i.type || "product") === "product");
+                        if (match) {
+                          setDetailsCartItemId(match.cartItemId);
+                          addedProductIdsRef.current.set(detailsBiz.id, {
+                            cartItemId: match.cartItemId,
+                            quantity: match.quantity,
+                          });
+                        }
+                      }
+                    }
+                  }}
                 >
                   🛒 Add to Cart
                 </button>
-                <button className="pd-buy-now-btn">Buy Now</button>
+                <button
+                  className="pd-buy-now-btn"
+                  onClick={async () => {
+                    if (detailsCartItemId) {
+                      await updateCartQuantity(detailsCartItemId, detailsQty);
+                    } else {
+                      await addToCart({ productId: detailsBiz.id, type: "product", quantity: detailsQty });
+                    }
+                    router.push("/checkout");
+                  }}
+                >
+                  Buy Now
+                </button>
               </div>
             </div>
           </div>

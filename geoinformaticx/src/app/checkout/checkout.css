@@ -224,3 +224,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+.track-status-confirmed { background: #e6f4ea; color: #2d6a4f; }
+.track-status-cancelled { background: #fdeaea; color: #c0392b; }

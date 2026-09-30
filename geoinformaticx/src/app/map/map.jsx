@@ -84,7 +84,7 @@ function districtForSeller(seller) {
 
 const categoryOptions = {
   Products: ["All Categories", "Handicrafts", "Household", "Pottery", "Food", "Beverages"],
-  Services: ["All Categories", "Maid", "Teacher", "Plumber"],
+  // Services: ["All Categories", "Maid", "Teacher", "Plumber"],
 };
 
 export default function MapExplore() {
@@ -93,9 +93,26 @@ export default function MapExplore() {
   const [category, setCategory] = useState("All Categories");
   const [rating, setRating] = useState(0);
   const [distance, setDistance] = useState(20);
+  const [regionalOnly, setRegionalOnly] = useState(false);
 
   const [liveListings, setLiveListings] = useState([]);
   const [sellers, setSellers] = useState([]);
+  const [serviceCategories, setServiceCategories] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get(`${API_BASE}/categories/public`, { params: { type: "service" } })
+      .then((res) => {
+        const cats = res.data.data?.categories || [];
+        setServiceCategories(cats.map((c) => c.name));
+      })
+      .catch((err) => console.error("Failed to load service categories:", err));
+  }, []);
+
+  const currentCategoryOptions =
+    type === "Services"
+      ? ["All Categories", ...serviceCategories]
+      : categoryOptions.Products;
   const [showGuide, setShowGuide] = useState(false);
   const [selectedSellerId, setSelectedSellerId] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -147,7 +164,7 @@ export default function MapExplore() {
             sellerId: item.seller?.id,
             seller: item.seller?.store_name || item.seller?.full_name || "Seller",
             sellerLocation: item.seller?.location || "",
-            rating: 4.7,
+            rating: item.avg_rating ?? 0,
             lat: Number(sellerLat),
             lng: Number(sellerLng),
             district: district?.name || null,
@@ -168,6 +185,7 @@ export default function MapExplore() {
 
   const filteredListings = liveListings.filter((l) => {
     if (l.type !== type) return false;
+    if (regionalOnly && !l.regional) return false;
     if (category !== "All Categories" && l.category !== category) return false;
     if (l.rating < rating) return false;
     return true;
@@ -196,12 +214,13 @@ export default function MapExplore() {
   useEffect(() => {
     const grouped = {};
     liveListings.forEach((l) => {
+      if (l.type !== type) return;
       if (!l.regional || !l.district) return;
       if (!grouped[l.district]) grouped[l.district] = [];
       grouped[l.district].push(l);
     });
     regionalByDistrictRef.current = grouped;
-  }, [liveListings]);
+  }, [liveListings, type]);
 
   const sellersByIdRef = useRef({});
   useEffect(() => {
@@ -512,7 +531,7 @@ export default function MapExplore() {
   useEffect(() => {
     if (!mapObjRef.current || !infoWindowRef.current) return;
     redrawForZoom(mapObjRef.current, infoWindowRef.current);
-  }, [type, category, rating, distance, liveListings, sellers]);
+  }, [type, category, rating, distance, regionalOnly, liveListings, sellers]);
 
   return (
     <div className="map-explore-page">
@@ -530,11 +549,21 @@ export default function MapExplore() {
             </button>
             <button
               className={type === "Services" ? "active" : ""}
-              onClick={() => { setType("Services"); setCategory("All Categories"); }}
+              onClick={() => { setType("Services"); setCategory("All Categories"); setRegionalOnly(false); }}
             >
               Services
             </button>
           </div>
+
+          {type === "Products" && (
+            <button
+              type="button"
+              className={`map-regional-btn ${regionalOnly ? "active" : ""}`}
+              onClick={() => setRegionalOnly((v) => !v)}
+            >
+              🎁 Regional Famous
+            </button>
+          )}
         </div>
 
         <div className="map-filter-section">
@@ -544,7 +573,7 @@ export default function MapExplore() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            {categoryOptions[type].map((cat) => (
+            {currentCategoryOptions.map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
@@ -583,6 +612,25 @@ export default function MapExplore() {
       </aside>
 
       <div className="map-canvas-wrapper">
+        <div className="map-toolbar">
+          <div className="view-toggle">
+            <button
+              type="button"
+              className={type === "Products" ? "active" : ""}
+              onClick={() => { setType("Products"); setCategory("All Categories"); }}
+            >
+              Products
+            </button>
+            <button
+              type="button"
+              className={type === "Services" ? "active" : ""}
+              onClick={() => { setType("Services"); setCategory("All Categories"); }}
+            >
+              Services
+            </button>
+          </div>
+        </div>
+
         <div ref={mapRef} className="map-canvas" />
 
         {showGuide && (
@@ -603,6 +651,7 @@ export default function MapExplore() {
       {selectedSellerId && sellersByIdRef.current[selectedSellerId] && (
         <SellerMapModal
           seller={sellersByIdRef.current[selectedSellerId]}
+          regionalOnly={regionalOnly}
           onClose={() => setSelectedSellerId(null)}
         />
       )}

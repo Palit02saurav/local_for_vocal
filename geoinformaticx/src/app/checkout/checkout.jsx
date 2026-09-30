@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { getCart, clearCart } from "@/lib/cart";
 import { getCurrentUser } from "@/lib/auth";
 import { createOrderFromCart } from "@/lib/orders";
 import "./checkout.css";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Checkout() {
   const router = useRouter();
@@ -32,6 +35,21 @@ export default function Checkout() {
       const user = getCurrentUser();
       if (user) {
         setForm((f) => ({ ...f, name: user.name || "", email: user.email || "" }));
+      }
+
+      try {
+        const { data } = await axios.get(`${API_BASE}/customer/auth/me`, { withCredentials: true });
+        const u = data.data?.user;
+        if (u) {
+          const fullAddress = [u.address, u.city, u.state, u.pincode].filter(Boolean).join(", ");
+          setForm((f) => ({
+            ...f,
+            phone: f.phone || u.phone || "",
+            address: f.address || fullAddress,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to prefill profile details:", err);
       }
     };
     loadCart();
@@ -60,7 +78,11 @@ export default function Checkout() {
     e.preventDefault();
     if (!validate()) return;
 
-    const { hasProducts, hasServices } = await createOrderFromCart(items, form);
+    const { success, message, hasProducts, hasServices } = await createOrderFromCart(items, form);
+    if (!success) {
+      alert(message || "Could not place the order. Please try again.");
+      return;
+    }
     await clearCart();
 
     if (hasProducts && hasServices) {

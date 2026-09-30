@@ -72,8 +72,8 @@ export default function StoreDetail({ sellerId }) {
             name: p.name,
             slug: p.sku,
             price: `₹${Number(p.price).toLocaleString("en-IN")}`,
-            rating: 4.7,
-            reviews: 0,
+            rating: p.avg_rating ?? 0,
+            reviews: p.review_count ?? 0,
             img: p.image_url || PLACEHOLDER_IMG,
           }))
         );
