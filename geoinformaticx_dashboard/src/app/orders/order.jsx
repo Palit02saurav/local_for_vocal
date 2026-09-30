@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { getCurrentUser } from "@/lib/auth";
 import "./order.css";
 
 const STATUS_STYLES = {
@@ -71,6 +72,7 @@ function StatIcon({ type }) {
 }
 
 export default function OrdersPage({ orders = [], loading = false, onSelectOrder, onUpdateStatus, initialStatus = "All Status" }) {
+  const isVendor = getCurrentUser()?.role === "VENDOR";
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(initialStatus);
 
@@ -268,13 +270,24 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
                     </td>
                     <td className="col-action">
                       <div className="cell-action-buttons">
-                        {o.status !== "Shipped" && o.status !== "Delivered" && o.status !== "Cancelled" && (
-                          <button
-                            className="action-shipped-btn"
-                            onClick={() => onUpdateStatus?.(o.orderId, "Shipped")}
-                          >
-                            Shipped
-                          </button>
+                        {isVendor ? (
+                          o.status !== "Out for Delivery" && o.status !== "Delivered" && o.status !== "Cancelled" && (
+                            <button
+                              className="action-shipped-btn"
+                              onClick={() => onUpdateStatus?.(o.orderId, "Out for Delivery")}
+                            >
+                              Out for Delivery
+                            </button>
+                          )
+                        ) : (
+                          o.status !== "Shipped" && o.status !== "Delivered" && o.status !== "Cancelled" && (
+                            <button
+                              className="action-shipped-btn"
+                              onClick={() => onUpdateStatus?.(o.orderId, "Shipped")}
+                            >
+                              Shipped
+                            </button>
+                          )
                         )}
                         <button className="action-dots" onClick={() => handleOpenOrder(o)}>
                           ⋯
@@ -358,20 +371,87 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
           </div>
 
           <div className="detail-actions">
-            {selected.status !== "Shipped" && selected.status !== "Delivered" && selected.status !== "Cancelled" && (
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  onUpdateStatus?.(selected.orderId, "Shipped");
-                  setSelected((prev) => (prev ? { ...prev, status: "Shipped" } : prev));
-                }}
-              >
-                Mark as Shipped
-              </button>
+            {isVendor ? (
+              <>
+                {selected.status !== "Out for Delivery" &&
+                  selected.status !== "Delivered" &&
+                  selected.status !== "Cancelled" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Out for Delivery");
+                      setSelected((prev) => (prev ? { ...prev, status: "Out for Delivery" } : prev));
+                    }}
+                  >
+                    Out for Delivery
+                  </button>
+                )}
+                {selected.status === "Out for Delivery" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Delivered");
+                      setSelected((prev) => (prev ? { ...prev, status: "Delivered" } : prev));
+                    }}
+                  >
+                    Delivered
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {selected.status !== "Shipped" &&
+                  selected.status !== "Out for Delivery" &&
+                  selected.status !== "Delivered" &&
+                  selected.status !== "Cancelled" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Shipped");
+                      setSelected((prev) => (prev ? { ...prev, status: "Shipped" } : prev));
+                    }}
+                  >
+                    Mark as Shipped
+                  </button>
+                )}
+                {selected.status === "Shipped" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Out for Delivery");
+                      setSelected((prev) => (prev ? { ...prev, status: "Out for Delivery" } : prev));
+                    }}
+                  >
+                    Mark as Out for Delivery
+                  </button>
+                )}
+                {selected.status === "Out for Delivery" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Delivered");
+                      setSelected((prev) => (prev ? { ...prev, status: "Delivered" } : prev));
+                    }}
+                  >
+                    Mark as Delivered
+                  </button>
+                )}
+                <button className="btn btn-outline">View Invoice</button>
+                <button className="btn btn-outline">Track Order</button>
+                {selected.status !== "Shipped" && selected.status !== "Delivered" && selected.status !== "Cancelled" && (
+                  <button
+                    className="btn btn-danger-outline"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Cancelled");
+                      setSelected((prev) => (prev ? { ...prev, status: "Cancelled" } : prev));
+                    }}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+                <button className="btn btn-danger-outline">Refund Order</button>
+              </>
             )}
-            <button className="btn btn-outline">View Invoice</button>
-            <button className="btn btn-outline">Track Order</button>
-            <button className="btn btn-danger-outline">Refund Order</button>
           </div>
         </aside>
       )}

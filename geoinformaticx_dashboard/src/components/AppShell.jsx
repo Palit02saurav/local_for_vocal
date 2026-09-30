@@ -20,37 +20,30 @@ export default function AppShell({ children }) {
 useEffect(() => {
   let cancelled = false;
 
-  const handleAuthChange = async () => {
-    if (isPublic) {
-      setReady(false);
-      setRole(null);
-      return;
-    }
+  if (isPublic) {
+    setReady(false);
+    setRole(null);
 
-    const user = await checkAuth();
-
+    return () => {
+      cancelled = true;
+    };
+  }
+  checkAuth().then((user) => {
     if (cancelled) return;
 
     if (!user) {
-      setReady(false);
-      setRole(null);
       router.replace("/login");
       return;
     }
 
     setRole(user.role || null);
     setReady(true);
-  };
-
-  handleAuthChange();
-
-  window.addEventListener("auth:changed", handleAuthChange);
+  });
 
   return () => {
     cancelled = true;
-    window.removeEventListener("auth:changed", handleAuthChange);
   };
-}, [isPublic, router]);
+}, [pathname, isPublic, router]);
 
   if (isPublic) {
     return <>{children}</>;

@@ -173,13 +173,11 @@ export default function AuthPage() {
     setLoading(true);
     const result = await login(signInForm.email, signInForm.password);
     setLoading(false);
-
     if (!result.success) {
       setSignInError(result.error);
       return;
     }
-
-    router.replace("/");
+router.replace("/");
   };
 
   const handleSignUp = async (e) => {

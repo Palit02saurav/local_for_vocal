@@ -95,17 +95,17 @@ const menuItems = [
       </svg>
     ),
   },
-  {
-    label: "Local Businesses",
-    href: "/localbusiness",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="9" width="18" height="12" rx="1" />
-        <path d="M9 21V13h6v8" />
-        <path d="M3 9 12 3l9 6" />
-      </svg>
-    ),
-  },
+  // {
+  //   label: "Local Businesses",
+  //   href: "/localbusiness",
+  //   icon: (
+  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  //       <rect x="3" y="9" width="18" height="12" rx="1" />
+  //       <path d="M9 21V13h6v8" />
+  //       <path d="M3 9 12 3l9 6" />
+  //     </svg>
+  //   ),
+  // },
   {
     label: "Sellers",
     href: "/sellers",
@@ -211,10 +211,10 @@ export default function NavDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-const handleLogout = async () => {
-  await logout();
-  router.replace("/login");
-};
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 

@@ -290,24 +290,27 @@ const [currentUser, setCurrentUser] = useState(null);
     const files = Array.from(fileList).slice(0, MAX_IMAGES - images.length);
     if (files.length === 0) return;
 
-    setCompressing(true);
-    try {
-      const newImages = await Promise.all(
-        files.map(async (file) => {
-          const compressed = await compressImage(file);
-          return {
-            file: compressed,
-            previewUrl: URL.createObjectURL(compressed),
-            originalSize: file.size,
-            size: compressed.size,
-          };
-        })
-      );
-      setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGES));
+    const MAX_FILE_BYTES = 5 * 1024 * 1024; 
+    const tooBig = files.filter((f) => f.size > MAX_FILE_BYTES);
+    const okFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
+
+    if (tooBig.length > 0) {
+      setErrors((e) => ({
+        ...e,
+        images: `${tooBig.map((f) => f.name).join(", ")} exceeds the 5MB limit and was not added.`,
+      }));
+    } else {
       setErrors((e) => ({ ...e, images: "" }));
-    } finally {
-      setCompressing(false);
     }
+    if (okFiles.length === 0) return;
+
+    const newImages = okFiles.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      originalSize: file.size,
+      size: file.size,
+    }));
+    setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGES));
   };
 
   const removeImage = (idx) => {
@@ -670,7 +673,7 @@ const validateForm = (f, draftImages = [], consent = false) => {
               </div>
               <p className="np-images-hint">
                 Upload at least {MIN_IMAGES} images (up to {MAX_IMAGES}). Images are
-                compressed automatically before upload.
+                uploaded in their original quality.
               </p>
 
               <div className="np-image-counter">

@@ -103,15 +103,17 @@ export default function NewBanner() {
               {errors.title && <span className="np-error">{errors.title}</span>}
             </div>
 
-            <div className="np-field">
-              <label>Link URL (optional)</label>
-              <input
-                type="text"
-                placeholder="/shop or https://..."
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-              />
-            </div>
+            {!isSeller && (
+              <div className="np-field">
+                <label>Link URL (optional)</label>
+                <input
+                  type="text"
+                  placeholder="/shop or https://..."
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="np-field">
               <label>Banner Image *</label>

@@ -61,7 +61,7 @@ export const login = async (email, password, role) => {
     }
     const user = data.data?.user;
     localStorage.setItem("admin_auth_user", JSON.stringify(user));
-    window.dispatchEvent(new Event("auth:changed"));
+    window.dispatchEvent(new Event("storage"));
     return { success: true, user };
   } catch (err) {
     return { success: false, error: "Could not reach the server. Is the backend running?" };
@@ -75,11 +75,9 @@ export const logout = async () => {
       credentials: "include",
     });
   } catch (err) {
-    console.error("Logout request failed:", err);
   }
-
   localStorage.removeItem("admin_auth_user");
-  window.dispatchEvent(new Event("auth:changed"));
+  window.dispatchEvent(new Event("storage"));
 };
 
 export const getCurrentUser = () => {
@@ -96,25 +94,12 @@ export const checkAuth = async () => {
     const res = await fetch(`${API_BASE}/auth/me`, {
       credentials: "include",
     });
-
-    if (!res.ok) {
-      localStorage.removeItem("admin_auth_user");
-      return null;
-    }
-
+    if (!res.ok) return null;
     const data = await res.json();
     const user = data.data?.user;
-
-    if (!user) {
-      localStorage.removeItem("admin_auth_user");
-      return null;
-    }
-
     localStorage.setItem("admin_auth_user", JSON.stringify(user));
-
-    return user;
-  } catch (err) {
-    console.error("Auth check failed:", err);
+    return user;  
+  } catch {
     return null;
   }
 };

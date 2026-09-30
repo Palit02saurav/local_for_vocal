@@ -182,10 +182,10 @@ export default function SellerDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-const handleLogout = async () => {
-  await logout();
-  router.replace("/login");
-};
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 
