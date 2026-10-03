@@ -31,6 +31,7 @@ export default function Services() {
   const [seller, setSeller] = useState("All Sellers");
   const [status, setStatus] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
   const loadServices = async () => {
     setLoading(true);
@@ -165,7 +166,7 @@ export default function Services() {
         ))}
       </div>
 
-      <div className="pp-content">
+      <div className={`pp-content ${showFilters ? "" : "pp-no-sidebar"}`}>
         {/* Main column */}
         <div className="pp-main-col">
           <div className="pp-toolbar">
@@ -274,7 +275,7 @@ export default function Services() {
                                 <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
                               </svg>
                             </button>
-                            <button aria-label="More">
+                            <button aria-label="More" onClick={() => setShowFilters((v) => !v)}>
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.8">
                                 <circle cx="12" cy="5" r="1.5" fill="#666" stroke="none" />
                                 <circle cx="12" cy="12" r="1.5" fill="#666" stroke="none" />
@@ -316,57 +317,60 @@ export default function Services() {
         </div>
 
         {/* Right sidebar */}
+        {showFilters && (
         <aside className="pp-sidebar">
-          <div className="pp-filter-card">
-            <div className="pp-filter-header">
-              <h3>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
-                Filters
-              </h3>
-              <button className="pp-clear-all" onClick={handleReset}>Clear All</button>
-            </div>
+          {showFilters && (
+            <div className="pp-filter-card">
+              <div className="pp-filter-header">
+                <h3>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                  Filters
+                </h3>
+                <button className="pp-clear-all" onClick={handleReset}>Clear All</button>
+              </div>
 
-            <div className="pp-filter-group">
-              <label>Search</label>
-              <input
-                type="text"
-                placeholder="Search services..."
-                className="pp-filter-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+              <div className="pp-filter-group">
+                <label>Search</label>
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  className="pp-filter-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-            <div className="pp-filter-group">
-              <label>Category</label>
-              <select className="pp-filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option>All Categories</option>
-                {categories.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
+              <div className="pp-filter-group">
+                <label>Category</label>
+                <select className="pp-filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <option>All Categories</option>
+                  {categories.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
 
-            <div className="pp-filter-group">
-              <label>Seller</label>
-              <select className="pp-filter-select" value={seller} onChange={(e) => setSeller(e.target.value)}>
-                <option>All Sellers</option>
-                {sellers.map((s) => <option key={s}>{s}</option>)}
-              </select>
-            </div>
+              <div className="pp-filter-group">
+                <label>Seller</label>
+                <select className="pp-filter-select" value={seller} onChange={(e) => setSeller(e.target.value)}>
+                  <option>All Sellers</option>
+                  {sellers.map((s) => <option key={s}>{s}</option>)}
+                </select>
+              </div>
 
-            <div className="pp-filter-group">
-              <label>Status</label>
-              <select className="pp-filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option>All Status</option>
-                <option>Active</option>
-                <option>Low Stock</option>
-                <option>Out of Stock</option>
-              </select>
-            </div>
+              <div className="pp-filter-group">
+                <label>Status</label>
+                <select className="pp-filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option>All Status</option>
+                  <option>Active</option>
+                  <option>Low Stock</option>
+                  <option>Out of Stock</option>
+                </select>
+              </div>
 
-            <button className="pp-apply-btn" onClick={loadServices}>Refresh</button>
-          </div>
+              <button className="pp-apply-btn" onClick={loadServices}>Refresh</button>
+            </div>
+          )}
 
           <div className="pp-summary-card">
             <h3>Service Summary</h3>
@@ -379,6 +383,7 @@ export default function Services() {
             ))}
           </div>
         </aside>
+        )}
       </div>
     </main>
   );

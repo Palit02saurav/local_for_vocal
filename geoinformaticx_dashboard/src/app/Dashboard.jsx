@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { findDistrictSpecialty } from "@/lib/districtSpecialties";
 import "./Dashboard.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -116,8 +116,8 @@ function parseInputDate(s) {
   return new Date(y, m - 1, d);
 }
 
-// Super admin only: sums order totals into hourly / daily / monthly buckets
-function buildSalesSeriesByFilter(rawOrders, filter, customFrom, customTo) {
+
+function buildSalesSeriesByFilter(rawOrders, filter, customFrom, customTo, isSellerRow = false) {
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const mon = (d) => MONTH_NAMES[d.getMonth()].slice(0, 3);
@@ -166,8 +166,9 @@ function buildSalesSeriesByFilter(rawOrders, filter, customFrom, customTo) {
 
   const totals = buckets.map(() => 0);
   rawOrders.forEach((raw) => {
-    const t = new Date(raw.created_at).getTime();
-    const amount = Number(raw.total);
+    const dateStr = isSellerRow ? raw.order?.created_at || raw.created_at : raw.created_at;
+    const t = new Date(dateStr).getTime();
+    const amount = isSellerRow ? Number(raw.price) * Number(raw.quantity) : Number(raw.total);
     if (Number.isNaN(t) || Number.isNaN(amount)) return;
     const idx = buckets.findIndex((b) => t >= b.start.getTime() && t < b.end.getTime());
     if (idx !== -1) totals[idx] += amount;
@@ -745,7 +746,7 @@ export default function Dashboard() {
   const isVendor = user?.role === "VENDOR";
   const regionalSpecialty = isSeller ? findDistrictSpecialty(sellerLocation) : null;
   const showProductsCard = !isSeller || sellerType !== "service";
-  const showServicesCard = !isSeller || sellerType !== "product";
+  const showServicesCard = !isVendor && (!isSeller || sellerType !== "product");
   const allStatCards = buildStatCards(productCount, sellerCount, serviceCount, orderCount, orderRevenue, isSeller, productGrowth, sellerGrowth, serviceGrowth);
   const baseStatCards = (isSeller || isVendor)
     ? allStatCards.filter((c) => {
@@ -780,9 +781,13 @@ export default function Dashboard() {
     setHiddenRevenue((prev) => ({ ...prev, [name]: !prev[name] }));
   };
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
-  const activeSales = isSuperAdmin
-    ? buildSalesSeriesByFilter(rawOrders, salesFilter, parseInputDate(customFrom), parseInputDate(customTo))
-    : salesSeries;
+  const activeSales = buildSalesSeriesByFilter(
+    rawOrders,
+    salesFilter,
+    parseInputDate(customFrom),
+    parseInputDate(customTo),
+    isSellerRow
+  );
 
   const chartMax = niceMax(Math.max(...activeSales.data, 0));
   const { linePath, areaPath, points, gridLines, leftPad, rightPad } = buildLinePath(
@@ -821,12 +826,12 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="dash-header-actions">
-          <DateRangePicker
+          {/* <DateRangePicker
             startDate={dateRange.start}
             endDate={dateRange.end}
             onChange={(start, end) => setDateRange({ start, end })}
-          />
-          <button className="dash-add-btn">+ Add New</button>
+          /> */}
+          
         </div>
       </div>
 
@@ -866,7 +871,7 @@ export default function Dashboard() {
             <div className="dash-card dash-sales-card">
               <div className="dash-card-title-row">
                 <h3>Sales Overview</h3>
-                {isSuperAdmin ? (
+                {true ? (
                   <div className="dash-sales-filter">
                     <select
                       className="dash-mini-select"

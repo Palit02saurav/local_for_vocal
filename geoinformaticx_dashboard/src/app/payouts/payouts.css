@@ -1,0 +1,73 @@
+.payouts-page {
+  padding: 24px;
+  font-family: var(--font-poppins), "Poppins", "Segoe UI", Arial, sans-serif;
+}
+.payouts-title { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+.payouts-subtitle { color: #777; margin: 0 0 20px; font-size: 14px; }
+
+.payouts-success,
+.payouts-error {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.payouts-success { background: #e6f4ea; color: #2f8d46; }
+.payouts-error { background: #fdeaea; color: #e63946; }
+
+.payouts-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+
+.payouts-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.payouts-card h2 { font-size: 16px; margin: 0; }
+.payouts-card-head { display: flex; justify-content: space-between; align-items: center; }
+
+.payouts-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #333; }
+.payouts-card input,
+.payouts-card select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.payouts-card input:focus,
+.payouts-card select:focus { outline: none; border-color: #2f8d46; }
+
+.payouts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.payouts-saved-note { font-size: 13px; color: #555; background: #f6f8f6; padding: 10px 12px; border-radius: 6px; margin: 0; }
+
+.payouts-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.payouts-badge.pending { background: #fff4e0; color: #b7791f; }
+.payouts-badge.verified { background: #e6f4ea; color: #2f8d46; }
+.payouts-badge.rejected { background: #fdeaea; color: #e63946; }
+
+.payouts-save-btn {
+  background: #2f8d46;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.payouts-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.payouts-readonly { display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; margin: 0; font-size: 13px; }
+.payouts-readonly dt { color: #777; }
+.payouts-readonly dd { margin: 0; font-weight: 600; word-break: break-all; }
+.payouts-hint { font-size: 12px; color: #999; margin: 0; }
+
+@media (max-width: 900px) {
+  .payouts-grid, .payouts-row { grid-template-columns: 1fr; }
+}

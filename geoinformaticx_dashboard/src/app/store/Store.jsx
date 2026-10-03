@@ -120,6 +120,13 @@ export default function Store() {
       {saveMessage && <div className="store-success">{saveMessage}</div>}
       {saveError && <div className="store-error">{saveError}</div>}
 
+      {(!form.business_address?.trim() || !form.profile_image_url) && (
+        <div className="store-error">
+          Your store is not visible to customers yet. Please upload a business
+          picture and add your business address, then save.
+        </div>
+      )}
+
       <div className="store-card store-profile-card">
         <div className="store-card-title">
           <span>🖼️</span>

@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export const signup = async ({
   fullName, businessName, email, phone, location, latitude, longitude,
@@ -61,7 +61,7 @@ export const login = async (email, password, role) => {
     }
     const user = data.data?.user;
     localStorage.setItem("admin_auth_user", JSON.stringify(user));
-    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("auth:changed"));
     return { success: true, user };
   } catch (err) {
     return { success: false, error: "Could not reach the server. Is the backend running?" };
@@ -76,8 +76,8 @@ export const logout = async () => {
     });
   } catch (err) {
   }
-  localStorage.removeItem("admin_auth_user");
-  window.dispatchEvent(new Event("storage"));
+localStorage.removeItem("admin_auth_user");
+window.dispatchEvent(new Event("auth:changed"));
 };
 
 export const getCurrentUser = () => {

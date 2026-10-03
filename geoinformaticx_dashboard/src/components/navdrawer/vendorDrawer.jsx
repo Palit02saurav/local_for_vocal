@@ -103,10 +103,10 @@ export default function VendorDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+const handleLogout = async () => {
+  await logout();
+  router.replace("/login");
+};
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 

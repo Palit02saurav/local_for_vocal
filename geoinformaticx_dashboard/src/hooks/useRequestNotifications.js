@@ -53,16 +53,33 @@ export const REQUEST_CATEGORIES = [
     notifTitle: "New product edit request",
     notifSubtitle: (r) => r.product?.name,
   },
+  {
+    key: "sellerPayouts",
+    endpoint: "/payout-accounts?status=Pending&seller_type=product",
+    dataKey: "accounts",
+    parentLabel: "Payments & Earnings",
+    submenuLabel: "Seller Payout Requests",
+    pagePath: "/payments/seller-requests",
+    storageKey: "seen_seller_payout_request_ids",
+    notifType: "seller",
+    notifTitle: "New seller bank details",
+    notifSubtitle: (r) => r.seller?.store_name || r.seller?.full_name,
+  },
+  {
+    key: "serviceProviderPayouts",
+    endpoint: "/payout-accounts?status=Pending&seller_type=service",
+    dataKey: "accounts",
+    parentLabel: "Payments & Earnings",
+    submenuLabel: "Service Provider Payout Requests",
+    pagePath: "/payments/service-provider-requests",
+    storageKey: "seen_service_provider_payout_request_ids",
+    notifType: "service",
+    notifTitle: "New service provider bank details",
+    notifSubtitle: (r) => r.seller?.store_name || r.seller?.full_name,
+  },
 ];
 
-/**
- * Shared tracking for pending seller/product/service requests.
- * Used by both the navbar notification bell and the sidebar badges so
- * they stay in sync: once a category's requests page has been visited
- * (or a notification for it has been clicked), it's marked "seen" in
- * localStorage and won't show up as new again until a fresh request
- * arrives.
- */
+
 export function useRequestNotifications(enabled = true) {
   const pathname = usePathname();
   const [recordsByCategory, setRecordsByCategory] = useState({});

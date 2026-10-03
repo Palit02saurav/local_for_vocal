@@ -1,5 +1,6 @@
 .reviews-page {
   padding: 24px;
+  font-family: var(--font-poppins), "Segoe UI", Arial, sans-serif;
 }
 
 .reviews-header {
@@ -107,4 +108,41 @@
   margin: 8px 0 0;
   font-size: 12px;
   color: #999;
+}
+
+/* Super admin: 2 cards per row */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.reviews-grid .review-card {
+  align-items: flex-start;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reviews-grid .review-product-img {
+  width: 80px;
+  height: 80px;
+}
+
+.reviews-grid .review-top-row {
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.review-seller {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #2f8d46;
+}
+
+.review-seller strong {
+  font-weight: 600;
 }

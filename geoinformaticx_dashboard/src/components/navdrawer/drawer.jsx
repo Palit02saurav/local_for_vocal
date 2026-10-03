@@ -44,12 +44,12 @@ const menuItems = [
       submenu: [
         { label: "All Products", href: "/products" },
         { label: "Add New Product", href: "/products/new" },
-        { label: "Inventory", href: "/products/inventory" },
+        // { label: "Inventory", href: "/products/inventory" },
         { label: "Product Requests", href: "/products/requests" },
         { label: "Product Edit Requests", href: "/products/edit-requests" },
         { label: "Regional Famous Products", href: "/products/regional" },
         { label: "Regional Famous Products Requests", href: "/products/regional-requests" },
-        { label: "Fresh Delivery Requests", href: "/products/fresh-requests" },
+        // { label: "Fresh Delivery Requests", href: "/products/fresh-requests" },
       ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -79,7 +79,7 @@ const menuItems = [
     href: "/categories",
     hasSubmenu: true,
     submenu: [
-      { label: "All Categories", href: "/categories" },
+      { label: "All Product Categories", href: "/categories" },
       { label: "Add New Category", href: "/categories/new" },
       { label: "All Service Categories", href: "/categories/services" },
       { label: "Add New Service Category", href: "/categories/new-service" },
@@ -170,26 +170,44 @@ const menuItems = [
       </svg>
     ),
   },
+  // {
+  //   label: "Reports",
+  //   href: "/reports",
+  //   hasSubmenu: true,
+  //   icon: (
+  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  //       <line x1="18" y1="20" x2="18" y2="10" />
+  //       <line x1="12" y1="20" x2="12" y2="4" />
+  //       <line x1="6" y1="20" x2="6" y2="14" />
+  //     </svg>
+  //   ),
+  // },
+  // {
+  //   label: "CMS",
+  //   href: "/cms",
+  //   hasSubmenu: true,
+  //   icon: (
+  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  //       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  //       <polyline points="14 2 14 8 20 8" />
+  //     </svg>
+  //   ),
+  // },
   {
-    label: "Reports",
-    href: "/reports",
+    label: "Payments & Earnings",
+    href: "/payments",
     hasSubmenu: true,
+    submenu: [
+      { label: "All Sellers Bank Accounts", href: "/payments/sellers" },
+      { label: "All Service Providers Bank Accounts", href: "/payments/service-providers" },
+      { label: "Seller Payout Requests", href: "/payments/seller-requests" },
+      { label: "Service Provider Payout Requests", href: "/payments/service-provider-requests" },
+      { label: "Monthly Sales & Commission", href: "/payments/monthly-sales" },
+    ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="14" />
-      </svg>
-    ),
-  },
-  {
-    label: "CMS",
-    href: "/cms",
-    hasSubmenu: true,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
+        <rect x="1" y="4" width="22" height="16" rx="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
       </svg>
     ),
   },
@@ -211,10 +229,10 @@ export default function NavDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+const handleLogout = async () => {
+  await logout();
+  router.replace("/login");
+};
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 

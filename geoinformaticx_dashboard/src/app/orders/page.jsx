@@ -22,7 +22,7 @@ function normalizeOrder(o, isSellerRow) {
 
     return {
       orderId: `ORD${order.id ?? o.id}`,
-      sellerName: o.seller_name || "—",
+      sellerName: o.seller_name || o.product?.vendor?.full_name || "—",
       customerName: customer.full_name || order.full_name || "—",
       customerEmail: customer.email || order.email || "—",
       customerPhone: order.phone,

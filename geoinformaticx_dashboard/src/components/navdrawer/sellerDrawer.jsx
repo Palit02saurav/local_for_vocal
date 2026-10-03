@@ -37,17 +37,17 @@ const menuItems = [
       </svg>
     ),
   },
-{
-    label: "Regional Specialty",
-    href: "/regional-specialty",
-    onlyFor: "product",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
-      </svg>
-    ),
-  },
+// {
+//     label: "Regional Specialty",
+//     href: "/regional-specialty",
+//     onlyFor: "product",
+//     icon: (
+//       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+//         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+//         <circle cx="12" cy="10" r="3" />
+//       </svg>
+//     ),
+//   },
 {
     label: "Products",
     href: "/products",
@@ -57,7 +57,7 @@ const menuItems = [
       { label: "All Products", href: "/products" },
       { label: "Add New Product", href: "/products/new" },
       { label: "In Progress", href: "/products/in-progress" },
-      { label: "Inventory", href: "/products/inventory" },
+      { label: "Regional Specialty", href: "/regional-specialty" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -153,17 +153,17 @@ const menuItems = [
       </svg>
     ),
   },
-  {
-    label: "Reports",
-    href: "/reports",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="14" />
-      </svg>
-    ),
-  },
+  // {
+  //   label: "Reports",
+  //   href: "/reports",
+  //   icon: (
+  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  //       <line x1="18" y1="20" x2="18" y2="10" />
+  //       <line x1="12" y1="20" x2="12" y2="4" />
+  //       <line x1="6" y1="20" x2="6" y2="14" />
+  //     </svg>
+  //   ),
+  // },
   {
     label: "Settings",
     href: "/settings",
@@ -182,10 +182,10 @@ export default function SellerDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+const handleLogout = async () => {
+  await logout();
+  router.replace("/login");
+};
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 
