@@ -1,4 +1,4 @@
-const { Review, OrderItem, Order, Customer, Product, Seller } = require('../models');
+const { Review, OrderItem, Order, Customer, Product, Seller, Vendor } = require('../models');
 
 exports.createReview = async (customerId, orderItemId, rating, comment) => {
   if (!rating || rating < 1 || rating > 5) {
@@ -43,15 +43,67 @@ exports.createReview = async (customerId, orderItemId, rating, comment) => {
   return review;
 };
 
-exports.listForSeller = async (sellerId) => {
+exports.listForSeller = async (userId, role) => {
+  let productWhere;
+  if (role === 'SELLER') productWhere = { seller_id: userId };
+  else if (role === 'VENDOR') productWhere = { vendor_id: userId };
+  else if (role === 'SUPER_ADMIN') productWhere = undefined; // admin sees all reviews
+  else {
+    const err = new Error('Not authorized.');
+    err.status = 403;
+    throw err;
+  }
+
   const reviews = await Review.findAll({
     include: [
       {
         model: Product,
         as: 'product',
         required: true,
-        where: { seller_id: sellerId },
+        ...(productWhere && { where: productWhere }),
         attributes: ['id', 'name', 'image_url'],
+        include: [
+          { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
+          { model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] },
+        ],
+      },
+    ],
+    order: [['created_at', 'DESC']],
+  });
+  return reviews;
+};
+
+
+
+exports.listForProduct = async (productId) => {
+  const rows = await Review.findAll({
+    where: { product_id: productId },
+    attributes: ['id', 'customer_name', 'rating', 'comment', 'created_at'],
+    order: [['created_at', 'DESC']],
+  });
+
+  const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let total = 0;
+  rows.forEach((r) => {
+    breakdown[r.rating] = (breakdown[r.rating] || 0) + 1;
+    total += r.rating;
+  });
+  const count = rows.length;
+
+  return {
+    reviews: rows.slice(0, 6),
+    summary: { average: count ? Number((total / count).toFixed(1)) : 0, count, breakdown },
+  };
+};
+exports.listForCustomer = async (customerId) => {
+  const reviews = await Review.findAll({
+    where: { customer_id: customerId },
+    include: [
+      {
+        model: Product,
+        as: 'product',
+        required: false,
+        attributes: ['id', 'name', 'image_url', 'sku'],
       },
     ],
     order: [['created_at', 'DESC']],

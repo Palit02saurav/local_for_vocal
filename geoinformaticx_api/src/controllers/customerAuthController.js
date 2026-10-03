@@ -66,3 +66,29 @@ exports.updateProfile = async (req, res) => {
     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error updating profile.');
   }
 };
+
+
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return CommonService.sendResponse(res, 400, false, 'No image file received.');
+    }
+    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const data = await CustomerAuthService.updateAvatar(req.customerId, url);
+    CommonService.sendResponse(res, 200, true, 'Profile photo updated.', data);
+  } catch (err) {
+    console.error('Upload avatar error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error uploading photo.');
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { current_password, new_password } = req.body || {};
+    await CustomerAuthService.changePassword(req.customerId, current_password, new_password);
+    CommonService.sendResponse(res, 200, true, 'Password changed successfully.');
+  } catch (err) {
+    console.error('Change password error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error changing password.');
+  }
+};

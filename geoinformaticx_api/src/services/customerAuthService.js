@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Customer } = require('../models');
+const { Customer, Review } = require('../models');
 const { generateCustomerToken, setCustomerAuthCookie } = require('../utils/tokenUtils');
 const { generateOtp, sendOtpEmail, sendOtpSms } = require('../utils/otpUtils');
 
@@ -103,16 +103,66 @@ exports.updateProfile = async (customerId, body) => {
   await customer.save();
   return customer;
 };
+
+exports.updateAvatar = async (customerId, url) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) {
+    const err = new Error('Account not found.');
+    err.status = 404;
+    throw err;
+  }
+  customer.avatar_url = url;
+  await customer.save();
+  return { avatar_url: customer.avatar_url };
+};
+
+
+exports.changePassword = async (customerId, currentPassword, newPassword) => {
+  if (!currentPassword?.trim() || !newPassword?.trim()) {
+    const err = new Error('Current and new password are required.');
+    err.status = 400;
+    throw err;
+  }
+  if (newPassword.length < 6) {
+    const err = new Error('New password must be at least 6 characters.');
+    err.status = 400;
+    throw err;
+  }
+
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) {
+    const err = new Error('Account not found.');
+    err.status = 404;
+    throw err;
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, customer.password_hash);
+  if (!isMatch) {
+    const err = new Error('Current password is incorrect.');
+    err.status = 400;
+    throw err;
+  }
+  if (currentPassword === newPassword) {
+    const err = new Error('New password must be different from the current password.');
+    err.status = 400;
+    throw err;
+  }
+
+  customer.password_hash = await bcrypt.hash(newPassword, 10);
+  await customer.save();
+};
+
 exports.me = async (customerId) => {
   const customer = await Customer.findByPk(customerId, {
-    attributes: ['id', 'name', 'email', 'phone', 'dob', 'address', 'city', 'state', 'pincode', 'is_active'],
+    attributes: ['id', 'name', 'email', 'phone', 'dob', 'address', 'city', 'state', 'pincode', 'avatar_url', 'is_active', 'created_at'],
   });
   if (!customer || !customer.is_active) {
     const err = new Error('Not authenticated.');
     err.status = 401;
     throw err;
   }
-  return customer;
+  const reviews_count= await Review.count({ where: { customer_id: customerId } });
+  return { ...customer.toJSON(), reviews_count };
 };
 exports.verifyOtp = async (email, otp, res) => {
   const normalizedEmail = email.trim().toLowerCase();

@@ -4,6 +4,7 @@ const sellerController = require('../controllers/sellerController');
 const verifyToken = require('../middlewares/auth');
 
 router.get('/public', sellerController.listPublic);
+router.get('/public/:id', sellerController.getPublic);
 
 router.get('/requests', verifyToken, sellerController.listRequests);
 router.patch('/:id/approve', verifyToken, sellerController.approve);

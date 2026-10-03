@@ -1,7 +1,26 @@
-const { Order, OrderItem, Customer, Product, Service, Seller, Review } = require('../models');
+const { Order, OrderItem, Customer, Product, Service, Seller, Review, Vendor } = require('../models');
 const { Op } = require('sequelize');
 const { sendServiceBookingEmail } = require('../utils/otpUtils');
 
+
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const getRazorpay = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    const err = new Error('Online payments are not configured.');
+    err.status = 500;
+    throw err;
+  }
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
+
+const paidOrCod = {
+  [Op.or]: [{ payment_method: { [Op.ne]: 'razorpay' } }, { payment_status: 'Paid' }],
+};
 const notifyServiceSellers = async (serviceItems, order, form) => {
   const services = await Service.findAll({
     where: { id: serviceItems.map((i) => i.id) },
@@ -30,12 +49,87 @@ const notifyServiceSellers = async (serviceItems, order, form) => {
   }
 };
 
-exports.createOrder = async (customerId, cartItems, form) => {
-  if (!cartItems || cartItems.length === 0) {
+// exports.createOrder = async (customerId, cartItems, form) => {
+//   if (!cartItems || cartItems.length === 0) {
+//     const err = new Error('Cart is empty.');
+//     err.status = 400;
+//     throw err;
+//   }
+
+//   const productItems = cartItems.filter((i) => (i.type || 'product') === 'product');
+//   const serviceItems = cartItems.filter((i) => i.type === 'service');
+
+//   const createGroup = async (items, status) => {
+//     const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+
+//     const order = await Order.create({
+//       customer_id: customerId,
+//       full_name: form.name,
+//       phone: form.phone,
+//       email: form.email,
+//       address: form.address,
+//       payment_method: form.paymentMethod || 'cod',
+//       status,
+//       total,
+//     });
+
+//     await OrderItem.bulkCreate(
+//       items.map((item) => ({
+//         order_id: order.id,
+//         item_type: item.type || 'product',
+//         product_id: item.type === 'service' ? null : item.id,
+//         service_id: item.type === 'service' ? item.id : null,
+//         name: item.name,
+//         seller_name: item.seller || null,
+//         image_url: item.image || null,
+//         price: Number(item.price),
+//         quantity: item.quantity,
+//       }))
+//     );
+
+//     return order;
+//   };
+
+//   const productOrder = productItems.length ? await createGroup(productItems, 'Processing') : null;
+//   const serviceOrder = serviceItems.length ? await createGroup(serviceItems, 'Confirmed') : null;
+
+//   if (serviceOrder) {
+//     notifyServiceSellers(serviceItems, serviceOrder, form).catch((e) =>
+//       console.error('Service booking mail error:', e.message)
+//     );
+//   }
+
+//   return {
+//     order: productOrder || serviceOrder,
+//     hasProducts: productItems.length > 0,
+//     hasServices: serviceItems.length > 0,
+//   };
+// };
+
+
+
+exports.createOrder = async (customerId, rawItems, form) => {
+  if (!rawItems || rawItems.length === 0) {
     const err = new Error('Cart is empty.');
     err.status = 400;
     throw err;
   }
+
+  const isOnline = form.paymentMethod === 'razorpay';
+
+  // NEW: take prices from the database, never from the browser
+  const cartItems = await Promise.all(
+    rawItems.map(async (item) => {
+      const Model = item.type === 'service' ? Service : Product;
+      const row = await Model.findByPk(item.id, { attributes: ['id', 'price'] });
+      if (!row) {
+        const err = new Error(`"${item.name}" is no longer available.`);
+        err.status = 400;
+        throw err;
+      }
+      return { ...item, price: Number(row.price) };
+    })
+  );
 
   const productItems = cartItems.filter((i) => (i.type || 'product') === 'product');
   const serviceItems = cartItems.filter((i) => i.type === 'service');
@@ -71,10 +165,45 @@ exports.createOrder = async (customerId, cartItems, form) => {
     return order;
   };
 
-  const productOrder = productItems.length ? await createGroup(productItems, 'Processing') : null;
-  const serviceOrder = serviceItems.length ? await createGroup(serviceItems, 'Confirmed') : null;
+  const productOrder = productItems.length ? await createGroup(productItems, isOnline ? 'Pending' : 'Processing') : null;
+  const serviceOrder = serviceItems.length ? await createGroup(serviceItems, isOnline ? 'Pending' : 'Confirmed') : null;
 
-  if (serviceOrder) {
+  let razorpay = null;
+  if (isOnline) {
+    const orders = [productOrder, serviceOrder].filter(Boolean);
+    try {
+      const total = orders.reduce((s, o) => s + Number(o.total), 0);
+      if (Math.round(total * 100) < 100) {
+        const err = new Error('Minimum online payment is ₹1.');
+        err.status = 400;
+        throw err;
+      }
+      const rzpOrder = await getRazorpay().orders.create({
+        amount: Math.round(total * 100), // paise
+        currency: 'INR',
+        receipt: `c${customerId}_${Date.now()}`,
+      });
+      await Order.update(
+        { razorpay_order_id: rzpOrder.id },
+        { where: { id: orders.map((o) => o.id) } }
+      );
+      razorpay = {
+        orderId: rzpOrder.id,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+      };
+    } catch (e) {
+      await Order.update(
+        { status: 'Cancelled', payment_status: 'Failed' },
+        { where: { id: orders.map((o) => o.id) } }
+      );
+      if (e.status) throw e; 
+      const err = new Error(e?.error?.description || e.message || 'Could not start payment.');
+      err.status = 500;
+      throw err;
+    }
+  } else if (serviceOrder) {
     notifyServiceSellers(serviceItems, serviceOrder, form).catch((e) =>
       console.error('Service booking mail error:', e.message)
     );
@@ -84,7 +213,67 @@ exports.createOrder = async (customerId, cartItems, form) => {
     order: productOrder || serviceOrder,
     hasProducts: productItems.length > 0,
     hasServices: serviceItems.length > 0,
+    razorpay, 
   };
+};
+
+exports.verifyPayment = async (customerId, body) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body || {};
+  if (!razorpay_order_id || !razorpay_payment_id || typeof razorpay_signature !== 'string') {
+    const err = new Error('Missing payment details.');
+    err.status = 400;
+    throw err;
+  }
+
+  const orders = await Order.findAll({
+    where: { razorpay_order_id, customer_id: customerId },
+    include: [{ model: OrderItem, as: 'items' }],
+  });
+  if (!orders.length) {
+    const err = new Error('Order not found.');
+    err.status = 404;
+    throw err;
+  }
+
+  const expected = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest('hex');
+  const valid =
+    expected.length === razorpay_signature.length &&
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(razorpay_signature));
+  if (!valid) {
+    const err = new Error('Payment verification failed.');
+    err.status = 400;
+    throw err;
+  }
+
+  for (const order of orders) {
+    if (order.payment_status === 'Paid') continue; 
+    const hasService = order.items.some((i) => i.item_type === 'service');
+    order.payment_status = 'Paid';
+    order.razorpay_payment_id = razorpay_payment_id;
+    order.status = hasService ? 'Confirmed' : 'Processing';
+    await order.save();
+
+    if (hasService) {
+      const serviceItems = order.items.map((i) => ({
+        id: i.service_id, name: i.name, price: i.price, quantity: i.quantity,
+      }));
+      notifyServiceSellers(serviceItems, order, {
+        name: order.full_name, phone: order.phone, email: order.email,
+        address: order.address, paymentMethod: order.payment_method,
+      }).catch((e) => console.error('Service booking mail error:', e.message));
+    }
+  }
+  return orders;
+};
+
+exports.abortPayment = async (customerId, razorpayOrderId) => {
+  await Order.update(
+    { status: 'Cancelled', payment_status: 'Failed' },
+    { where: { customer_id: customerId, razorpay_order_id: razorpayOrderId, payment_status: 'Unpaid' } }
+  );
 };
 
 exports.listProductOrders = async (customerId) => {
@@ -94,8 +283,8 @@ exports.listProductOrders = async (customerId) => {
       {
         model: Order,
         as: 'order',
-        where: { customer_id: customerId },
-        attributes: ['id', 'status', 'created_at'],
+        where: { customer_id: customerId, ...paidOrCod },
+        attributes: ['id', 'status', 'created_at', 'updated_at'],
       },
       {
         model: Product,
@@ -118,12 +307,26 @@ exports.listProductOrders = async (customerId) => {
 exports.listServiceOrders = async (customerId) => {
   const items = await OrderItem.findAll({
     where: { item_type: 'service' },
-    include: [{
-      model: Order,
-      as: 'order',
-      where: { customer_id: customerId },
-      attributes: ['id', 'status', 'created_at'],
-    }],
+    include: [
+      {
+        model: Order,
+        as: 'order',
+        where: { customer_id: customerId, ...paidOrCod },
+        attributes: ['id', 'status', 'address', 'created_at', 'updated_at'],
+      },
+      {
+        model: Service,
+        as: 'service',
+        required: false,
+        attributes: ['id', 'seller_id'],
+        include: [{
+          model: Seller,
+          as: 'seller',
+          required: false,
+          attributes: ['id', 'store_name', 'phone', 'location'],
+        }],
+      },
+    ],
     order: [['created_at', 'DESC']],
   });
   return items;
@@ -131,6 +334,7 @@ exports.listServiceOrders = async (customerId) => {
 
 exports.listAllOrders = async () => {
   const orders = await Order.findAll({
+    where: paidOrCod,
     include: [
       { model: Customer, as: 'customer' },
       { model: OrderItem, as: 'items' },
@@ -159,6 +363,7 @@ exports.listSellerOrders = async (sellerId) => {
       {
         model: Order,
         as: 'order',
+        where: paidOrCod,
         include: [{ model: Customer, as: 'customer' }],
       },
       {
@@ -203,35 +408,7 @@ exports.cancelOrder = async (orderId, customerId) => {
 };
 
 
-exports.listSellerOrders = async (sellerId) => {
-  const items = await OrderItem.findAll({
-    include: [
-      {
-        model: Order,
-        as: 'order',
-        include: [{ model: Customer, as: 'customer' }],
-      },
-      {
-        model: Product,
-        as: 'product',
-        required: false,
-      },
-      {
-        model: Service,
-        as: 'service',
-        required: false,
-      },
-    ],
-    order: [['created_at', 'DESC']],
-  });
 
-  // Filter in JS: keep only items whose underlying product/service belongs to this seller.
-  return items.filter((item) => {
-    if (item.item_type === 'product') return item.product?.seller_id === sellerId;
-    if (item.item_type === 'service') return item.service?.seller_id === sellerId;
-    return false;
-  });
-};
 
 
 
@@ -243,6 +420,7 @@ exports.listVendorOrders = async (vendorId) => {
       {
         model: Order,
         as: 'order',
+        where: paidOrCod,
         include: [{ model: Customer, as: 'customer' }],
       },
       {
@@ -250,6 +428,7 @@ exports.listVendorOrders = async (vendorId) => {
         as: 'product',
         required: true,
         where: { vendor_id: vendorId },
+        include: [{ model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] }],
       },
     ],
     order: [['created_at', 'DESC']],

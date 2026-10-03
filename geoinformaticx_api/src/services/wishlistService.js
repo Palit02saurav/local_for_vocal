@@ -1,13 +1,46 @@
-const { WishlistItem, Product, Service } = require('../models');
+const { fn, col } = require('sequelize');
+const { WishlistItem, Product, Service, Review } = require('../models');
 
 exports.getWishlist = async (customerId) => {
-  return WishlistItem.findAll({
+  const items = await WishlistItem.findAll({
     where: { customer_id: customerId },
     include: [
       { model: Product, as: 'product' },
       { model: Service, as: 'service' },
     ],
     order: [['created_at', 'DESC']],
+  });
+
+  // average rating + review count for the wishlisted products
+  const productIds = items.filter((i) => i.product_id).map((i) => i.product_id);
+  const stats = productIds.length
+    ? await Review.findAll({
+        attributes: [
+          'product_id',
+          [fn('AVG', col('rating')), 'avg_rating'],
+          [fn('COUNT', col('id')), 'review_count'],
+        ],
+        where: { product_id: productIds },
+        group: ['product_id'],
+        raw: true,
+      })
+    : [];
+
+  const byProduct = {};
+  stats.forEach((s) => {
+    byProduct[s.product_id] = {
+      avg_rating: Number(Number(s.avg_rating).toFixed(1)),
+      review_count: Number(s.review_count),
+    };
+  });
+
+  return items.map((i) => {
+    const json = i.toJSON();
+    if (json.product) {
+      json.product.avg_rating = byProduct[json.product_id]?.avg_rating || 0;
+      json.product.review_count = byProduct[json.product_id]?.review_count || 0;
+    }
+    return json;
   });
 };
 

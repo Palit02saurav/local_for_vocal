@@ -8,7 +8,10 @@ const Order = sequelize.define('Order', {
   phone: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.TEXT, allowNull: false },
-  payment_method: { type: DataTypes.ENUM('cod', 'upi', 'card'), allowNull: false, defaultValue: 'cod' },
+  payment_method: { type: DataTypes.ENUM('cod', 'upi', 'card', 'razorpay'), allowNull: false, defaultValue: 'cod' },
+  payment_status: { type: DataTypes.ENUM('Unpaid', 'Paid', 'Failed'), allowNull: false, defaultValue: 'Unpaid' },
+  razorpay_order_id: { type: DataTypes.STRING, allowNull: true },
+  razorpay_payment_id: { type: DataTypes.STRING, allowNull: true },
   status: {
     type: DataTypes.ENUM('Pending', 'Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'),
     allowNull: false,

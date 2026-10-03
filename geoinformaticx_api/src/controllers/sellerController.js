@@ -21,6 +21,19 @@ exports.listPublic = async (req, res) => {
   }
 };
 
+exports.getPublic = async (req, res) => {
+  try {
+    const seller = await SellerService.getPublicSeller(req.params.id);
+    if (!seller) {
+      return CommonService.sendResponse(res, 404, false, 'Store not found.');
+    }
+    CommonService.sendResponse(res, 200, true, 'Seller fetched successfully', { seller });
+  } catch (err) {
+    console.error('Get public seller error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching seller.');
+  }
+};
+
 exports.listRequests = async (req, res) => {
   try {
     const sellers = await SellerService.listRequests(req.userRole);

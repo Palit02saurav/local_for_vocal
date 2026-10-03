@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const customerAuthController = require('../controllers/customerAuthController');
 const verifyCustomerToken = require('../middlewares/customerAuth');
+const upload = require('../middlewares/upload');
+const CommonService = require('../services/commonService');
 
 router.post('/signup', customerAuthController.signup);
 router.post('/login', customerAuthController.login);
@@ -10,4 +12,11 @@ router.post('/verify-otp', customerAuthController.verifyOtp);
 router.post('/resend-otp', customerAuthController.resendOtp);
 router.get('/me', verifyCustomerToken, customerAuthController.me);
 router.patch('/me', verifyCustomerToken, customerAuthController.updateProfile);
-module.exports = router;    
+router.post('/me/avatar', verifyCustomerToken, upload.single('image'), customerAuthController.uploadAvatar);
+router.patch('/me/password', verifyCustomerToken, customerAuthController.changePassword);
+
+router.use((err, req, res, next) => {
+  CommonService.sendResponse(res, 400, false, err.message || 'Image upload failed.');
+});
+
+module.exports = router; 

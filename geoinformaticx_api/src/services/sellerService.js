@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 const { Seller } = require('../models');
 
 exports.listSellers = () => {
@@ -17,12 +18,28 @@ exports.listPublicSellers = () => {
     where: {
       approval_status: 'Approved',
       is_active: true,
+      business_address: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] },
+      profile_image_url: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] },
     },
     attributes: [
       'id', 'full_name', 'store_name', 'location', 'phone',
-      'latitude', 'longitude', 'seller_type',
+      'latitude', 'longitude', 'seller_type', 'profile_image_url',
     ],
     order: [['id', 'ASC']],
+  });
+};
+
+exports.getPublicSeller = (id) => {
+  return Seller.findOne({
+    where: {
+      id,
+      approval_status: 'Approved',
+      is_active: true,
+    },
+    attributes: [
+      'id', 'full_name', 'store_name', 'location', 'business_address', 'phone',
+      'latitude', 'longitude', 'seller_type', 'profile_image_url',
+    ],
   });
 };
 

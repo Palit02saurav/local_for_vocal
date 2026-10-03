@@ -20,4 +20,6 @@ router.use('/orders', require('./orderRoutes'));
 router.use('/reviews', require('./reviewRoutes'));
 router.use('/notifications', require('./notificationRoutes'));
 router.use('/mails', require('./mailRoutes'));
+router.use('/contact', require('./contactRoutes'));
 router.use('/uploads', require('./uploadRoutes'));
+router.use('/payout-accounts', require('./payoutAccountRoutes'));

@@ -19,7 +19,8 @@ const Customer = sequelize.define(
     city: { type: DataTypes.STRING, allowNull: true },
     state: { type: DataTypes.STRING, allowNull: true },
     pincode: { type: DataTypes.STRING, allowNull: true },
-    is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    avatar_url: { type: DataTypes.STRING(500), allowNull: true },
+    is_active:{ type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },
   {
     tableName: 'customers',

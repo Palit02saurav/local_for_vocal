@@ -47,6 +47,12 @@ const Product = sequelize.define(
     image_url: { type: DataTypes.STRING(500) },
     gallery_urls: { type: DataTypes.TEXT }, 
     description: { type: DataTypes.TEXT },
+    return_replace_accepted: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    return_replace_days: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 7 },
+    brand: { type: DataTypes.STRING(100) },
+    weight: { type: DataTypes.DECIMAL(8, 2) },
+    dimensions: { type: DataTypes.STRING(60) },
+    tags: { type: DataTypes.STRING(500) },
   },
   {
     tableName: 'products',

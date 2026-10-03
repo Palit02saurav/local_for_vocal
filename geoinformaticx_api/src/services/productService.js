@@ -45,6 +45,8 @@ exports.createProduct= async (body, userId, userRole) => {
  const {
     name, sku, category, price, stock, image_url, gallery_urls, description, product_type,
     delivery_type, unit, shelf_life, prep_time_minutes,
+    return_replace_accepted, return_replace_days,
+    brand, tags, weight, dimensions,
   } = body;
   let { seller_id } = body;
 
@@ -100,7 +102,18 @@ const isFresh = delivery_type === 'Fresh';
     }
   }
 
-  // Vendors don't enter a SKU on the form — generate one server-side.
+  let returnAccepted = false;
+  let returnDays = 7;
+  if (created_by_role === 'SELLER') {
+    if (return_replace_accepted !== true && return_replace_accepted !== 'true') {
+      const err = new Error('Seller must accept return or replacement for this product.');
+      err.status = 400;
+      throw err;
+    }
+    returnAccepted = true;
+    returnDays = 7; 
+  }
+
   const finalSku = sku || `VND-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const existingSku = await Product.findOne({ where: { sku: finalSku } });
@@ -148,6 +161,15 @@ const VENDOR_DEFAULT_STOCK = 100; // change as you like
     image_url: image_url || null,
     gallery_urls: gallery_urls || null,
     description: description || null,
+    return_replace_accepted: returnAccepted,
+    return_replace_days: returnDays,
+    brand: brand || null,
+    tags: tags || null,
+    weight: weight ? Number(weight) : null,
+    dimensions:
+      dimensions?.length && dimensions?.width && dimensions?.height
+        ? `${dimensions.length} x ${dimensions.width} x ${dimensions.height}`
+        : null,
   });
 };
 

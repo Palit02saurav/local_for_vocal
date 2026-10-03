@@ -14,10 +14,30 @@ exports.create = async (req, res) => {
 
 exports.listForSeller = async (req, res) => {
   try {
-    const reviews = await ReviewService.listForSeller(req.userId);
+    const reviews = await ReviewService.listForSeller(req.userId, req.userRole);
     CommonService.sendResponse(res, 200, true, 'Reviews fetched successfully.', { reviews });
   } catch (err) {
     console.error('List seller reviews error:', err);
-    CommonService.sendResponse(res, 500, false, 'Server error fetching reviews.');
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching reviews.');
+  }
+};
+
+exports.listForProduct = async (req, res) => {
+  try {
+    const data = await ReviewService.listForProduct(req.params.productId);
+    CommonService.sendResponse(res, 200, true, 'Product reviews fetched.', data);
+  } catch (err) {
+    console.error('List product reviews error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching reviews.');
+  }
+};
+
+exports.listMine = async (req, res) => {
+  try {
+    const reviews = await ReviewService.listForCustomer(req.customerId);
+    CommonService.sendResponse(res, 200, true, 'Your reviews fetched.', { reviews });
+  } catch (err) {
+    console.error('List my reviews error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error fetching reviews.');
   }
 };

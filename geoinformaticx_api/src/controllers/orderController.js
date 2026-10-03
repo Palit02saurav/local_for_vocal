@@ -73,3 +73,24 @@ exports.cancel = async (req, res) => {
     CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error cancelling order.');
   }
 };
+
+
+exports.verifyPayment = async (req, res) => {
+  try {
+    await OrderService.verifyPayment(req.customerId, req.body);
+    CommonService.sendResponse(res, 200, true, 'Payment verified.');
+  } catch (err) {
+    console.error('Verify payment error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Payment verification failed.');
+  }
+};
+
+exports.abortPayment = async (req, res) => {
+  try {
+    await OrderService.abortPayment(req.customerId, req.body?.razorpay_order_id);
+    CommonService.sendResponse(res, 200, true, 'Payment cancelled.');
+  } catch (err) {
+    console.error('Abort payment error:', err);
+    CommonService.sendResponse(res, 500, false, 'Server error.');
+  }
+};

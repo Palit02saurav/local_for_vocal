@@ -10,5 +10,6 @@ router.get('/products', verifyCustomerToken, orderController.listProductOrders);
 router.get('/services', verifyCustomerToken, orderController.listServiceOrders);
 router.patch('/:id/status', verifyToken, orderController.updateStatus);
 router.patch('/:id/cancel', verifyCustomerToken, orderController.cancel);
-
+router.post('/payment/verify', verifyCustomerToken, orderController.verifyPayment);
+router.post('/payment/abort', verifyCustomerToken, orderController.abortPayment);
 module.exports = router;
