@@ -90,18 +90,18 @@
 }
 
 .prf-avatar {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: #eaf4ef;
-  color: #2d6a4f;
-  font-size: 24px;
+  background: #1f6b43;
+  color: #fff;
+  font-size: 40px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 10px;
 }
+.prf-avatar-lg { width: 100px; height: 100px; }
 
 .prf-user-name {
   font-size: 15px;
@@ -156,11 +156,12 @@
 }
 
 .prf-nav-item.active {
-  background: #eaf4ef;
+  background: #dcefe5;
   color: #2d6a4f;
   font-weight: 700;
-  border-left: 3px solid #2d6a4f;
+  border-left: 4px solid #2d6a4f;
   padding-left: 9px;
+  border-radius: 10px;
 }
 
 .prf-logout-item {
@@ -457,4 +458,266 @@
   font-weight: 600;
   font-size: 13.5px;
   text-decoration: none;
+}
+
+.prf-hero {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 28px 40px;
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, #e3f1ea 0%, #cfe6da 60%, #e3f1ea 100%);
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+}
+.prf-hero-text { position: relative; z-index: 2; }
+.prf-hero h1 { font-size: 36px; font-weight: 800; margin: 0 0 6px; }
+.prf-hero p { margin: 0; font-size: 15px; color: #333; }
+.prf-hero-images {
+  position: absolute; top: 0; right: 0; height: 100%; width: 50%;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 35%);
+          mask-image: linear-gradient(to right, transparent, #000 35%);
+}
+.prf-hero-images img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+
+/* avatar camera */
+.prf-avatar-wrap { position: relative; width: 100px; margin: 0 auto 10px; }
+.prf-avatar-cam {
+  position: absolute; right: -2px; bottom: 2px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #fff; border: 1px solid #e3e3e3; color: #333;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.prf-dot { width: 8px; height: 8px; border-radius: 50%; background: #e03131; margin-left: 2px; }
+
+/* layout: 3 columns */
+.prf-layout { gap: 22px; }
+.prf-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+
+/* card title */
+.prf-card-title { display: flex; align-items: center; gap: 14px; }
+.prf-card-title h2 { font-size: 20px; font-weight: 800; margin: 0; }
+.prf-card-title p { margin: 2px 0 0; font-size: 13px; color: #777; }
+.prf-card-ico {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #e3f1ea; color: #1f6b43;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* form labels */
+.prf-field label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #222; }
+.prf-field label b { color: #e03131; font-weight: 400; }
+.prf-field input, .prf-field select { padding: 12px 14px; border-radius: 8px; }
+.prf-field input:disabled, .prf-field select:disabled { background: #f4f4f4; }
+
+/* edit button solid green */
+.prf-edit-btn { background: #1f6b43; color: #fff; border-color: #1f6b43; padding: 10px 18px; border-radius: 8px; }
+.prf-edit-btn:hover { background: #185636; }
+
+/* security card */
+.prf-security { margin-top: 20px; }
+.prf-security .prf-card-title { margin-bottom: 18px; }
+.prf-sec-list { border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+.prf-sec-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+.prf-sec-row + .prf-sec-row { border-top: 1px solid #eee; }
+.prf-sec-ico {
+  width: 40px; height: 40px; border-radius: 50%; background: #f2f2f2; color: #333;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.prf-sec-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.prf-sec-text strong { font-size: 14px; }
+.prf-sec-text span { font-size: 13px; color: #777; }
+.prf-outline-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: #fff; border: 1px solid #1f6b43; color: #1f6b43;
+  padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+}
+.prf-outline-btn:hover { background: #f0f7f4; }
+
+/* right panel */
+.prf-right-top {
+  background: #e9f4ee; border: 1px solid #dcebe3; border-radius: 14px;
+  padding: 24px 18px; text-align: center;
+}
+.prf-change-photo { width: 100%; margin-top: 16px; background: #fff; }
+.prf-stats {
+  background: #fbf6ec; border-radius: 14px; padding: 8px 18px;
+}
+.prf-stat { display: flex; align-items: center; gap: 14px; padding: 14px 0; }
+.prf-stat + .prf-stat { border-top: 1px solid #efe6d3; }
+.prf-stat-ico { width: 32px; display: flex; justify-content: center; color: #222; }
+.prf-stat small { display: block; font-size: 13px; color: #555; }
+.prf-stat strong { font-size: 17px; font-weight: 800; }
+
+@media (max-width: 1100px) {
+  .prf-layout { flex-wrap: wrap; }
+  .prf-right { width: 100%; flex-direction: row; }
+  .prf-right > * { flex: 1; }
+}
+@media (max-width: 900px) {
+  .prf-right { flex-direction: column; }
+  .prf-sec-row { flex-wrap: wrap; }
+}
+
+.prf-link-btn { text-decoration: none; display: inline-block; }
+.prf-orders-item { padding: 16px; }
+.prf-orders-item-img { width: 72px; height: 72px; background: #f4f4f4; }
+
+/* Wishlist section (reuses the orders list look) */
+.prf-wish-name { display: block; text-decoration: none; color: inherit; }
+.prf-wish-name:hover { color: #1f7a4d; }
+
+.prf-wish-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.prf-wish-cart-btn {
+  background: #1f7a4d;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(31, 122, 77, 0.35);
+}
+.prf-wish-cart-btn:hover { background: #196640; }
+
+.prf-wish-remove-btn {
+  background: transparent;
+  border: none;
+  color: #c0392b;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.prf-wish-remove-btn:hover { text-decoration: underline; }
+
+/* Addresses section */
+.prf-addr-card {
+  display: flex;
+  gap: 16px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.prf-addr-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e3f1ea;
+  color: #1f7a4d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prf-addr-badge {
+  display: inline-block;
+  background: #e3f1ea;
+  color: #1f7a4d;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.prf-addr-name {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.prf-addr-line,
+.prf-addr-phone {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  color: #444;
+}
+
+.prf-addr-phone { margin-top: 8px; color: #666; }
+
+/* Reviews section */
+.prf-rev-item { align-items: flex-start; }
+
+.prf-rev-stars { margin-top: 4px; font-size: 17px; letter-spacing: 2px; color: #d9d9d9; }
+.prf-rev-stars .on { color: #e0a800; }
+
+.prf-rev-comment {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: #444;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Profile photo */
+.prf-avatar { overflow: hidden; }
+.prf-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.prf-avatar-cam:disabled,
+.prf-change-photo:disabled { opacity: 0.6; cursor: wait; }
+
+/* Profile hero: custom background image from /public/images */
+.prf-hero {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0) 100%),
+    url("/images/pro.png") center / cover no-repeat;
+  min-height: 190px;
+}
+
+/* Keep long state names from stretching the form grid */
+.prf-form-row,
+.prf-form-row-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prf-form-row-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.prf-field {
+  min-width: 0;
+}
+
+.prf-field input,
+.prf-field select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+  .prf-form-row,
+  .prf-form-row-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Change password form */
+.prf-pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border-top: 1px solid #eee;
+  background: #fcfcfc;
+}
+
+.prf-pw-form .prf-field input:not(:disabled) { background: #fff; }
+
+.prf-pw-error {
+  margin: 0;
+  color: #e03131;
+  font-size: 13px;
 }

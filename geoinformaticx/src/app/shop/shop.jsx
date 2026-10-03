@@ -226,8 +226,6 @@ export default function Shop() {
             <option>Price Low to High</option>
             <option>Price High to Low</option>
           </select>
-          <button className="view-btn active">⊞</button>
-          <button className="view-btn">☰</button>
         </div>
       </div>
 
@@ -369,7 +367,7 @@ export default function Shop() {
                 <span>Other Shops</span>
               </div>
             </div>
-          </div>
+          {/* </div>
 
           <div className="card featured-card">
             <h3 className="featured-title">Featured Local Business</h3>
@@ -391,6 +389,10 @@ export default function Shop() {
               <button className="view-store-btn">View Store</button>
             </div>
           </div>
+
+          <div className="card support-card"> */}
+
+      </div>
 
           <div className="card support-card">
             <div className="support-content">

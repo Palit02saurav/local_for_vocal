@@ -17,7 +17,7 @@ html {
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -46,4 +46,29 @@ a {
   html {
     color-scheme: dark;
   }
+}
+/* Unified green pill buttons (match navbar "Home" pill) */
+.product-add-to-cart-btn.product-add-to-cart-btn,
+.sp-add-cart-btn.sp-add-cart-btn,
+.wl-add-to-cart-btn.wl-add-to-cart-btn,
+.details-book-btn.details-book-btn,
+.wl-move-all-btn.wl-move-all-btn,
+.wl-continue-btn.wl-continue-btn {
+  background: #1f7a4d;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(31, 122, 77, 0.35);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.product-add-to-cart-btn.product-add-to-cart-btn:hover,
+.sp-add-cart-btn.sp-add-cart-btn:hover,
+.wl-add-to-cart-btn.wl-add-to-cart-btn:hover,
+.details-book-btn.details-book-btn:hover,
+.wl-move-all-btn.wl-move-all-btn:hover,
+.wl-continue-btn.wl-continue-btn:hover {
+  background: #196640;
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(31, 122, 77, 0.45);
 }

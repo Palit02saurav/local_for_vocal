@@ -637,7 +637,6 @@
   display: inline-block;
   margin-top: 12px;
 }
-
 .all-categories-btn {
   display: flex;
   align-items: center;
@@ -645,9 +644,9 @@
   background: #2d6a4f;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 9px 14px;
-  font-size: 13.5px;
+  border-radius: 999px;
+  padding: 11px 24px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;

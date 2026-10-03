@@ -6,9 +6,11 @@ import axios from "axios";
 import { addToCart } from "@/lib/cart";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { useRouter } from "next/navigation";
+
 import Link from "next/link";
 
 export default function Services() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const [wishlisted, setWishlisted] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,30 +21,21 @@ export default function Services() {
   const [sortBy, setSortBy] = useState("Popularity");
   const [selectedService, setSelectedService] = useState(null);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const [allServices, setAllServices] = useState([]);
 
-const [allServices, setAllServices] = useState([]);
-
-useEffect(() => {
-  axios
-    .get(`${API_BASE}/services/public`)
-    .then((res) => {
-      const services = (
-        res.data.data?.products ||
-        res.data.data?.services ||
-        []
-      ).map((s) => ({
-        ...s,
-        slug: s.sku,
-        img: s.image_url || "https://placehold.co/300x300?text=No+Image",
-      }));
-
-      setAllServices(services);
-    })
-    .catch((err) => {
-      console.error("Failed to load services:", err);
-    });
-}, []);
+  useEffect(() => {
+    axios
+      axios.get(`${API_BASE}/services/public`)
+      .then((res) => {
+        const services = (res.data.data?.products || res.data.data?.services || []).map((s) => ({
+          ...s,
+          slug: s.sku,
+          img: s.image_url || "https://placehold.co/300x300?text=No+Image",
+        }));
+        setAllServices(services);
+      })
+      .catch((err) => console.error("Failed to load services:", err));
+  }, []);
 
   const syncWishlist = async () => {
     const list = await getWishlist();
@@ -118,8 +111,6 @@ useEffect(() => {
             <option>Price Low to High</option>
             <option>Price High to Low</option>
           </select>
-          <button className="view-btn active">⊞</button>
-          <button className="view-btn">☰</button>
         </div>
       </div>
 

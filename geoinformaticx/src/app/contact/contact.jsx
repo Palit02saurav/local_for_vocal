@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import api from "@/lib/api";
 import {
   FaMapMarkerAlt,
   FaPhoneAlt,
@@ -19,13 +20,26 @@ import "./contact.css";
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+    if (sending) return;
+    setSending(true);
+    setError("");
+    setSubmitted(false);
+    try {
+      await api.post("/contact", form);
+      setSubmitted(true);
+      setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -139,9 +153,10 @@ export default function Contact() {
 
           {submitted && (
             <div className="contact-success-banner">
-              ✓ Thank you! Your message has been sent successfully.
+              ✓ Thank you! Your message has been sent successfully. A confirmation email is on its way to you.
             </div>
           )}
+          {error && <div className="contact-error-banner">{error}</div>}
 
           <form onSubmit={handleSubmit} className="contact-form">
             <div className="contact-form-row">
@@ -200,8 +215,8 @@ export default function Contact() {
               />
             </label>
 
-            <button type="submit" className="contact-submit-btn">
-              Send Message <FaPaperPlane />
+            <button type="submit" className="contact-submit-btn" disabled={sending}>
+              {sending ? "Sending..." : <>Send Message <FaPaperPlane /></>}
             </button>
 
             <p className="contact-privacy-note">

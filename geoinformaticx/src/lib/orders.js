@@ -15,7 +15,12 @@ export const createOrderFromCart = async (items, form) => {
     if (!res.ok) {
       return { success: false, message: data.message, hasProducts: false, hasServices: false };
     }
-    return { success: true, hasProducts: data.data?.hasProducts, hasServices: data.data?.hasServices };
+    return {
+      success: true,
+      hasProducts: data.data?.hasProducts,
+      hasServices: data.data?.hasServices,
+      razorpay: data.data?.razorpay || null,
+    };
   } catch (err) {
     return { success: false, message: "Could not reach the server.", hasProducts: false, hasServices: false };
   }
@@ -59,6 +64,7 @@ const normalizeOrder = (raw) => ({
   quantity: raw.quantity,
   status: raw.order?.status || "Pending",
   date: raw.order?.created_at || raw.created_at,
+  updatedAt: raw.order?.updated_at,
   isFreshDelivery: raw.product?.delivery_type === "Fresh",
   isRated: !!raw.review,
 });
@@ -75,14 +81,48 @@ export const getProductOrders = async () => {
   }
 };
 
+const normalizeServiceOrder = (raw) => ({
+  ...normalizeOrder(raw),
+  providerPhone: raw.service?.seller?.phone || "",
+  location: raw.service?.seller?.location || "",
+  serviceAddress: raw.order?.address || "",
+});
+
 export const getServiceOrders = async () => {
   try {
     const res = await fetch(`${API_BASE}/orders/services`, { credentials: "include" });
     const data = await res.json();
     if (!res.ok) return [];
-    return (data.data?.orders || []).map(normalizeOrder);
+    return (data.data?.orders || []).map(normalizeServiceOrder);
   } catch (err) {
     console.error("getServiceOrders error:", err);
     return [];
   }
+};
+
+
+export const verifyRazorpayPayment = async (payload) => {
+  try {
+    const res = await fetch(`${API_BASE}/orders/payment/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { success: res.ok, message: data.message };
+  } catch (err) {
+    return { success: false, message: "Could not reach the server." };
+  }
+};
+
+export const abortRazorpayPayment = async (razorpayOrderId) => {
+  try {
+    await fetch(`${API_BASE}/orders/payment/abort`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ razorpay_order_id: razorpayOrderId }),
+    });
+  } catch (err) {}
 };

@@ -19,7 +19,6 @@ export default function Login() {
   const [signInError, setSignInError] = useState("");
 
   const [signUpLoading, setSignUpLoading] = useState(false);
-  const [signInLoading, setSignInLoading] = useState(false);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -35,24 +34,16 @@ export default function Login() {
     }
   };
 
-const handleSignIn = async (e) => {
-  e.preventDefault();
-
-  if (signInLoading) return;
-
-  setSignInError("");
-  setSignInLoading(true);
-
-  const result = await signIn(signInData);
-
-  setSignInLoading(false);
-
-  if (result.success) {
-    router.replace(redirectTo);
-  } else {
-    setSignInError(result.message);
-  }
-};
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setSignInError("");
+    const result = await signIn(signInData);
+    if (result.success) {
+      router.push(redirectTo);
+    } else {
+      setSignInError(result.message);
+    }
+  };
 
   return (
     <div className="login-page-wrapper">
@@ -135,9 +126,7 @@ const handleSignIn = async (e) => {
             onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
           />
           <a href="#">Forgot Your Password?</a>
-          <button type="submit" disabled={signInLoading}>
-            {signInLoading ? "Signing In..." : "Sign In"}
-          </button>
+          <button type="submit">Sign In</button>
         </form>
       </div>
 

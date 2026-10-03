@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { addToCart } from "@/lib/cart";
 import { useRouter } from "next/navigation";
-import { addToWishlist, removeFromWishlist, isWishlisted } from "@/lib/wishlist";
+import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { findDistrictSpecialty, productMatchesSpecialty } from "@/lib/districtSpecialties";
 import "./Homepage.css";
 import axios from "axios";
@@ -12,23 +12,11 @@ import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;  
 
-function WishlistCard({ item, onViewDetails, type = "product" }) {
+function WishlistCard({ item, onViewDetails, type = "product", wishlistItemId, onToggleWishlist }) {
   const router = useRouter();
-  const [wishlisted, setWishlisted] = useState(false);
+  const wishlisted = !!wishlistItemId;
 
-  useEffect(() => {
-    setWishlisted(isWishlisted(item.name));
-  }, [item.name]);
-  
-  const toggleWishlist = () => {
-    if (wishlisted) {
-      removeFromWishlist(item.name);
-      setWishlisted(false);
-    } else {
-      addToWishlist(item);
-      setWishlisted(true);
-    }
-  };
+  const toggleWishlist = () => onToggleWishlist?.(item, type);
 
   const handleAddToCart = async () => {
     const result = await addToCart({ productId: item.id, type });
@@ -131,6 +119,38 @@ const [servicesLoading, setServicesLoading] = useState(true);
 const [liveSellers, setLiveSellers] = useState([]);
 const [sellersLoading, setSellersLoading] = useState(true);
 const [banners, setBanners] = useState([]);
+
+const [wishlistMap, setWishlistMap] = useState({});
+const wlKey = (type, id) => `${type}-${id}`;
+
+const syncWishlist = async () => {
+  const list = await getWishlist();
+  const map = {};
+  list.forEach((w) => {
+    map[wlKey(w.type, w.id)] = w.wishlistItemId;
+  });
+  setWishlistMap(map);
+};
+
+useEffect(() => {
+  syncWishlist();
+  window.addEventListener("storage", syncWishlist);
+  return () => window.removeEventListener("storage", syncWishlist);
+}, []);
+
+const handleToggleWishlist = async (item, type = "product") => {
+  const existingId = wishlistMap[wlKey(type, item.id)];
+  if (existingId) {
+    await removeFromWishlist(existingId);
+  } else {
+    const result = await addToWishlist({ productId: item.id, type });
+    if (result.requiresLogin) {
+      router.push("/login?redirect=/");
+      return;
+    }
+  }
+  syncWishlist();
+};
 
   useEffect(() => {
     const loadBanners = async () => {
@@ -238,12 +258,30 @@ const [banners, setBanners] = useState([]);
 const loadSellers = async () => {
   try {
     const { data } = await axios.get(`${API_BASE}/sellers/public`);
-    const sellers = (data.data?.sellers || []).map((s) => ({
-      id: s.id,
-      name: s.store_name || s.full_name || "Local Store",
-      location: s.location || "",
-      img: `https://picsum.photos/seed/store-${s.id}/300/300`,
-    }));
+    const prodRes = await axios.get(`${API_BASE}/products/public`);
+    const allProducts = prodRes.data.data?.products || [];
+    const svcRes = await axios.get(`${API_BASE}/services/public`);
+    const allServices = svcRes.data.data?.services || [];
+
+    const sellers = (data.data?.sellers || []).map((s) => {
+      const isService = s.seller_type === "service";
+      const mine = (isService ? allServices : allProducts).filter(
+        (p) => String(p.seller?.id) === String(s.id)
+      );
+      return {
+        id: s.id,
+        isService,
+        name: s.store_name || s.full_name || "Local Store",
+        location: s.location || "",
+        img: s.profile_image_url,
+        productCount: mine.length,
+        products: mine.slice(0, 3).map((p) => ({
+          id: p.id,
+          name: p.name,
+          img: p.image_url,
+        })),
+      };
+    });
     setLiveSellers(sellers);
   } catch (err) {
     console.error("Failed to load sellers:", err);
@@ -582,7 +620,13 @@ loadSellers();
             {!regAtStart && <button className="scroll-btn scroll-left" onClick={() => document.getElementById('regional-grid').scrollBy({left: -700, behavior: 'smooth'})}>‹</button>}
             <div className="products-grid" id="regional-grid" onScroll={handleRegScroll}>
               {regionalProducts.map((product) => (
-                <WishlistCard key={product.slug || product.name} item={product} onViewDetails={setSelectedItem} />
+              <WishlistCard
+                key={product.slug || product.name}
+                item={product}
+                onViewDetails={setSelectedItem}
+                wishlistItemId={wishlistMap[wlKey("product", product.id)]}
+                onToggleWishlist={handleToggleWishlist}
+              />
               ))}
             </div>
             {!regAtEnd && <button className="scroll-btn scroll-right" onClick={() => document.getElementById('regional-grid').scrollBy({left: 700, behavior: 'smooth'})}>›</button>}
@@ -611,6 +655,8 @@ loadSellers();
                 key={product.slug || product.name}
                 item={product}
                 onViewDetails={setSelectedItem}
+                wishlistItemId={wishlistMap[wlKey("product", product.id)]}
+                onToggleWishlist={handleToggleWishlist}
               />
             ))
           )}
@@ -631,7 +677,13 @@ loadSellers();
             <p style={{ padding: "20px", color: "#888" }}>No products listed yet.</p>
           ) : (
             liveProducts.map((product) => (
-              <WishlistCard key={product.slug || product.name} item={product} onViewDetails={setSelectedItem} />
+              <WishlistCard
+                key={product.slug || product.name}
+                item={product}
+                onViewDetails={setSelectedItem}
+                wishlistItemId={wishlistMap[wlKey("product", product.id)]}
+                onToggleWishlist={handleToggleWishlist}
+              />
             ))
           )}
           </div>
@@ -653,7 +705,14 @@ loadSellers();
             <p style={{ padding: "20px", color: "#888" }}>No services listed yet.</p>
           ) : (
             liveServices.map((service) => (
-              <WishlistCard key={service.slug || service.name} item={service} onViewDetails={setSelectedItem} type="service" />
+              <WishlistCard
+                key={service.slug || service.name}
+                item={service}
+                onViewDetails={setSelectedItem}
+                type="service"
+                wishlistItemId={wishlistMap[wlKey("service", service.id)]}
+                onToggleWishlist={handleToggleWishlist}
+              />
             ))
           )}
           </div>
@@ -683,6 +742,18 @@ loadSellers();
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2d6a4f" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       {biz.location}
                     </p>
+
+                    <p className="business-products-count">
+                      {biz.productCount} {biz.isService ? "service" : "product"}{biz.productCount !== 1 ? "s" : ""}
+                    </p>
+                    {biz.products.length > 0 && (
+                      <div className="business-products-row">
+                        {biz.products.map((p) => (
+                          <img key={p.id} src={p.img} alt={p.name} title={p.name} />
+                        ))}
+                      </div>
+                    )}
+
                     <Link href={`/store/${biz.id}`} className="view-store-btn">View Store</Link>
                   </div>
                 </div>

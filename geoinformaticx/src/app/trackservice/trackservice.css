@@ -1,58 +1,277 @@
-.track-page {
-  max-width: 900px;
+.ts-page {
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 24px 24px 60px;
-  color: #1a1a1a;
+  padding: 20px 24px 60px;
+  color: #14241b;
 }
 
-.track-breadcrumb {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 20px;
+/* ---------- Banner ---------- */
+.ts-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  border-radius: 16px;
+  background-color: #e8f5ed;
+  background-image:
+    url("/images/tracks.png"),
+    linear-gradient(90deg, #e6f4ec 0%, #f1f9f4 100%);
+  background-repeat: no-repeat;
+  background-size: cover, cover;
+  background-position: right center, center;
+  margin-bottom: 14px;
 }
 
-.track-breadcrumb a {
-  color: #2d6a4f;
-  text-decoration: none;
+
+
+
+.ts-hero-text { position: relative; padding: 22px 28px; }
+
+.ts-breadcrumb { font-size: 13.5px; color: #4d5d54; margin-bottom: 10px; }
+.ts-breadcrumb a { color: #1b5e3b; text-decoration: none; }
+
+.ts-title {
+  margin: 0 0 6px;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.ts-title span { color: #1b5e3b; }
+
+.ts-subtitle { margin: 0; font-size: 15px; color: #5d6b63; }
+
+.ts-trusted {
+  position: absolute;
+  right: 22%;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(20, 60, 40, 0.12);
+}
+.ts-trusted div { display: flex; flex-direction: column; line-height: 1.3; }
+.ts-trusted strong { font-size: 14px; font-weight: 600; }
+.ts-trusted span { font-size: 14px; }
+
+/* ---------- Stat cards ---------- */
+.ts-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
-.track-title {
-  font-size: 26px;
-  font-weight: 700;
-  margin: 0 0 4px;
+.ts-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f3faf5;
+  border: 1px solid #e0eee5;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.ts-stat.blue { background: #eef5fc; border-color: #d9e8f7; }
+.ts-stat.orange { background: #fff6ee; border-color: #fbe3cc; }
+.ts-stat.active { box-shadow: 0 0 0 2px rgba(27, 94, 59, 0.25); }
+
+.ts-stat-ico {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e0f0e6;
+  color: #1b5e3b;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.ts-stat.blue .ts-stat-ico { background: #dbe9fa; color: #2563c9; }
+.ts-stat.orange .ts-stat-ico { background: #fde8d3; color: #a8601f; }
+
+.ts-stat-body { display: flex; flex-direction: column; gap: 2px; }
+.ts-stat-label { font-size: 13.5px; font-weight: 500; }
+.ts-stat-num { font-size: 26px; font-weight: 800; line-height: 1.1; }
+
+/* ---------- Booking card ---------- */
+.ts-list { display: flex; flex-direction: column; gap: 16px; }
+
+.ts-card {
+  background: #fff;
+  border: 1px solid #ecefed;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(20, 60, 40, 0.06);
+  padding: 16px 18px;
 }
 
-.track-subtitle {
-  font-size: 13.5px;
-  color: #777;
-  margin: 0 0 28px;
+.ts-card-top {
+  display: grid;
+  grid-template-columns: 170px 1fr 340px;
+  gap: 22px;
+  align-items: start;
 }
 
-.track-empty {
-  text-align: center;
-  padding: 80px 20px;
+.ts-card-img {
+  width: 170px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f3f3f3;
 }
 
-.track-empty-icon {
-  font-size: 48px;
-  margin: 0 0 16px;
-}
+.ts-card-name { margin: 2px 0 8px; font-size: 24px; font-weight: 800; }
 
-.track-empty h2 {
-  font-size: 20px;
+.ts-card-seller,
+.ts-card-loc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 8px;
+  font-size: 15px;
+  color: #3f4f46;
+}
+.ts-card-loc { color: #3f4f46; }
+
+.ts-confirm {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #eef7f1;
+  max-width: 460px;
+}
+.ts-confirm div { display: flex; flex-direction: column; gap: 2px; }
+.ts-confirm strong { font-size: 16px; font-weight: 700; color: #1b5e3b; }
+.ts-confirm span { font-size: 14px; color: #3f4f46; }
+.ts-confirm-dot { width: 36px; height: 36px; border-radius: 50%; background: currentColor; opacity: 0.25; flex-shrink: 0; }
+.ts-confirm.amber { background: #fdf6e6; color: #b9840e; }
+.ts-confirm.amber strong { color: #b9840e; }
+.ts-confirm.blue { background: #eef5fc; color: #2563c9; }
+.ts-confirm.blue strong { color: #2563c9; }
+.ts-confirm.red { background: #fdeeee; color: #d64545; }
+.ts-confirm.red strong { color: #d64545; }
+
+/* right side */
+.ts-card-side {
+  border-left: 1px solid #e8ebe9;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
 }
 
-.track-empty p {
-  color: #777;
-  font-size: 14px;
-  margin: 0 0 24px;
+.ts-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px 8px 12px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.ts-pill.green { background: #e3f3e8; color: #1b5e3b; }
+.ts-pill.amber { background: #fdf3de; color: #b9840e; padding-left: 20px; }
+.ts-pill.blue { background: #e6f0fc; color: #2563c9; padding-left: 20px; }
+.ts-pill.red { background: #fde8e8; color: #d64545; padding-left: 20px; }
+
+.ts-facts {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 14px;
+}
+.ts-fact { display: flex; gap: 12px; align-items: flex-start; color: #5d6b63; }
+.ts-fact div { display: flex; flex-direction: column; gap: 4px; }
+.ts-fact span { font-size: 13.5px; color: #5d6b63; }
+.ts-fact strong { font-size: 15.5px; font-weight: 700; color: #14241b; }
+.ts-fact .ts-amount { font-size: 24px; font-weight: 800; color: #1b5e3b; line-height: 1.1; }
+
+/* ---------- Bottom strip ---------- */
+.ts-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
 }
 
-.track-empty-btn {
+.ts-contact-strip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: #f3faf5;
+  border-radius: 12px;
+}
+
+.ts-contact { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ts-contact div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ts-contact strong { font-size: 14px; font-weight: 700; }
+.ts-contact span { font-size: 13.5px; color: #5d6b63; }
+.ts-contact-sep { width: 1px; height: 34px; background: #dbe7df; flex-shrink: 0; }
+
+.ts-contact-ico {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e1f0e7;
+  color: #1b5e3b;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ts-btn-outline { background: #fff; color: #1b5e3b; border: 1.5px solid #1b5e3b; }
+.ts-btn-outline:hover { background: #f1f8f3; }
+.ts-btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+.ts-btn-solid { background: #1b5e3b; color: #fff; border: 1.5px solid #1b5e3b; }
+.ts-btn-solid:hover { background: #154a2f; }
+
+/* ---------- Details panel ---------- */
+.ts-details {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.ts-details div { display: flex; flex-direction: column; gap: 4px; }
+.ts-details span { font-size: 12.5px; color: #6b7a72; }
+.ts-details strong { font-size: 14.5px; }
+
+/* ---------- Empty ---------- */
+.ts-empty { text-align: center; padding: 70px 20px; }
+.ts-empty-icon { font-size: 48px; margin: 0 0 16px; }
+.ts-empty h2 { font-size: 20px; margin: 0 0 8px; }
+.ts-empty p { color: #777; font-size: 14px; margin: 0 0 24px; }
+.ts-empty-btn {
   display: inline-block;
-  background: #2d6a4f;
-  color: white;
+  background: #1b5e3b;
+  color: #fff;
   padding: 10px 22px;
   border-radius: 6px;
   font-size: 13.5px;
@@ -60,87 +279,22 @@
   text-decoration: none;
 }
 
-.track-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .ts-stats { grid-template-columns: repeat(2, 1fr); }
+  .ts-card-top { grid-template-columns: 140px 1fr; }
+  .ts-card-img { width: 140px; height: 100px; }
+  .ts-card-side { grid-column: 1 / -1; border-left: none; padding-left: 0; align-items: stretch; }
+  .ts-hero { background-position: 70% center, center; }
+  .ts-trusted { display: none; }
+  .ts-bottom { flex-wrap: wrap; }
+  .ts-contact-strip { flex: 1 1 100%; flex-wrap: wrap; }
+  .ts-details { grid-template-columns: repeat(2, 1fr); }
 }
 
-.track-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 16px 20px;
-}
-
-.track-card-img {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.track-card-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.track-card-name {
-  font-size: 14.5px;
-  font-weight: 700;
-  margin: 0 0 3px;
-}
-
-.track-card-seller {
-  font-size: 12.5px;
-  color: #777;
-  margin: 0 0 6px;
-}
-
-.track-card-id {
-  font-size: 11.5px;
-  color: #999;
-  margin: 0;
-}
-
-.track-card-date {
-  font-size: 11.5px;
-  color: #999;
-  margin: 0;
-}
-
-.track-card-right {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.track-status {
-  display: inline-block;
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 20px;
-  margin-bottom: 8px;
-}
-
-.track-status-placed { background: #fdf3de; color: #b9840e; }
-.track-status-shipped { background: #e8f1fb; color: #4a90d9; }
-.track-status-delivered { background: #e6f4ea; color: #2d6a4f; }
-.track-status-confirmed { background: #e6f4ea; color: #2d6a4f; }
-.track-status-cancelled { background: #fdeaea; color: #c0392b; }
-
-.track-card-qty {
-  font-size: 12px;
-  color: #777;
-  margin: 0 0 3px;
-}
-
-.track-card-price {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0;
+@media (max-width: 600px) {
+  .ts-stats { grid-template-columns: 1fr; }
+  .ts-card-top { grid-template-columns: 1fr; }
+  .ts-card-img { width: 100%; height: 160px; }
+  .ts-title { font-size: 28px; }
 }

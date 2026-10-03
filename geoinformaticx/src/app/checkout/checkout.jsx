@@ -6,7 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import { getCart, clearCart } from "@/lib/cart";
 import { getCurrentUser } from "@/lib/auth";
-import { createOrderFromCart } from "@/lib/orders";
+import { createOrderFromCart, verifyRazorpayPayment, abortRazorpayPayment } from "@/lib/orders";
 import "./checkout.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -22,6 +22,7 @@ export default function Checkout() {
     paymentMethod: "cod",
   });
   const [errors, setErrors] = useState({});
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     const loadCart = async () => {
@@ -74,25 +75,75 @@ export default function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+const goToTracking = (hasProducts, hasServices) => {
+  if (hasProducts && hasServices) router.push("/trackorder?mixed=1");
+  else if (hasProducts) router.push("/trackorder");
+  else if (hasServices) router.push("/trackservice");
+};
 
-    const { success, message, hasProducts, hasServices } = await createOrderFromCart(items, form);
-    if (!success) {
-      alert(message || "Could not place the order. Please try again.");
-      return;
-    }
+const handlePlaceOrder = async (e) => {
+  e.preventDefault();
+  if (!validate() || paying) return;
+  setPaying(true);
+
+  const { success, message, hasProducts, hasServices, razorpay } =
+    await createOrderFromCart(items, form);
+  if (!success) {
+    setPaying(false);
+    alert(message || "Could not place the order. Please try again.");
+    return;
+  }
+
+  // Cash on delivery: same as before
+  if (form.paymentMethod !== "razorpay") {
     await clearCart();
+    goToTracking(hasProducts, hasServices);
+    return;
+  }
 
-    if (hasProducts && hasServices) {
-      router.push("/trackorder?mixed=1");
-    } else if (hasProducts) {
-      router.push("/trackorder");
-    } else if (hasServices) {
-      router.push("/trackservice");
-    }
-  };
+  // Online payment
+  if (!window.Razorpay) {
+    await abortRazorpayPayment(razorpay.orderId);
+    setPaying(false);
+    alert("Payment gateway failed to load. Please refresh and try again.");
+    return;
+  }
+
+  const rzp = new window.Razorpay({
+    key: razorpay.keyId,
+    amount: razorpay.amount,
+    currency: razorpay.currency,
+    order_id: razorpay.orderId,
+    name: "Geoinformaticx",
+    description: "Order payment",
+    prefill: { name: form.name, email: form.email, contact: form.phone },
+    theme: { color: "#2f6f4e" },
+    handler: async (response) => {
+      const v = await verifyRazorpayPayment({
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+      });
+      if (!v.success) {
+        setPaying(false);
+        alert(v.message || "Payment could not be verified. If money was deducted, please contact support.");
+        return;
+      }
+      await clearCart();
+      goToTracking(hasProducts, hasServices);
+    },
+    modal: {
+      ondismiss: async () => {
+        await abortRazorpayPayment(razorpay.orderId); 
+        setPaying(false);
+      },
+    },
+  });
+  rzp.on("payment.failed", (resp) => {
+    alert(resp.error?.description || "Payment failed. You can retry in the popup.");
+  });
+  rzp.open();
+};
 
   if (items.length === 0) return null;
 
@@ -169,30 +220,20 @@ export default function Checkout() {
               <span>💰 Cash on Delivery</span>
             </label>
 
-            <label className={`checkout-payment-option ${form.paymentMethod === "upi" ? "selected" : ""}`}>
+            <label className={`checkout-payment-option ${form.paymentMethod === "razorpay" ? "selected" : ""}`}>
               <input
                 type="radio"
                 name="paymentMethod"
-                checked={form.paymentMethod === "upi"}
-                onChange={() => handleChange("paymentMethod", "upi")}
+                checked={form.paymentMethod === "razorpay"}
+                onChange={() => handleChange("paymentMethod", "razorpay")}
               />
-              <span>📱 UPI</span>
-            </label>
-
-            <label className={`checkout-payment-option ${form.paymentMethod === "card" ? "selected" : ""}`}>
-              <input
-                type="radio"
-                name="paymentMethod"
-                checked={form.paymentMethod === "card"}
-                onChange={() => handleChange("paymentMethod", "card")}
-              />
-              <span>💳 Credit / Debit Card</span>
+              <span>💳 Pay Online (UPI / Card / Net Banking / Wallets)</span>
             </label>
           </div>
 
-          <button type="submit" className="checkout-place-order-btn">
-            Place Order
-          </button>
+        <button type="submit" className="checkout-place-order-btn" disabled={paying}>
+          {paying ? "Please wait..." : form.paymentMethod === "razorpay" ? `Pay ₹${subtotal.toLocaleString("en-IN")}` : "Place Order"}
+        </button>
         </form>
 
         {/* Right: order summary */}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import api from "@/lib/api";
 import {
   FaRupeeSign,
   FaChartLine,
@@ -43,6 +44,7 @@ export default function Sell() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -54,12 +56,14 @@ export default function Sell() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.agreed) return;
+    if (!form.agreed || submitting) return;
     setSubmitting(true);
+    setError("");
     try {
-      // TODO: wire this up to your API route, e.g. POST /api/sellers
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await api.post("/contact/seller-application", form);
       setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -265,12 +269,14 @@ export default function Sell() {
             <div className="form-success">
               <h4>Application received!</h4>
               <p>
-                Thanks for applying, {form.fullName || "there"}. Our team will
-                reach out to you shortly to complete your seller setup.
+                Thanks for applying, {form.fullName || "there"}. A confirmation
+                email is on its way to you, and our team will reach out shortly
+                to complete your seller setup.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="seller-form">
+              {error && <div className="form-error">{error}</div>}
               <div className="form-row">
                 <div className="form-field">
                   <label htmlFor="fullName">

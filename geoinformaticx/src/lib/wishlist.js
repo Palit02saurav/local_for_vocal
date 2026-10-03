@@ -15,6 +15,8 @@ const normalizeItem = (raw) => {
     slug: source?.sku,
     img: source?.image_url || "https://placehold.co/300x300?text=No+Image",
     type: raw.item_type,
+    rating: Number(source?.avg_rating || 0),
+    reviewCount: Number(source?.review_count || 0),
   };
 };
 
