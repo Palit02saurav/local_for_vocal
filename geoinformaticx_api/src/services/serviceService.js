@@ -1,6 +1,5 @@
-const { Service, Seller } = require('../models');
-const { Op } = require('sequelize');
-
+const { Service, Seller, Review } = require('../models');
+const { Op, fn, col } = require('sequelize');
 // function resolveStatus(stock) {
 //   if (stock === 0) return 'Out of Stock';
 //   if (stock <= 10) return 'Low Stock';
@@ -118,12 +117,42 @@ exports.rejectService = async (id, userRole) => {
   return service;
 };
 
-exports.listPublicServices = () => {
-  return Service.findAll({
+// average rating + review count per service
+const getRatingStats = async (serviceIds) => {
+  const where = { service_id: serviceIds ? serviceIds : { [Op.ne]: null } };
+  const stats = await Review.findAll({
+    attributes: [
+      'service_id',
+      [fn('AVG', col('rating')), 'avg_rating'],
+      [fn('COUNT', col('id')), 'review_count'],
+    ],
+    where,
+    group: ['service_id'],
+    raw: true,
+  });
+  const byService = {};
+  stats.forEach((s) => {
+    byService[s.service_id] = {
+      avg_rating: Number(Number(s.avg_rating).toFixed(1)),
+      review_count: Number(s.review_count),
+    };
+  });
+  return byService;
+};
+
+exports.listPublicServices = async () => {
+  const services = await Service.findAll({
     where: { approval_status: 'Approved', status: 'Active' },
     include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude'] }],
     order: [['created_at', 'DESC']],
   });
+
+  const stats = await getRatingStats();
+  return services.map((s) => ({
+    ...s.toJSON(),
+    avg_rating: stats[s.id]?.avg_rating || 0,
+    review_count: stats[s.id]?.review_count || 0,
+  }));
 };
 
 
@@ -137,5 +166,11 @@ exports.getPublicServiceBySku = async (sku) => {
     err.status = 404;
     throw err;
   }
-  return service;
+
+  const stats = await getRatingStats([service.id]);
+  return {
+    ...service.toJSON(),
+    avg_rating: stats[service.id]?.avg_rating || 0,
+    review_count: stats[service.id]?.review_count || 0,
+  };
 };

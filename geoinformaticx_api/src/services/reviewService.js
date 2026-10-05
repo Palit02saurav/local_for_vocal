@@ -8,7 +8,7 @@ exports.createReview = async (customerId, orderItemId, rating, comment) => {
   }
 
   const orderItem = await OrderItem.findOne({
-    where: { id: orderItemId, item_type: 'product' },
+    where: { id: orderItemId },
     include: [{ model: Order, as: 'order', where: { customer_id: customerId } }],
   });
   if (!orderItem) {
@@ -16,8 +16,18 @@ exports.createReview = async (customerId, orderItemId, rating, comment) => {
     err.status = 404;
     throw err;
   }
-  if (orderItem.order.status !== 'Delivered') {
-    const err = new Error('You can only rate an item after it has been delivered.');
+  const RATABLE_SERVICE_STATUSES = ['Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+  const canRate =
+    orderItem.item_type === 'service'
+      ? RATABLE_SERVICE_STATUSES.includes(orderItem.order.status)
+      : orderItem.order.status === 'Delivered';
+
+  if (!canRate) {
+    const err = new Error(
+      orderItem.item_type === 'service'
+        ? 'You can rate a service once the booking is confirmed.'
+        : 'You can only rate an item after it has been delivered.'
+    );
     err.status = 400;
     throw err;
   }
@@ -33,7 +43,8 @@ exports.createReview = async (customerId, orderItemId, rating, comment) => {
 
   const review = await Review.create({
     order_item_id: orderItemId,
-    product_id: orderItem.product_id,
+    product_id: orderItem.item_type === 'product' ? orderItem.product_id : null,
+    service_id: orderItem.item_type === 'service' ? orderItem.service_id : null,
     customer_id: customerId,
     customer_name: customer?.name || 'Customer',
     rating,

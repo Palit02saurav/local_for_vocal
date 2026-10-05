@@ -326,6 +326,12 @@ exports.listServiceOrders = async (customerId) => {
           attributes: ['id', 'store_name', 'phone', 'location'],
         }],
       },
+      {
+        model: Review,
+        as: 'review',
+        required: false,
+        attributes: ['id', 'rating'],
+      },
     ],
     order: [['created_at', 'DESC']],
   });

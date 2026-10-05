@@ -1,4 +1,4 @@
-const { Banner, Seller } = require('../models');
+const { Banner, Seller, Vendor } = require('../models');
 const { Op } = require('sequelize');
 
 exports.listBanners = async (userId, userRole) => {
@@ -7,10 +7,14 @@ exports.listBanners = async (userId, userRole) => {
   if (userRole === 'SELLER') {
     where.seller_id = userId;
     where.approval_status = 'Approved';
+  } else if (userRole === 'VENDOR') {
+    where.vendor_id = userId;
+    where.approval_status = 'Approved';
   } else if (userRole === 'SUPER_ADMIN') {
     where[Op.or] = [
       { created_by_role: 'ADMIN' },
       { created_by_role: 'SELLER', approval_status: 'Approved' },
+      { created_by_role: 'VENDOR', approval_status: 'Approved' },
     ];
   } else {
     const err = new Error('Not authorized to view banners.');
@@ -20,7 +24,10 @@ exports.listBanners = async (userId, userRole) => {
 
   return Banner.findAll({
     where,
-    include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] }],
+    include: [
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
+      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] },
+    ],
     order: [['created_at', 'DESC']],
   });
 };
@@ -51,9 +58,10 @@ exports.createBanner = async (body, userId, userRole) => {
     err.status = 400;
     throw err;
   }
-
-  const created_by_role = userRole === 'SUPER_ADMIN' ? 'ADMIN' : 'SELLER';
+  const created_by_role =
+    userRole === 'SUPER_ADMIN' ? 'ADMIN' : userRole === 'VENDOR' ? 'VENDOR' : 'SELLER';
   const seller_id = userRole === 'SELLER' ? userId : null;
+  const vendor_id = userRole === 'VENDOR' ? userId : null;
   const admin_id = userRole === 'SUPER_ADMIN' ? userId : null;
   const approval_status = created_by_role === 'ADMIN' ? 'Approved' : 'Pending';
 
@@ -79,6 +87,7 @@ exports.createBanner = async (body, userId, userRole) => {
     image_url,
     link_url: link_url || null,
     seller_id,
+    vendor_id,
     admin_id,
     created_by_role,
     approval_status,
@@ -185,8 +194,11 @@ exports.listRequests = async (userRole) => {
     throw err;
   }
   return Banner.findAll({
-    where: { created_by_role: 'SELLER', approval_status: 'Pending' },
-    include: [{ model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] }],
+    where: { created_by_role: { [Op.in]: ['SELLER', 'VENDOR'] }, approval_status: 'Pending' },
+    include: [
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
+      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] },
+    ],
     order: [['created_at', 'DESC']],
   });
 };

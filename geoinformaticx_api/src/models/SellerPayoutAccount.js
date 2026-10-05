@@ -3,7 +3,8 @@ const sequelize = require('../config/database');
 
 const SellerPayoutAccount = sequelize.define('SellerPayoutAccount', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  seller_id: { type: DataTypes.INTEGER, allowNull: false, unique: true },
+  seller_id: { type: DataTypes.INTEGER, allowNull: true, unique: true },
+  vendor_id: { type: DataTypes.INTEGER, allowNull: true, unique: true },
   account_holder_name: { type: DataTypes.STRING(150), allowNull: false },
   bank_name: { type: DataTypes.STRING(150), allowNull: false },
   branch_name: { type: DataTypes.STRING(150), allowNull: true },

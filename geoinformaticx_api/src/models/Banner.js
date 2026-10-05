@@ -10,7 +10,8 @@ const Banner = sequelize.define(
     link_url: { type: DataTypes.STRING, allowNull: true },
     seller_id: { type: DataTypes.INTEGER, allowNull: true },
     admin_id: { type: DataTypes.INTEGER, allowNull: true },
-    created_by_role: { type: DataTypes.ENUM('ADMIN', 'SELLER'), allowNull: false },
+    vendor_id: { type: DataTypes.INTEGER, allowNull: true },
+    created_by_role: { type: DataTypes.ENUM('ADMIN', 'SELLER', 'VENDOR'), allowNull: false },
     approval_status: {
       type: DataTypes.ENUM('Pending', 'Approved', 'Rejected'),
       allowNull: false,

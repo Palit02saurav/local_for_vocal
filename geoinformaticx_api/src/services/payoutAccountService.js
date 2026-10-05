@@ -22,6 +22,13 @@ const assertSuperAdmin = (role) => {
   if (role !== 'SUPER_ADMIN') throw httpError(403, 'Not authorized.');
 };
 
+// Which column identifies the logged-in owner of the account
+const ownerWhere = (userId, role) => {
+  if (role === 'SELLER') return { seller_id: userId };
+  if (role === 'VENDOR') return { vendor_id: userId };
+  throw httpError(403, 'Not authorized.');
+};
+
 const toAdmin = (a) => ({
   id: a.id,
   account_holder_name: a.account_holder_name,
@@ -63,17 +70,15 @@ const toPublic = (a) =>
         updated_at: a.updated_at,
       }
     : null;
-
-exports.getMine = async (sellerId, role) => {
-  assertSeller(role);
-  const account = await SellerPayoutAccount.findOne({ where: { seller_id: sellerId } });
+exports.getMine = async (userId, role) => {
+  const account = await SellerPayoutAccount.findOne({ where: ownerWhere(userId, role) });
   return toPublic(account);
 };
 
-exports.saveMine = async (sellerId, role, body) => {
-  assertSeller(role);
+exports.saveMine = async (userId, role, body) => {
+  const owner = ownerWhere(userId, role);
 
-  const existing = await SellerPayoutAccount.findOne({ where: { seller_id: sellerId } });
+  const existing = await SellerPayoutAccount.findOne({ where: owner });
   if (existing && existing.status !== 'Rejected') {
     throw httpError(409, 'Payout details are already submitted and cannot be changed. Please contact support.');
   }
@@ -109,7 +114,7 @@ exports.saveMine = async (sellerId, role, body) => {
   if (account) {
     await account.update(payload); 
   } else {
-    account = await SellerPayoutAccount.create({ seller_id: sellerId, ...payload });
+    account = await SellerPayoutAccount.create({ ...owner, ...payload });
   }
   return toPublic(account);
 };
