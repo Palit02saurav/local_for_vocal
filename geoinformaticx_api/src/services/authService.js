@@ -193,7 +193,7 @@ exports.me = async (userId, userRole) => {
   const attrs = userRole === 'SUPER_ADMIN'
     ? ['id', 'full_name', 'email']
     : userRole === 'VENDOR'
-    ? ['id', 'full_name', 'phone', 'address', 'id_type', 'id_number', 'approval_status']
+    ? ['id', 'full_name', 'phone', 'address', 'id_type', 'id_number', 'approval_status', 'profile_image_url']
     : [
         'id', 'full_name', 'email', 'seller_type', 'store_name', 'phone', 'location',
         'business_address', 'gst_number', 'business_registration_number', 'pan_number',

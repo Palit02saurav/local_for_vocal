@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
-const { Seller } = require('../models');
+const { Seller, Vendor } = require('../models');
 
 exports.listSellers = () => {
   return Seller.findAll({
@@ -156,10 +156,35 @@ exports.changePassword = async (userId, userRole, body) => {
 };
 
 exports.updateMe = async (userId, userRole, body) => {
-  if (userRole !== 'SELLER') {
+  if (userRole !== 'SELLER' && userRole !== 'VENDOR') {
     const err = new Error('Not authorized.');
     err.status = 403;
     throw err;
+  }
+
+  const { business_address, profile_image_url } = body;
+
+  if (userRole === 'VENDOR') {
+    const vendor = await Vendor.findByPk(userId);
+    if (!vendor) {
+      const err = new Error('Vendor not found.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (business_address !== undefined) vendor.address = business_address;
+    if (profile_image_url !== undefined) vendor.profile_image_url = profile_image_url;
+
+    await vendor.save();
+
+    // Same shape the Store page expects (vendors store it in `address`)
+    return {
+      id: vendor.id,
+      full_name: vendor.full_name,
+      phone: vendor.phone,
+      business_address: vendor.address,
+      profile_image_url: vendor.profile_image_url || null,
+    };
   }
 
   const seller = await Seller.findByPk(userId);
@@ -168,8 +193,6 @@ exports.updateMe = async (userId, userRole, body) => {
     err.status = 404;
     throw err;
   }
-
-  const { business_address, profile_image_url } = body;
 
   if (business_address !== undefined) seller.business_address = business_address;
   if (profile_image_url !== undefined) seller.profile_image_url = profile_image_url;

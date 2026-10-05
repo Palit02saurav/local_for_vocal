@@ -32,6 +32,10 @@ const Vendor = sequelize.define('Vendor', {
     type: DataTypes.DECIMAL(10, 7),
     allowNull: true,
   },
+  profile_image_url: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
   id_type: {
     type: DataTypes.ENUM('aadhaar', 'pan'),
     allowNull: false,
