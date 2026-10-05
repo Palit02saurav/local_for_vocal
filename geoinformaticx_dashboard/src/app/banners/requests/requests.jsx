@@ -66,7 +66,7 @@ export default function BannerRequests() {
                     <img src={b.image_url} alt={b.title} />
                   </td>
                   <td className="pp-product-name">{b.title}</td>
-                  <td>{b.seller?.store_name || b.seller?.full_name || "—"}</td>
+                  <td>{b.seller?.store_name || b.seller?.full_name || b.vendor?.full_name || "—"}</td>
                   <td>{b.link_url || "—"}</td>
                   <td>
                     <div className="pp-action-icons">

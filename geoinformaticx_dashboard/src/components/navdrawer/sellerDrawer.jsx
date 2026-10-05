@@ -23,11 +23,11 @@ const menuItems = [
     hasSubmenu: true,
     submenu: [
       { label: "All Orders", href: "/orders" },
-      { label: "Pending", href: "/orders?status=pending" },
-      { label: "Shipped", href: "/orders?status=shipped" },
+      { label: "Pending", href: "/orders?status=pending", hideFor: "service" },
+      { label: "Shipped", href: "/orders?status=shipped", hideFor: "service" },
       { label: "Delivered", href: "/orders?status=delivered" },
-      { label: "Cancelled", href: "/orders?status=cancelled" },
-      { label: "Refunds", href: "/orders?status=refunds" },
+      { label: "Cancelled", href: "/orders?status=cancelled", hideFor: "service" },
+      { label: "Refunds", href: "/orders?status=refunds", hideFor: "service" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -67,22 +67,22 @@ const menuItems = [
       </svg>
     ),
   },
-  {
-    label: "Fresh Delivery",
-    href: "/fresh-delivery",
-    hasSubmenu: true,
-    onlyFor: "product",
-    submenu: [
-      { label: "All Fresh Products", href: "/fresh-delivery" },
-      { label: "Add Fresh Product", href: "/fresh-delivery/new" },
-      { label: "In Progress", href: "/fresh-delivery/in-progress" },
-    ],
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-      </svg>
-    ),
-  },
+  // {
+  //   label: "Fresh Delivery",
+  //   href: "/fresh-delivery",
+  //   hasSubmenu: true,
+  //   onlyFor: "product",
+  //   submenu: [
+  //     { label: "All Fresh Products", href: "/fresh-delivery" },
+  //     { label: "Add Fresh Product", href: "/fresh-delivery/new" },
+  //     { label: "In Progress", href: "/fresh-delivery/in-progress" },
+  //   ],
+  //   icon: (
+  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+  //       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  //     </svg>
+  //   ),
+  // },
   {
     label: "Services",
     href: "/services",
@@ -164,17 +164,6 @@ const menuItems = [
   //     </svg>
   //   ),
   // },
-  {
-    label: "Settings",
-    href: "/settings",
-    hasArrow: true,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
-    ),
-  },
 ];
 
 export default function SellerDrawer() {
@@ -182,10 +171,10 @@ export default function SellerDrawer() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-const handleLogout = async () => {
-  await logout();
-  router.replace("/login");
-};
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
   const currentSearch = searchParams.toString();
   const fullPath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 
@@ -256,7 +245,7 @@ const handleLogout = async () => {
 
               {item.hasSubmenu && item.submenu && isExpanded && (
                 <div className="drawer-submenu">
-                  {item.submenu.map((sub) => {
+                  {item.submenu.filter((sub) => sub.hideFor !== sellerType).map((sub) => {
                     const subActive = sub.href === fullPath;
                     return (  
                       <Link

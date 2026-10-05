@@ -73,6 +73,8 @@ function StatIcon({ type }) {
 
 export default function OrdersPage({ orders = [], loading = false, onSelectOrder, onUpdateStatus, initialStatus = "All Status" }) {
   const isVendor = getCurrentUser()?.role === "VENDOR";
+  const isServiceProvider =
+    getCurrentUser()?.role === "SELLER" && getCurrentUser()?.seller_type === "service";
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(initialStatus);
 
@@ -279,6 +281,15 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
                               Out for Delivery
                             </button>
                           )
+                        ) : isServiceProvider ? (
+                          o.status !== "Delivered" && o.status !== "Cancelled" && (
+                            <button
+                              className="action-shipped-btn"
+                              onClick={() => onUpdateStatus?.(o.orderId, "Delivered")}
+                            >
+                              Delivered
+                            </button>
+                          )
                         ) : (
                           o.status !== "Shipped" && o.status !== "Delivered" && o.status !== "Cancelled" && (
                             <button
@@ -400,7 +411,21 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
               </>
             ) : (
               <>
-                {selected.status !== "Shipped" &&
+                {isServiceProvider &&
+                  selected.status !== "Delivered" &&
+                  selected.status !== "Cancelled" && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      onUpdateStatus?.(selected.orderId, "Delivered");
+                      setSelected((prev) => (prev ? { ...prev, status: "Delivered" } : prev));
+                    }}
+                  >
+                    Mark as Delivered
+                  </button>
+                )}
+                {!isServiceProvider &&
+                  selected.status !== "Shipped" &&
                   selected.status !== "Out for Delivery" &&
                   selected.status !== "Delivered" &&
                   selected.status !== "Cancelled" && (

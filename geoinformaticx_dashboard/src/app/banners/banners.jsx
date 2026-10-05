@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import "../products/products.css";
 
 function getSellerName(b) {
-  return b.Seller?.store_name || b.Seller?.full_name || b.seller?.store_name || b.seller?.full_name || "Admin";
+  return b.Seller?.store_name || b.Seller?.full_name || b.seller?.store_name || b.seller?.full_name || b.vendor?.full_name || "Admin";
 }
 
 export default function Banners() {

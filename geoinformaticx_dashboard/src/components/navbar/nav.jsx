@@ -89,19 +89,6 @@ const handleLogout = async () => {
         </div>
       </Link>
 
-      <div className="admin-navbar-search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search for orders, products, users, businesses..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
       <div className="admin-navbar-right">
         <div className="admin-navbar-notif-wrapper" ref={notifRef}>
           <button

@@ -10,7 +10,7 @@ import "../../products/new/new-product.css";
 
 export default function NewBanner() {
   const router = useRouter();
-  const isSeller = getCurrentUser()?.role === "SELLER";
+  const isSeller = ["SELLER", "VENDOR"].includes(getCurrentUser()?.role);
 
   const [title, setTitle] = useState("");
   const [linkUrl, setLinkUrl] = useState("");

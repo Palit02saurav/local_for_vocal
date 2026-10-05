@@ -32,17 +32,21 @@ export default function Payouts() {
   useEffect(() => {
     const user = getCurrentUser();
     setRole(user?.role || null);
-    if (user?.role !== "SELLER") {
+    if (user?.role !== "SELLER" && user?.role !== "VENDOR") {
       setLoading(false);
       return;
     }
     const load = async () => {
       try {
         const [profileRes, accountRes] = await Promise.all([
-          api.get("/sellers/me"),
+          api.get(user.role === "VENDOR" ? "/vendors/me" : "/sellers/me"),
           api.get("/payout-accounts/me"),
         ]);
-        setProfile(profileRes.data.data?.seller || null);
+        setProfile(
+          user.role === "VENDOR"
+            ? profileRes.data.data?.vendor || null
+            : profileRes.data.data?.seller || null
+        );
         const acc = accountRes.data.data?.account;
         if (acc) setSaved(acc);
       } catch (err) {
@@ -84,7 +88,7 @@ export default function Payouts() {
 
   if (loading) return <div className="payouts-page"><p>Loading...</p></div>;
 
-  if (role !== "SELLER") {
+  if (role !== "SELLER" && role !== "VENDOR") {
     return (
       <div className="payouts-page">
         <h1 className="payouts-title">Payouts &amp; Earnings</h1>
@@ -202,13 +206,22 @@ export default function Payouts() {
 
         <div className="payouts-card">
           <h2>Business details (from your profile)</h2>
-          <dl className="payouts-readonly">
-            <dt>Seller / Store</dt><dd>{profile?.store_name || profile?.full_name || "—"}</dd>
-            <dt>PAN</dt><dd>{profile?.pan_number || "—"}</dd>
-            <dt>GSTIN</dt><dd>{profile?.gst_number || "—"}</dd>
-            <dt>Email</dt><dd>{profile?.email || "—"}</dd>
-            <dt>Phone</dt><dd>{profile?.phone || "—"}</dd>
-          </dl>
+          {role === "VENDOR" ? (
+            <dl className="payouts-readonly">
+              <dt>Vendor</dt><dd>{profile?.full_name || "—"}</dd>
+              <dt>Phone</dt><dd>{profile?.phone || "—"}</dd>
+              <dt>Address</dt><dd>{profile?.address || "—"}</dd>
+              <dt>ID type</dt><dd>{profile?.id_type || "—"}</dd>
+            </dl>
+          ) : (
+            <dl className="payouts-readonly">
+              <dt>Seller / Store</dt><dd>{profile?.store_name || profile?.full_name || "—"}</dd>
+              <dt>PAN</dt><dd>{profile?.pan_number || "—"}</dd>
+              <dt>GSTIN</dt><dd>{profile?.gst_number || "—"}</dd>
+              <dt>Email</dt><dd>{profile?.email || "—"}</dd>
+              <dt>Phone</dt><dd>{profile?.phone || "—"}</dd>
+            </dl>
+          )}
           <p className="payouts-hint">To change these, update them in My Store.</p>
         </div>
       </div>
