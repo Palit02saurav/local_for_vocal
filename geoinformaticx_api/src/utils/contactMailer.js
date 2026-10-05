@@ -96,7 +96,7 @@ exports.sendNewsletterEmails = async ({ email }) => {
 
 exports.sendSellerApplicationEmails = async ({ fullName, email, phone, businessName, category, city }) => {
   // 1) Mail to the company inbox
-  await transporter.sendMail({
+  const companyMail = transporter.sendMail({
     from: `"Geoinformaticx Website" <${process.env.EMAIL_USER}>`,
     to: process.env.COMPANY_EMAIL,
     replyTo: email,
@@ -115,7 +115,7 @@ exports.sendSellerApplicationEmails = async ({ fullName, email, phone, businessN
   });
 
   // 2) Confirmation mail to the applicant
-  await transporter.sendMail({
+  const applicantMail = transporter.sendMail({
     from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'We received your seller application',
@@ -129,4 +129,6 @@ exports.sendSellerApplicationEmails = async ({ fullName, email, phone, businessN
       <p>Regards,<br/>Team Geoinformaticx</p>
     `,
   });
+
+  await Promise.all([companyMail, applicantMail]);
 };

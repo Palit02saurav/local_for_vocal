@@ -85,16 +85,22 @@ exports.sellerApplication = async (req, res) => {
       return CommonService.sendResponse(res, 400, false, 'One of the fields is too long.');
     }
 
-    await sendSellerApplicationEmails({
+    const payload = {
       fullName: fullName.trim(),
       email: email.trim(),
       phone: phone.trim(),
       businessName: businessName.trim(),
       category: category.trim(),
       city: city.trim(),
-    });
+    };
 
     CommonService.sendResponse(res, 200, true, 'Your application has been submitted successfully.');
+
+    sendSellerApplicationEmails(payload)
+      .then(() => console.log('Seller application emails sent for', payload.email))
+      .catch((err) =>
+        console.error('Background seller application email failed:', err.message, '| code:', err.code, '| response:', err.response)
+      );
   } catch (err) {
     console.error('Seller application error:', err);
     CommonService.sendResponse(res, 500, false, 'Could not submit your application. Please try again later.');
