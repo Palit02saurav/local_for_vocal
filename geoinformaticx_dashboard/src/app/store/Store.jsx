@@ -43,7 +43,7 @@ export default function Store() {
           gst_number: s.gst_number || "",
           business_registration_number: s.business_registration_number || "",
           pan_number: s.pan_number || "",
-          business_address: s.business_address || "",
+          business_address: s.business_address || s.address || "",
           profile_image_url: s.profile_image_url || "",
         });
       } catch (err) {

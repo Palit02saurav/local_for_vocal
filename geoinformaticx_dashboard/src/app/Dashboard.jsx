@@ -1158,21 +1158,23 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bottom stats strip */}
-      <div className="dash-strip">
-        {bottomStats.map((s) => (
-          <div className="dash-strip-item" key={s.label}>
-            <div className="dash-strip-icon" style={{ background: s.bg, color: s.color }}>
-              {stripIcons[s.icon]}
+      {/* Bottom stats strip (Super Admin only) */}
+      {isSuperAdmin && (
+        <div className="dash-strip">
+          {bottomStats.map((s) => (
+            <div className="dash-strip-item" key={s.label}>
+              <div className="dash-strip-icon" style={{ background: s.bg, color: s.color }}>
+                {stripIcons[s.icon]}
+              </div>
+              <div>
+                <p className="dash-strip-label">{s.label}</p>
+                <p className="dash-strip-value">{s.value}</p>
+                <p className="dash-strip-change" style={{ color: s.color }}>↑ {s.change} <span className="dash-strip-change-sub">vs last week</span></p>
+              </div>
             </div>
-            <div>
-              <p className="dash-strip-label">{s.label}</p>
-              <p className="dash-strip-value">{s.value}</p>
-              <p className="dash-strip-change" style={{ color: s.color }}>↑ {s.change} <span className="dash-strip-change-sub">vs last week</span></p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
