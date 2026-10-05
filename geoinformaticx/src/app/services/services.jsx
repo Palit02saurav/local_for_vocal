@@ -3,14 +3,12 @@
 import "./services.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { addToCart } from "@/lib/cart";
+import { addToCart, getCart } from "@/lib/cart";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { useRouter } from "next/navigation";
-
 import Link from "next/link";
 
 export default function Services() {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const [wishlisted, setWishlisted] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,20 +20,27 @@ export default function Services() {
   const [selectedService, setSelectedService] = useState(null);
 
   const [allServices, setAllServices] = useState([]);
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+useEffect(() => {
+  axios
+    .get(`${API_BASE}/services/public`)
+    .then((res) => {
+      const services = (
+        res.data.data?.products ||
+        res.data.data?.services ||
+        []
+      ).map((s) => ({
+        ...s,
+        slug: s.sku,
+        img:
+          s.image_url ||
+          "https://placehold.co/300x300?text=No+Image",
+      }));
 
-  useEffect(() => {
-    axios
-      axios.get(`${API_BASE}/services/public`)
-      .then((res) => {
-        const services = (res.data.data?.products || res.data.data?.services || []).map((s) => ({
-          ...s,
-          slug: s.sku,
-          img: s.image_url || "https://placehold.co/300x300?text=No+Image",
-        }));
-        setAllServices(services);
-      })
-      .catch((err) => console.error("Failed to load services:", err));
-  }, []);
+      setAllServices(services);
+    })
+    .catch((err) => console.error("Failed to load services:", err));
+}, []);
 
   const syncWishlist = async () => {
     const list = await getWishlist();
@@ -50,6 +55,23 @@ export default function Services() {
     syncWishlist();
     window.addEventListener("storage", syncWishlist);
     return () => window.removeEventListener("storage", syncWishlist);
+  }, []);
+
+  const [bookedServices, setBookedServices] = useState({});
+
+  const syncCart = async () => {
+    const cart = await getCart();
+    const map = {};
+    cart.forEach((c) => {
+      if (c.type === "service") map[c.id] = true;
+    });
+    setBookedServices(map);
+  };
+
+  useEffect(() => {
+    syncCart();
+    window.addEventListener("storage", syncCart);
+    return () => window.removeEventListener("storage", syncCart);
   }, []);
 
   const handleAddToCart = async (service) => {
@@ -76,12 +98,13 @@ export default function Services() {
     .filter((s) => {
       if (selectedCategory !== "All Categories" && s.category !== selectedCategory) return false;
       if (Number(s.price) > priceRange) return false;
+      if (selectedRating !== null && Number(s.avg_rating || 0) < selectedRating) return false;
       return true;
     })
     .sort((a, b) => {
       if (sortBy === "Price Low to High") return Number(a.price) - Number(b.price);
       if (sortBy === "Price High to Low") return Number(b.price) - Number(a.price);
-      return 0;
+      return Number(b.review_count || 0) - Number(a.review_count || 0);
     });
 
   const paginatedServices = filteredServices.slice(
@@ -186,9 +209,14 @@ export default function Services() {
                   <p className="product-seller">{service.seller?.store_name}</p>
                   <div className="product-meta">
                     <span className="product-price">₹{Number(service.price || 0).toLocaleString("en-IN")}</span>
+                    <span className="product-rating">⭐ {service.avg_rating ?? 0} ({service.review_count ?? 0})</span>
                   </div>
-                  <button className="product-add-to-cart-btn" onClick={() => handleAddToCart(service)}>
-                    📋 Book Now
+                  <button
+                    className="product-add-to-cart-btn"
+                    onClick={() => handleAddToCart(service)}
+                    disabled={!!bookedServices[service.id]}
+                  >
+                    {bookedServices[service.id] ? "✓ Booked" : "📋 Book Now"}
                   </button>
                   <Link href={`/services/${service.slug}`} className="product-details-btn">
                     View Details
@@ -307,12 +335,13 @@ export default function Services() {
 
               <button
                 className="details-book-btn"
+                disabled={!!bookedServices[selectedService.id]}
                 onClick={async () => {
                   await handleAddToCart(selectedService);
                   setSelectedService(null);
                 }}
               >
-                📋 Book Now
+                {bookedServices[selectedService.id] ? "✓ Booked" : "📋 Book Now"}
               </button>
             </div>
           </div>

@@ -298,3 +298,48 @@
   .ts-card-img { width: 100%; height: 160px; }
   .ts-title { font-size: 28px; }
 }
+
+.ts-btn-rate { background: #fff7e6; color: #b26a00; border: 1.5px solid #f5a623; }
+.ts-btn-rate:hover { background: #ffefcc; }
+
+/* ---------- Rating form ---------- */
+.ts-rate-form {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+}
+.ts-rate-stars { font-size: 28px; letter-spacing: 4px; margin-bottom: 10px; }
+.ts-star { color: #ddd; cursor: pointer; }
+.ts-star.filled { color: #f5a623; }
+.ts-rate-comment {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.ts-rate-actions { display: flex; gap: 10px; margin-top: 12px; }
+.ts-rate-submit {
+  padding: 10px 20px;
+  background: #1b5e3b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ts-rate-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.ts-rate-cancel {
+  padding: 10px 20px;
+  background: #fff;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ts-rated-note { margin-top: 12px; font-size: 14px; color: #1b5e3b; font-weight: 600; }

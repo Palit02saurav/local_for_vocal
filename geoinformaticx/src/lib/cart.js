@@ -36,6 +36,7 @@ export const getCart = async () => {
 // item: { productId, type: "product" | "service" }
 export const addToCart = async (item, quantity = 1) => {
   try {
+    if (item.type === "service") quantity = 1;
     await client.post("/cart", {
       item_type: item.type || "product",
       product_id: item.type === "service" ? undefined : item.productId,

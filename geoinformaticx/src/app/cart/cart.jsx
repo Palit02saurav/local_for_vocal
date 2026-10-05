@@ -99,7 +99,7 @@ const qtyOf = (arr) => arr.reduce((s, i) => s + i.quantity, 0);
 const sumOf = (arr) => arr.reduce((s, i) => s + i.price * i.quantity, 0);
 
 /* One section (Products / Services / 10-Min) */
-function CartSection({ title, icon, tone, column, items, onQty, onRemove }) {
+function CartSection({ title, icon, tone, column, items, onQty, onRemove, hideQty = false }) {
   return (
     <section className={`ct-section ${tone}`}>
       <div className="ct-section-head">
@@ -142,11 +142,15 @@ function CartSection({ title, icon, tone, column, items, onQty, onRemove }) {
 
           <span className="ct-row-price">{item.price > 0 ? inr(item.price) : "—"}</span>
 
-          <div className="ct-qty">
-            <button onClick={() => onQty(item.cartItemId, -1)} aria-label="Decrease quantity">−</button>
-            <span>{item.quantity}</span>
-            <button onClick={() => onQty(item.cartItemId, 1)} aria-label="Increase quantity">+</button>
-          </div>
+          {hideQty ? (
+            <span className="ct-row-price">{item.quantity}</span>
+          ) : (
+            <div className="ct-qty">
+              <button onClick={() => onQty(item.cartItemId, -1)} aria-label="Decrease quantity">−</button>
+              <span>{item.quantity}</span>
+              <button onClick={() => onQty(item.cartItemId, 1)} aria-label="Increase quantity">+</button>
+            </div>
+          )}
 
           <span className="ct-row-total">{item.price > 0 ? inr(item.price * item.quantity) : "—"}</span>
 
@@ -246,6 +250,7 @@ export default function Cart() {
                 <CartSection
                   title="Services" icon="wrench" tone="blue" column="Service"
                   items={serviceItems} onQty={handleQtyChange} onRemove={handleRemove}
+                  hideQty
                 />
               )}
               {tenMinItems.length > 0 && (

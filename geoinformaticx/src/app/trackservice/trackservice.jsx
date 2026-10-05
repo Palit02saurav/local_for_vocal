@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getServiceOrders } from "@/lib/orders";
+import { getServiceOrders, submitReview } from "@/lib/orders";
 import "./trackservice.css";
 
 /* ---------- SVG ICONS (Lucide-style, 24x24) ---------- */
@@ -19,6 +19,7 @@ const ICONS = {
   phone: (<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />),
   message: (<><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 9h8" /><path d="M8 13h5" /></>),
   eye: (<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>),
+  star: (<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />),
 };
 
 function Icon({ name, size = 18, stroke = 1.8 }) {
@@ -105,13 +106,37 @@ export default function TrackService() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("all"); // all | upcoming | ongoing | completed
   const [openId, setOpenId] = useState(null);
+  const [ratingId, setRatingId] = useState(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [submittingRating, setSubmittingRating] = useState(false);
+
+  const loadOrders = async () => setOrders(await getServiceOrders());
 
   useEffect(() => {
-    const sync = async () => setOrders(await getServiceOrders());
-    sync();
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    loadOrders();
+    window.addEventListener("storage", loadOrders);
+    return () => window.removeEventListener("storage", loadOrders);
   }, []);
+
+  const closeRating = () => {
+    setRatingId(null);
+    setRatingValue(0);
+    setRatingComment("");
+  };
+
+  const handleRateSubmit = async (orderId) => {
+    if (ratingValue < 1) return;
+    setSubmittingRating(true);
+    const result = await submitReview(orderId, ratingValue, ratingComment);
+    setSubmittingRating(false);
+    if (result.success) {
+      closeRating();
+      await loadOrders();
+    } else {
+      alert(result.message || "Could not submit your rating.");
+    }
+  };
 
   const groupOf = (o) => (STATUS[o.status] || STATUS.Pending).group;
   const total = orders.length;
@@ -196,6 +221,7 @@ export default function TrackService() {
           {visible.map((order) => {
             const cfg = STATUS[order.status] || STATUS.Pending;
             const isOpen = openId === order.orderId;
+            const canRate = ["Confirmed", "Processing", "Shipped", "Out for Delivery", "Delivered"].includes(order.status);
 
             return (
               <div key={order.orderId} className="ts-card">
@@ -286,6 +312,20 @@ export default function TrackService() {
                     </div>
                   </div>
 
+                  {canRate && !order.isRated && (
+                    <button
+                      className="ts-btn ts-btn-rate"
+                      onClick={() => {
+                        setRatingId(order.orderId);
+                        setRatingValue(0);
+                        setRatingComment("");
+                      }}
+                    >
+                      <Icon name="star" size={20} />
+                      Rate Now
+                    </button>
+                  )}
+
                   {order.providerPhone ? (
                     <a href={`tel:${order.providerPhone}`} className="ts-btn ts-btn-outline">
                       <Icon name="message" size={20} />
@@ -314,6 +354,42 @@ export default function TrackService() {
                     <div><span>Booked On</span><strong>{fmtDate(order.date)}, {fmtTime(order.date)}</strong></div>
                     <div><span>Last Updated</span><strong>{fmtDate(order.updatedAt || order.date)}</strong></div>
                   </div>
+                )}
+
+                {canRate && ratingId === order.orderId && !order.isRated && (
+                  <div className="ts-rate-form">
+                    <div className="ts-rate-stars">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <span
+                          key={n}
+                          className={`ts-star ${n <= ratingValue ? "filled" : ""}`}
+                          onClick={() => setRatingValue(n)}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <textarea
+                      className="ts-rate-comment"
+                      placeholder="Tell us about this service (optional)"
+                      value={ratingComment}
+                      onChange={(e) => setRatingComment(e.target.value)}
+                    />
+                    <div className="ts-rate-actions">
+                      <button
+                        className="ts-rate-submit"
+                        disabled={ratingValue < 1 || submittingRating}
+                        onClick={() => handleRateSubmit(order.orderId)}
+                      >
+                        {submittingRating ? "Submitting..." : "Submit Rating"}
+                      </button>
+                      <button className="ts-rate-cancel" onClick={closeRating}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {canRate && order.isRated && (
+                  <p className="ts-rated-note">✓ You've rated this service.</p>
                 )}
               </div>
             );

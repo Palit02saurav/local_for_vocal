@@ -83,6 +83,7 @@ export const getProductOrders = async () => {
 
 const normalizeServiceOrder = (raw) => ({
   ...normalizeOrder(raw),
+  isRated: !!raw.review,
   providerPhone: raw.service?.seller?.phone || "",
   location: raw.service?.seller?.location || "",
   serviceAddress: raw.order?.address || "",

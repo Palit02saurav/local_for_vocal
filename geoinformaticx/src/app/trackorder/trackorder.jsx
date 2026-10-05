@@ -17,6 +17,7 @@ const ICONS = {
   file: (<><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></>),
   check: (<path d="M20 6 9 17l-5-5" />),
   chevron: (<path d="m9 18 6-6-6-6" />),
+  star: (<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />),
 };
 
 function Icon({ name, size = 18, stroke = 1.8 }) {
@@ -341,6 +342,20 @@ export default function TrackOrder() {
 
                 {/* footer buttons */}
                 <div className="track-card-footer">
+                  {order.status === "Delivered" && !order.isRated && (
+                    <button
+                      className="track-btn track-btn-rate"
+                      onClick={() => {
+                        setExpandedId(order.orderId); 
+                        setRatingId(order.orderId);   
+                        setRatingValue(0);
+                        setRatingComment("");
+                      }}
+                    >
+                      <Icon name="star" size={16} />
+                      Rate Now
+                    </button>
+                  )}
                   <button
                     className="track-btn track-btn-outline"
                     onClick={() => setExpandedId(isExpanded ? null : order.orderId)}

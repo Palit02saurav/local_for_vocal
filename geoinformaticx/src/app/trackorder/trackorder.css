@@ -308,6 +308,8 @@
 .track-btn-outline:hover { background: #f1f8f3; }
 .track-btn-solid { background: #1b5e3b; color: #fff; border: 1.5px solid #1b5e3b; }
 .track-btn-solid:hover { background: #154a2f; }
+.track-btn-rate { background: #fff7e6; color: #b26a00; border: 1.5px solid #f5a623; }
+.track-btn-rate:hover { background: #ffefcc; }
 
 /* ---------- Details panel ---------- */
 .track-expand-panel {

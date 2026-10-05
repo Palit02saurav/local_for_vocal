@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { addToCart } from "@/lib/cart";
+import { addToCart, getCart } from "@/lib/cart";
 import { useRouter } from "next/navigation";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { findDistrictSpecialty, productMatchesSpecialty } from "@/lib/districtSpecialties";
@@ -12,7 +12,7 @@ import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;  
 
-function WishlistCard({ item, onViewDetails, type = "product", wishlistItemId, onToggleWishlist }) {
+function WishlistCard({ item, onViewDetails, type = "product", wishlistItemId, onToggleWishlist, inCart = false }) {
   const router = useRouter();
   const wishlisted = !!wishlistItemId;
 
@@ -71,8 +71,14 @@ function WishlistCard({ item, onViewDetails, type = "product", wishlistItemId, o
           {type === "service" ? "📋 Book Now" : "🛒 Add to Cart"}
         </button> */}
 
-        <button className="add-to-cart-btn" onClick={handleAddToCart}>
-          {type === "service" ? "📋 Book Now" : "🛒 Add to Cart"}
+        <button
+          className="add-to-cart-btn"
+          onClick={handleAddToCart}
+          disabled={type === "service" && inCart}
+        >
+          {type === "service"
+            ? inCart ? "✓ Booked" : "📋 Book Now"
+            : "🛒 Add to Cart"}
         </button>
         <Link
           href={type === "service" ? `/services/${item.slug}` : `/shop/${item.slug}`}
@@ -136,6 +142,23 @@ useEffect(() => {
   syncWishlist();
   window.addEventListener("storage", syncWishlist);
   return () => window.removeEventListener("storage", syncWishlist);
+}, []);
+
+const [bookedServices, setBookedServices] = useState({});
+
+const syncCart = async () => {
+  const cart = await getCart();
+  const map = {};
+  cart.forEach((c) => {
+    if (c.type === "service") map[c.id] = true;
+  });
+  setBookedServices(map);
+};
+
+useEffect(() => {
+  syncCart();
+  window.addEventListener("storage", syncCart);
+  return () => window.removeEventListener("storage", syncCart);
 }, []);
 
 const handleToggleWishlist = async (item, type = "product") => {
@@ -242,8 +265,8 @@ const handleToggleWishlist = async (item, type = "product") => {
           slug: s.sku,
           seller: s.seller?.store_name || s.seller?.full_name || "Geoinformaticx",
           price: `₹${Number(s.price).toLocaleString("en-IN")}`,
-          rating: 0,
-          reviews: 0,
+          rating: s.avg_rating ?? 0,
+          reviews: s.review_count ?? 0,
           badge: null,
           img: s.image_url || "https://placehold.co/300x300?text=No+Image",
         }));
@@ -712,6 +735,7 @@ loadSellers();
                 type="service"
                 wishlistItemId={wishlistMap[wlKey("service", service.id)]}
                 onToggleWishlist={handleToggleWishlist}
+                inCart={!!bookedServices[service.id]}
               />
             ))
           )}
@@ -854,6 +878,7 @@ loadSellers();
 
               <button
                 className="details-book-btn"
+                disabled={selectedItem.type === "service" && !!bookedServices[selectedItem.id]}
                 onClick={async () => {
                   const result = await addToCart({
                     productId: selectedItem.id,
@@ -866,7 +891,9 @@ loadSellers();
                   setSelectedItem(null);
                 }}
               >
-                {selectedItem.type === "service" ? "📋 Book Now" : "🛒 Add to Cart"}
+                {selectedItem.type === "service"
+                  ? bookedServices[selectedItem.id] ? "✓ Booked" : "📋 Book Now"
+                  : "🛒 Add to Cart"}
               </button>
             </div>
           </div>

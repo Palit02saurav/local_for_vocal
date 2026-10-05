@@ -98,6 +98,8 @@ function Rating({ value, count }) {
   );
 }
 
+const isService = (item) => item.type === "service";
+
 export default function Wishlist() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,7 +231,7 @@ export default function Wishlist() {
                   >
                     <Icon name="heart" size={18} fill="#e5483b" stroke={1.5} />
                   </button>
-                  <Link href={`/shop/${item.slug}`}>
+                  <Link href={isService(item) ? `/services/${item.slug}` : `/shop/${item.slug}`}>
                     <img
                       src={item.img}
                       alt={item.name}
@@ -243,14 +245,14 @@ export default function Wishlist() {
                   <p className="wl-card-name">{item.name}</p>
                   <p className="wl-card-price">{inr(item.price)}</p>
                   <div className="wl-card-meta">
-                    <StockPill inStock={item.stock > 0} />
+                    {isService(item) ? <span /> : <StockPill inStock={item.stock > 0} />}
                     <Rating value={item.rating} count={item.reviewCount} />
                   </div>
                   <div className="wl-card-actions">
                     <button
                       className="wl-add-btn"
                       onClick={() => handleAddToCart(item)}
-                      disabled={item.stock === 0}
+                      disabled={!isService(item) && item.stock === 0}
                     >
                       <Icon name="cart" size={17} />
                       Add to Cart
