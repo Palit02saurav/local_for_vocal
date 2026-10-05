@@ -38,15 +38,22 @@ exports.submit = async (req, res) => {
       return CommonService.sendResponse(res, 400, false, 'Subject or message is too long.');
     }
 
-    await sendContactEmails({
+    const payload = {
       name: name.trim(),
       email: email.trim(),
       phone: phone?.trim(),
       subject: subject.trim(),
       message: message.trim(),
-    });
+    };
 
+    // Reply to the visitor straight away, send the emails in the background
     CommonService.sendResponse(res, 200, true, 'Your message has been sent successfully.');
+
+    sendContactEmails(payload)
+      .then(() => console.log('Contact emails sent for', payload.email))
+      .catch((err) =>
+        console.error('Background contact email failed:', err.message, '| code:', err.code, '| response:', err.response)
+      );
   } catch (err) {
     console.error('Contact form error:', err);
     CommonService.sendResponse(res, 500, false, 'Could not send your message. Please try again later.');

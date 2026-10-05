@@ -1,15 +1,25 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: Number(process.env.EMAIL_PORT) || 587,
-  secure: Number(process.env.EMAIL_PORT) === 465,
+  host: process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch',
+  port: Number(process.env.EMAIL_PORT) || 465,
+  secure: (Number(process.env.EMAIL_PORT) || 465) === 465,
   family: 4,
   connectionTimeout: 10000,
+  logger: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+});
+
+// Verify the SMTP connection on startup so problems show up in the server logs immediately
+transporter.verify((error) => {
+  if (error) {
+    console.error('Error with mail transporter:', error);
+  } else {
+    console.log('Mail transporter is ready to send messages');
+  }
 });
 
 const esc = (s) =>
@@ -22,7 +32,7 @@ exports.sendContactEmails = async ({ name, email, phone, subject, message }) => 
   const msgHtml = esc(message).replace(/\n/g, '<br/>');
 
   // 1) Mail to the company inbox (reply goes straight to the visitor)
-  await transporter.sendMail({
+  const companyMail = transporter.sendMail({
     from: `"Geoinformaticx Website" <${process.env.EMAIL_USER}>`,
     to: process.env.COMPANY_EMAIL,
     replyTo: email,
@@ -41,7 +51,7 @@ exports.sendContactEmails = async ({ name, email, phone, subject, message }) => 
   });
 
   // 2) Confirmation mail to the person who filled the form
-  await transporter.sendMail({
+  const userMail = transporter.sendMail({
     from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'We received your message',
@@ -53,6 +63,8 @@ exports.sendContactEmails = async ({ name, email, phone, subject, message }) => 
       <p>Regards,<br/>Team Geoinformaticx</p>
     `,
   });
+
+  await Promise.all([companyMail, userMail]);
 };
 
 
