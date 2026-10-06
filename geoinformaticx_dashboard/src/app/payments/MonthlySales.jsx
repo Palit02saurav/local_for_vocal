@@ -80,9 +80,10 @@ export default function MonthlySales() {
           onChange={(e) => setType(e.target.value)}
           style={{ padding: "10px 14px", border: "1px solid #e0e0e0", borderRadius: 8, fontSize: 14 }}
         >
-          <option value="">Sellers &amp; Service Providers</option>
+          <option value="">All (Sellers, Service Providers &amp; Street Vendors)</option>
           <option value="product">Sellers only</option>
           <option value="service">Service Providers only</option>
+          <option value="vendor">Street Vendors only</option>
         </select>
       </div>
 
@@ -96,7 +97,7 @@ export default function MonthlySales() {
           <div style={{ ...cardValue, color: "#2f8d46" }}>{inr(s?.commission)}</div>
         </div>
         <div style={cardStyle}>
-          <div style={cardLabel}>Payable to sellers</div>
+          <div style={cardLabel}>Payable to sellers &amp; vendors</div>
           <div style={cardValue}>{inr(s?.seller_amount)}</div>
         </div>
       </div>
@@ -133,9 +134,15 @@ export default function MonthlySales() {
             ) : (
               <>
                 {rows.map((r) => (
-                  <tr key={r.seller_id}>
+                  <tr key={r.row_key}>
                     <td className="pp-product-name">{r.store_name || r.full_name}</td>
-                    <td>{r.seller_type === "service" ? "Service Provider" : "Seller"}</td>
+                    <td>
+                      {r.seller_type === "service"
+                        ? "Service Provider"
+                        : r.seller_type === "vendor"
+                        ? "Street Vendor"
+                        : "Seller"}
+                    </td>
                     <td>{r.email}</td>
                     <td>{r.orders}</td>
                     <td>{inr(r.gross_sales)}</td>
