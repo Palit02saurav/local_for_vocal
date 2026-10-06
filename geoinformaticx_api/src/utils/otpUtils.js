@@ -1,14 +1,16 @@
 const nodemailer = require('nodemailer');
 
+const EMAIL_PORT = Number(process.env.EMAIL_PORT) || 465;
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false,
-  family: 4, // force IPv4 — avoids ECONNRESET on Windows when Node tries IPv6 to Gmail first
+  host: process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch',
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465,
+  family: 4,
   connectionTimeout: 10000,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
@@ -28,7 +30,7 @@ exports.generateOtp = () => {
 
 exports.sendOtpEmail = async (email, name, otp) => {
   await transporter.sendMail({
-    from: `"Geoinformaticx" <${process.env.SMTP_USER}>`,
+    from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Your Verification Code',
     html: `
