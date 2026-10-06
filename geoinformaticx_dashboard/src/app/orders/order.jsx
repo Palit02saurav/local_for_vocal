@@ -122,21 +122,6 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
             <h1>Orders</h1>
             <p>Manage and track all customer orders.</p>
           </div>
-          <div className="orders-header-actions">
-            <button className="btn btn-outline">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M12 3v13m0 0-4-4m4 4 4-4" />
-                <path d="M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
-              </svg>
-              Export
-            </button>
-            <button className="btn btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M4 6h16M7 12h10M10 18h4" />
-              </svg>
-              Filters
-            </button>
-          </div>
         </div>
 
         <div className="orders-stats">
