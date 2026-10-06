@@ -15,6 +15,7 @@ export default function Sellers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all"); // all | product | service
 
   const loadSellers = async () => {
     setLoading(true);
@@ -34,15 +35,17 @@ export default function Sellers() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!searchQuery) return sellers;
     const q = searchQuery.toLowerCase();
-    return sellers.filter(
-      (s) =>
+    return sellers.filter((s) => {
+      if (typeFilter !== "all" && s.seller_type !== typeFilter) return false;
+      if (!q) return true;
+      return (
         s.store_name?.toLowerCase().includes(q) ||
         s.full_name?.toLowerCase().includes(q) ||
         s.email?.toLowerCase().includes(q)
-    );
-  }, [sellers, searchQuery]);
+      );
+    });
+  }, [sellers, searchQuery, typeFilter]);
 
   return (
     <main className="pp-page">
@@ -66,6 +69,15 @@ export default function Sellers() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <select
+          className="pp-toolbar-select"
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="product">Sellers</option>
+          <option value="service">Service Providers</option>
+        </select>
       </div>
 
       <div className="pp-table-wrapper">
