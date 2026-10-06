@@ -61,7 +61,7 @@ exports.sendServiceBookingEmail = async ({ to, sellerName, orderId, customer, it
     .join('');
 
   await transporter.sendMail({
-    from: `"Geoinformaticx" <${process.env.SMTP_USER}>`,
+    from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
     to,
     subject: `New service booking #${orderId}`,
     html: `
