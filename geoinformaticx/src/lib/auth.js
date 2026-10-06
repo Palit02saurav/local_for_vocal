@@ -38,6 +38,28 @@ export const verifyOtp = async (email, otp) => {
   }
 };
 
+export const skipOtp = async (email) => {
+  try {
+    const res = await fetch(`${API_BASE}/customer/auth/skip-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, message: data.message || "Could not skip verification." };
+    }
+    const user = data.data?.user;
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    window.dispatchEvent(new Event("storage"));
+    showToast(`Welcome, ${user.name}!`);
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: "Could not reach the server. Is the backend running?" };
+  }
+};
+
 export const resendOtp = async (email) => {
   try {
     const res = await fetch(`${API_BASE}/customer/auth/resend-otp`, {

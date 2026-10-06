@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { verifyOtp, resendOtp } from "@/lib/auth";
+import { verifyOtp, resendOtp, skipOtp } from "@/lib/auth";
 import "./verify-otp.css";
 
 function VerifyOtpContent() {
@@ -42,6 +42,20 @@ function VerifyOtpContent() {
         ? "A new OTP has been sent to your email."
         : result.message
     );
+  };
+
+
+    const handleSkip = async () => {
+    setResendMsg("");
+    setError("");
+
+    const result = await skipOtp(email);
+
+    if (result.success) {
+      router.push("/");
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -85,6 +99,14 @@ function VerifyOtpContent() {
           className="otp-resend-btn"
         >
           Resend OTP
+        </button>
+
+        <button
+          onClick={handleSkip}
+          className="otp-resend-btn"
+          style={{ display: "block", margin: "8px auto 0" }}
+        >
+          Skip OTP
         </button>
 
         {resendMsg && (
