@@ -1,52 +1,48 @@
-const dns = require('dns').promises;
-const nodemailer = require('nodemailer');
+// Sends mail through Brevo's HTTPS API (port 443) instead of SMTP, because
+// Render blocks outbound SMTP. Same interface as before: transporter.sendMail / verify.
+const API_URL = 'https://api.brevo.com/v3';
 
-const HOST = process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch';
-const PORT = Number(process.env.EMAIL_PORT) || 465;
-
-let cachedIp = null;
-let cachedAt = 0;
-let cachedTransport = null;
-let cachedTransportIp = null;
-
-const resolveIPv4 = async () => {
-  if (cachedIp && Date.now() - cachedAt < 5 * 60 * 1000) return cachedIp;
-  try {
-    const [ip] = await dns.resolve4(HOST);
-    cachedIp = ip;
-    cachedAt = Date.now();
-    return ip;
-  } catch (err) {
-    console.error('IPv4 lookup failed, falling back to hostname:', err.message);
-    return HOST;
-  }
+// '"Geoinformaticx" <info@site.com>'  ->  { name: 'Geoinformaticx', email: 'info@site.com' }
+const parseAddress = (value) => {
+  const str = String(value || '').trim();
+  const m = str.match(/^"?([^"<]*?)"?\s*<([^>]+)>$/);
+  if (m) return { name: m[1].trim() || undefined, email: m[2].trim() };
+  return { email: str };
 };
 
-const getTransport = async () => {
-  const ip = await resolveIPv4();
-  if (cachedTransport && cachedTransportIp === ip) return cachedTransport;
-  cachedTransport = nodemailer.createTransport({
-    host: ip,
-    port: PORT,
-    secure: PORT === 465,
-    tls: { servername: HOST }, // certificate is still checked against the real hostname
-    connectionTimeout: 30000, // 30s to connect
-    greetingTimeout: 30000,   // 30s to get the server greeting
-    socketTimeout: 60000,     // 60s of silence before giving up
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+const toList = (value) =>
+  (Array.isArray(value) ? value : String(value || '').split(','))
+    .map((s) => String(s).trim())
+    .filter(Boolean)
+    .map(parseAddress);
+
+const brevo = async (path, options = {}) => {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) throw new Error('BREVO_API_KEY is not set');
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: { 'api-key': key, accept: 'application/json', 'content-type': 'application/json' },
+    signal: AbortSignal.timeout(15000),
   });
-  cachedTransportIp = ip;
-  return cachedTransport;
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text }; }
+  if (!res.ok) throw new Error(`Brevo ${res.status}: ${data.message || text}`);
+  return data;
 };
 
 exports.transporter = {
   async sendMail(message) {
-    return (await getTransport()).sendMail(message);
+    const body = {
+      sender: parseAddress(message.from),
+      to: toList(message.to),
+      subject: message.subject,
+      htmlContent: message.html,
+    };
+    if (message.replyTo) body.replyTo = parseAddress(message.replyTo);
+    return brevo('/smtp/email', { method: 'POST', body: JSON.stringify(body) });
   },
   verify(cb) {
-    getTransport().then((t) => t.verify(cb)).catch(cb);
+    brevo('/account').then(() => cb(null, true)).catch(cb);
   },
 };
