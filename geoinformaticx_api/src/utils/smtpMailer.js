@@ -40,7 +40,9 @@ exports.transporter = {
       htmlContent: message.html,
     };
     if (message.replyTo) body.replyTo = parseAddress(message.replyTo);
-    return brevo('/smtp/email', { method: 'POST', body: JSON.stringify(body) });
+    const result = await brevo('/smtp/email', { method: 'POST', body: JSON.stringify(body) });
+    console.log(`Brevo accepted email to ${body.to.map((t) => t.email).join(', ')} from ${body.sender.email} | messageId: ${result.messageId}`);
+    return result;
   },
   verify(cb) {
     brevo('/account').then(() => cb(null, true)).catch(cb);
