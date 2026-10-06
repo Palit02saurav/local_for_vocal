@@ -30,7 +30,10 @@ const notifyServiceSellers = async (serviceItems, order, form) => {
   const bySeller = {};
   for (const item of serviceItems) {
     const svc = services.find((s) => s.id === item.id);
-    if (!svc?.seller?.email) continue; 
+    if (!svc?.seller?.email) {
+      console.warn(`Service booking mail skipped: service ${item.id} has no seller with an email`);
+      continue;
+    }
     const key = svc.seller.id;
     if (!bySeller[key]) bySeller[key] = { seller: svc.seller, items: [] };
     bySeller[key].items.push(item);
@@ -46,6 +49,7 @@ const notifyServiceSellers = async (serviceItems, order, form) => {
       total: items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0),
       paymentMethod: form.paymentMethod,
     });
+    console.log(`Service booking mail sent to ${seller.email} for order ${order.id}`);
   }
 };
 
