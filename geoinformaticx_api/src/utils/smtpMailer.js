@@ -1,36 +1,50 @@
-const parseFrom = (from) => {
-  const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(from || '');
-  return m ? { name: m[1].trim(), email: m[2].trim() } : { email: String(from || '').trim() };
+const dns = require('dns').promises;
+const nodemailer = require('nodemailer');
+
+const HOST = process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch';
+const PORT = Number(process.env.EMAIL_PORT) || 465;
+
+let cachedIp = null;
+let cachedAt = 0;
+let cachedTransport = null;
+let cachedTransportIp = null;
+
+const resolveIPv4 = async () => {
+  if (cachedIp && Date.now() - cachedAt < 5 * 60 * 1000) return cachedIp;
+  try {
+    const [ip] = await dns.resolve4(HOST);
+    cachedIp = ip;
+    cachedAt = Date.now();
+    return ip;
+  } catch (err) {
+    console.error('IPv4 lookup failed, falling back to hostname:', err.message);
+    return HOST;
+  }
 };
 
-const API_URL = 'https://api.brevo.com/v3';
+const getTransport = async () => {
+  const ip = await resolveIPv4();
+  if (cachedTransport && cachedTransportIp === ip) return cachedTransport;
+  cachedTransport = nodemailer.createTransport({
+    host: ip,
+    port: PORT,
+    secure: PORT === 465,
+    tls: { servername: HOST }, // certificate is still checked against the real hostname
+    connectionTimeout: 10000,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  cachedTransportIp = ip;
+  return cachedTransport;
+};
 
 exports.transporter = {
-  // Startup check: confirms the API key is valid
-  verify(cb) {
-    if (!process.env.BREVO_API_KEY) return cb(new Error('BREVO_API_KEY is not set'));
-    fetch(`${API_URL}/account`, { headers: { 'api-key': process.env.BREVO_API_KEY } })
-      .then((res) => cb(res.ok ? null : new Error(`Brevo rejected the API key (${res.status})`)))
-      .catch(cb);
+  async sendMail(message) {
+    return (await getTransport()).sendMail(message);
   },
-
-  async sendMail({ from, to, subject, html, replyTo }) {
-    const res = await fetch(`${API_URL}/smtp/email`, {
-      method: 'POST',
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'content-type': 'application/json',
-        accept: 'application/json',
-      },
-      body: JSON.stringify({
-        sender: parseFrom(from),
-        to: String(to).split(',').map((e) => ({ email: e.trim() })),
-        ...(replyTo && { replyTo: { email: replyTo } }),
-        subject,
-        htmlContent: html,
-      }),
-    });
-    if (!res.ok) throw new Error(`Brevo ${res.status}: ${await res.text()}`);
-    return res.json();
+  verify(cb) {
+    getTransport().then((t) => t.verify(cb)).catch(cb);
   },
 };
