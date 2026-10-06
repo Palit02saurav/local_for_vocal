@@ -203,6 +203,7 @@ const menuItems = [
       { label: "All Street Vendors Bank Accounts", href: "/payments/vendors" },
       { label: "Seller Payout Requests", href: "/payments/seller-requests" },
       { label: "Service Provider Payout Requests", href: "/payments/service-provider-requests" },
+      { label: "Street Vendor Payout Requests", href: "/payments/vendor-requests" },
       { label: "Monthly Sales & Commission", href: "/payments/monthly-sales" },
     ],
     icon: (

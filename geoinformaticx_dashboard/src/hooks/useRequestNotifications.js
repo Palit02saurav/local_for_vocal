@@ -77,6 +77,18 @@ export const REQUEST_CATEGORIES = [
     notifTitle: "New service provider bank details",
     notifSubtitle: (r) => r.seller?.store_name || r.seller?.full_name,
   },
+  {
+    key: "vendorPayouts",
+    endpoint: "/payout-accounts?status=Pending&seller_type=vendor",
+    dataKey: "accounts",
+    parentLabel: "Payments & Earnings",
+    submenuLabel: "Street Vendor Payout Requests",
+    pagePath: "/payments/vendor-requests",
+    storageKey: "seen_vendor_payout_request_ids",
+    notifType: "vendor",
+    notifTitle: "New street vendor bank details",
+    notifSubtitle: (r) => r.seller?.full_name,
+  },
 ];
 
 
