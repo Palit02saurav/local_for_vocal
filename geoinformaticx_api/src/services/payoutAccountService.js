@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { SellerPayoutAccount, Seller, Order, OrderItem, Product, Service } = require('../models');
+const { SellerPayoutAccount, Seller, Vendor, Order, OrderItem, Product, Service } = require('../models');
 
 const COMMISSION_RATE = 0.10;            
 const COUNTED_STATUSES = ['Delivered'];  
@@ -49,6 +49,15 @@ const toAdmin = (a) => ({
         email: a.seller.email,
         phone: a.seller.phone,
         seller_type: a.seller.seller_type,
+      }
+    : a.vendor
+    ? {
+        id: a.vendor.id,
+        full_name: a.vendor.full_name,
+        store_name: null,
+        email: null,
+        phone: a.vendor.phone,
+        seller_type: 'vendor',
       }
     : null,
 });
@@ -124,6 +133,21 @@ exports.listAll = async (role, query = {}) => {
 
   const where = {};
   if (['Pending', 'Verified', 'Rejected'].includes(query.status)) where.status = query.status;
+
+  // Street vendors keep their accounts under vendor_id, not seller_id
+  if (query.seller_type === 'vendor') {
+    const vendorAccounts = await SellerPayoutAccount.findAll({
+      where,
+      include: [{
+        model: Vendor,
+        as: 'vendor',
+        attributes: ['id', 'full_name', 'phone'],
+        required: true,
+      }],
+      order: [['updated_at', 'DESC']],
+    });
+    return vendorAccounts.map(toAdmin);
+  }
 
   const sellerWhere = ['product', 'service'].includes(query.seller_type)
     ? { seller_type: query.seller_type }

@@ -25,6 +25,7 @@ OrderItem.hasOne(Review, { foreignKey: 'order_item_id', as: 'review' });
 Banner.belongsTo(Seller, { foreignKey: 'seller_id', as: 'seller' });
 Banner.belongsTo(Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
 SellerPayoutAccount.belongsTo(Seller, { foreignKey: 'seller_id', as: 'seller' });
+SellerPayoutAccount.belongsTo(Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
 Order.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 CartItem.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 CartItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
