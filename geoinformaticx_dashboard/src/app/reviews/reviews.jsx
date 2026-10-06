@@ -31,7 +31,7 @@ export default function ReviewsPage({ reviews = [], loading = false }) {
       <div className="reviews-header">
         <div>
           <h1>Reviews &amp; Ratings</h1>
-          <p>See what customers are saying about your products.</p>
+<p>See what customers are saying about your products and services.</p>
         </div>
         <div className="reviews-summary">
           <span className="reviews-avg">{avgRating}</span>
@@ -46,24 +46,26 @@ export default function ReviewsPage({ reviews = [], loading = false }) {
         <p className="reviews-empty">No reviews yet.</p>
       ) : (
         <div className={`reviews-list ${isAdmin ? "reviews-grid" : ""}`}>
-          {reviews.map((r) => (
+          {reviews.map((r) => {
+            const item = r.product || r.service;
+            return (
             <div key={r.id} className="review-card">
               <img
-                src={r.product?.image_url || "https://placehold.co/60x60?text=No+Image"}
-                alt={r.product?.name}
+                src={item?.image_url || "https://placehold.co/60x60?text=No+Image"}
+                alt={item?.name}
                 className="review-product-img"
               />
               <div className="review-body">
                 <div className="review-top-row">
-                  <span className="review-product-name">{r.product?.name}</span>
+                  <span className="review-product-name">{item?.name}</span>
                   <Stars value={r.rating} />
                 </div>
                 {isAdmin && (
                   <p className="review-seller">
                     Seller:{" "}
                     <strong>
-                      {r.product?.seller?.store_name ||
-                        r.product?.seller?.full_name ||
+                      {item?.seller?.store_name ||
+                        item?.seller?.full_name ||
                         r.product?.vendor?.full_name ||
                         "—"}
                     </strong>
@@ -78,7 +80,8 @@ export default function ReviewsPage({ reviews = [], loading = false }) {
                 </p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
