@@ -1,4 +1,5 @@
-const { Review, OrderItem, Order, Customer, Product, Seller, Vendor } = require('../models');
+const { Op } = require('sequelize');
+const { Review, OrderItem, Order, Customer, Product, Service, Seller, Vendor } = require('../models');
 
 exports.createReview = async (customerId, orderItemId, rating, comment) => {
   if (!rating || rating < 1 || rating > 5) {
@@ -53,29 +54,45 @@ exports.createReview = async (customerId, orderItemId, rating, comment) => {
 
   return review;
 };
-
 exports.listForSeller = async (userId, role) => {
-  let productWhere;
-  if (role === 'SELLER') productWhere = { seller_id: userId };
-  else if (role === 'VENDOR') productWhere = { vendor_id: userId };
-  else if (role === 'SUPER_ADMIN') productWhere = undefined; // admin sees all reviews
-  else {
+  let where;
+  if (role === 'SELLER') {
+    where = {
+      [Op.or]: [
+        { '$product.seller_id$': userId },
+        { '$service.seller_id$': userId },
+      ],
+    };
+  } else if (role === 'VENDOR') {
+    where = { '$product.vendor_id$': userId };
+  } else if (role === 'SUPER_ADMIN') {
+    where = undefined; // admin sees all reviews
+  } else {
     const err = new Error('Not authorized.');
     err.status = 403;
     throw err;
   }
 
   const reviews = await Review.findAll({
+    ...(where && { where }),
     include: [
       {
         model: Product,
         as: 'product',
-        required: true,
-        ...(productWhere && { where: productWhere }),
-        attributes: ['id', 'name', 'image_url'],
+        required: false,
+        attributes: ['id', 'name', 'image_url', 'seller_id', 'vendor_id'],
         include: [
           { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
           { model: Vendor, as: 'vendor', attributes: ['id', 'full_name'] },
+        ],
+      },
+      {
+        model: Service,
+        as: 'service',
+        required: false,
+        attributes: ['id', 'name', 'image_url', 'seller_id'],
+        include: [
+          { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name'] },
         ],
       },
     ],
