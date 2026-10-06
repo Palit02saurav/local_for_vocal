@@ -200,6 +200,7 @@ const menuItems = [
     submenu: [
       { label: "All Sellers Bank Accounts", href: "/payments/sellers" },
       { label: "All Service Providers Bank Accounts", href: "/payments/service-providers" },
+      { label: "All Street Vendors Bank Accounts", href: "/payments/vendors" },
       { label: "Seller Payout Requests", href: "/payments/seller-requests" },
       { label: "Service Provider Payout Requests", href: "/payments/service-provider-requests" },
       { label: "Monthly Sales & Commission", href: "/payments/monthly-sales" },
