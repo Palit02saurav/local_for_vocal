@@ -227,6 +227,45 @@ exports.resendOtp = async (email) => {
   );
 };
 
+exports.skipOtp = async (email, res) => {
+  if (process.env.ALLOW_SKIP_OTP !== 'true') {
+    const err = new Error('Skipping verification is not available.');
+    err.status = 403;
+    throw err;
+  }
+
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  const pending = pendingSignups.get(normalizedEmail);
+
+  if (!pending) {
+    const err = new Error('No pending signup found for this email. Please sign up again.');
+    err.status = 404;
+    throw err;
+  }
+
+  if (Date.now() > pending.expiresAt) {
+    pendingSignups.delete(normalizedEmail);
+    const err = new Error('Signup has expired. Please sign up again.');
+    err.status = 400;
+    throw err;
+  }
+
+  const customer = await Customer.create({
+    name: pending.name,
+    email: pending.email,
+    phone: pending.phone,
+    password_hash: pending.password_hash,
+    is_active: true,
+  });
+
+  pendingSignups.delete(normalizedEmail);
+
+  const token = generateCustomerToken(customer);
+  setCustomerAuthCookie(res, token);
+
+  return { id: customer.id, name: customer.name, email: customer.email };
+};
+
 // exports.me = async (customerId) => {
 //   const customer = await Customer.findByPk(customerId, {
 //     attributes: ['id', 'name', 'email', 'phone', 'is_active'],

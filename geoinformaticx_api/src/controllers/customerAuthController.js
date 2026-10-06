@@ -22,6 +22,16 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
+exports.skipOtp = async (req, res) => {
+  try {
+    const user = await CustomerAuthService.skipOtp(req.body.email, res);
+    CommonService.sendResponse(res, 200, true, 'Signed in without verification.', { user });
+  } catch (err) {
+    console.error('Skip OTP error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Could not skip verification.');
+  }
+};
+
 exports.resendOtp = async (req, res) => {
   try {
     await CustomerAuthService.resendOtp(req.body.email);

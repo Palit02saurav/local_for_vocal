@@ -9,6 +9,7 @@ router.post('/signup', customerAuthController.signup);
 router.post('/login', customerAuthController.login);
 router.post('/logout', customerAuthController.logout);
 router.post('/verify-otp', customerAuthController.verifyOtp);
+router.post('/skip-otp', customerAuthController.skipOtp);
 router.post('/resend-otp', customerAuthController.resendOtp);
 router.get('/me', verifyCustomerToken, customerAuthController.me);
 router.patch('/me', verifyCustomerToken, customerAuthController.updateProfile);
