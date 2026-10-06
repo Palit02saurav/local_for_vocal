@@ -62,7 +62,7 @@ export default function MonthlySales() {
         <div>
           <h1>Monthly Sales &amp; Commission</h1>
           <p>
-            Delivered sales per seller, the {rate}% commission we keep, and the amount payable to the seller.
+            Completed product sales and confirmed service bookings per seller, the {rate}% commission we keep, and the amount payable to the seller.
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function MonthlySales() {
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#888" }}>
-                  No delivered sales for this month.
+                  No sales for this month.
                 </td>
               </tr>
             ) : (
