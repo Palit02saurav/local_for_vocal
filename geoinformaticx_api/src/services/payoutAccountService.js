@@ -2,7 +2,8 @@ const { Op } = require('sequelize');
 const { SellerPayoutAccount, Seller, Vendor, Order, OrderItem, Product, Service } = require('../models');
 
 const COMMISSION_RATE = 0.10;            
-const COUNTED_STATUSES = ['Delivered'];  
+const COUNTED_STATUSES = ['Delivered'];
+const COUNTED_SERVICE_STATUSES = ['Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
 const paidOrCod = {
   [Op.or]: [{ payment_method: { [Op.ne]: 'razorpay' } }, { payment_status: 'Paid' }],
 };
@@ -193,10 +194,10 @@ exports.monthlyEarnings = async (role, query = {}) => {
         model: Order,
         as: 'order',
         required: true,
-        attributes: ['id'],
+        attributes: ['id', 'status'],
         where: {
           ...paidOrCod,
-          status: { [Op.in]: COUNTED_STATUSES },
+          status: { [Op.in]: COUNTED_SERVICE_STATUSES },
           created_at: { [Op.gte]: start, [Op.lt]: end },
         },
       },
@@ -207,6 +208,8 @@ exports.monthlyEarnings = async (role, query = {}) => {
 
   const totals = {};
   for (const it of items) {
+    const counted = it.item_type === 'service' ? COUNTED_SERVICE_STATUSES : COUNTED_STATUSES;
+    if (!counted.includes(it.order.status)) continue;
     const sellerId = it.product?.seller_id || it.service?.seller_id;
     if (!sellerId) continue;
     if (!totals[sellerId]) totals[sellerId] = { gross: 0, orders: new Set() };
