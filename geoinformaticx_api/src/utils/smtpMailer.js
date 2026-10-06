@@ -30,7 +30,9 @@ const getTransport = async () => {
     port: PORT,
     secure: PORT === 465,
     tls: { servername: HOST }, // certificate is still checked against the real hostname
-    connectionTimeout: 10000,
+    connectionTimeout: 30000, // 30s to connect
+    greetingTimeout: 30000,   // 30s to get the server greeting
+    socketTimeout: 60000,     // 60s of silence before giving up
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
