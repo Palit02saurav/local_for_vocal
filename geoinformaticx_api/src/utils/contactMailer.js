@@ -1,17 +1,4 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch',
-  port: Number(process.env.EMAIL_PORT) || 465,
-  secure: (Number(process.env.EMAIL_PORT) || 465) === 465,
-  family: 4,
-  connectionTimeout: 10000,
-  logger: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const { transporter } = require('./smtpMailer');
 
 // Verify the SMTP connection on startup so problems show up in the server logs immediately
 transporter.verify((error) => {

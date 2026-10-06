@@ -1,18 +1,4 @@
-const nodemailer = require('nodemailer');
-
-const EMAIL_PORT = Number(process.env.EMAIL_PORT) || 465;
-
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'asmtp.mail.hostpoint.ch',
-  port: EMAIL_PORT,
-  secure: EMAIL_PORT === 465,
-  family: 4,
-  connectionTimeout: 10000,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const { transporter } = require('./smtpMailer');
 
 // One-time check at startup so a broken SMTP config shows up immediately in the logs
 // instead of silently failing every time someone requests an OTP.
