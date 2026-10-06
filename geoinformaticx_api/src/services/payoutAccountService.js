@@ -201,7 +201,7 @@ exports.monthlyEarnings = async (role, query = {}) => {
           created_at: { [Op.gte]: start, [Op.lt]: end },
         },
       },
-      { model: Product, as: 'product', required: false, attributes: ['seller_id'] },
+      { model: Product, as: 'product', required: false, attributes: ['seller_id', 'vendor_id'] },
       { model: Service, as: 'service', required: false, attributes: ['seller_id'] },
     ],
   });
@@ -210,44 +210,79 @@ exports.monthlyEarnings = async (role, query = {}) => {
   for (const it of items) {
     const counted = it.item_type === 'service' ? COUNTED_SERVICE_STATUSES : COUNTED_STATUSES;
     if (!counted.includes(it.order.status)) continue;
-    const sellerId = it.product?.seller_id || it.service?.seller_id;
-    if (!sellerId) continue;
-    if (!totals[sellerId]) totals[sellerId] = { gross: 0, orders: new Set() };
-    totals[sellerId].gross += Number(it.price) * it.quantity;
-    totals[sellerId].orders.add(it.order_id);
+
+    let key = null;
+    if (it.product?.seller_id) key = `s:${it.product.seller_id}`;
+    else if (it.service?.seller_id) key = `s:${it.service.seller_id}`;
+    else if (it.product?.vendor_id) key = `v:${it.product.vendor_id}`;
+    if (!key) continue;
+
+    if (!totals[key]) totals[key] = { gross: 0, orders: new Set() };
+    totals[key].gross += Number(it.price) * it.quantity;
+    totals[key].orders.add(it.order_id);
   }
 
-  const sellerIds = Object.keys(totals).map(Number);
+  const sellerIds = Object.keys(totals).filter((k) => k.startsWith('s:')).map((k) => Number(k.slice(2)));
+  const vendorIds = Object.keys(totals).filter((k) => k.startsWith('v:')).map((k) => Number(k.slice(2)));
+
+  const wantSellers = query.seller_type !== 'vendor';
+  const wantVendors = !['product', 'service'].includes(query.seller_type);
+
   const sellerWhere = { id: sellerIds };
   if (['product', 'service'].includes(query.seller_type)) sellerWhere.seller_type = query.seller_type;
 
-  const [sellers, bankAccounts] = await Promise.all([
-    Seller.findAll({
-      where: sellerWhere,
-      attributes: ['id', 'full_name', 'store_name', 'email', 'seller_type'],
-    }),
-    SellerPayoutAccount.findAll({ where: { seller_id: sellerIds }, attributes: ['seller_id', 'status'] }),
+  const [sellers, vendors, sellerBanks, vendorBanks] = await Promise.all([
+    wantSellers && sellerIds.length
+      ? Seller.findAll({ where: sellerWhere, attributes: ['id', 'full_name', 'store_name', 'email', 'seller_type'] })
+      : [],
+    wantVendors && vendorIds.length
+      ? Vendor.findAll({ where: { id: vendorIds }, attributes: ['id', 'full_name', 'phone'] })
+      : [],
+    sellerIds.length
+      ? SellerPayoutAccount.findAll({ where: { seller_id: sellerIds }, attributes: ['seller_id', 'status'] })
+      : [],
+    vendorIds.length
+      ? SellerPayoutAccount.findAll({ where: { vendor_id: vendorIds }, attributes: ['vendor_id', 'status'] })
+      : [],
   ]);
-  const bankStatus = Object.fromEntries(bankAccounts.map((b) => [b.seller_id, b.status]));
+  const sellerBankStatus = Object.fromEntries(sellerBanks.map((b) => [b.seller_id, b.status]));
+  const vendorBankStatus = Object.fromEntries(vendorBanks.map((b) => [b.vendor_id, b.status]));
 
-  const rows = sellers
-    .map((s) => {
-      const gross = r2(totals[s.id].gross);
-      const commission = r2(gross * COMMISSION_RATE);
-      return {
+  const buildRow = (key, base, bank) => {
+    const gross = r2(totals[key].gross);
+    const commission = r2(gross * COMMISSION_RATE);
+    return {
+      ...base,
+      orders: totals[key].orders.size,
+      gross_sales: gross,
+      commission,
+      seller_amount: r2(gross - commission),
+      bank_status: bank || null,
+    };
+  };
+
+  const rows = [
+    ...sellers.map((s) =>
+      buildRow(`s:${s.id}`, {
+        row_key: `s-${s.id}`,
         seller_id: s.id,
         store_name: s.store_name,
         full_name: s.full_name,
         email: s.email,
         seller_type: s.seller_type,
-        orders: totals[s.id].orders.size,
-        gross_sales: gross,
-        commission,
-        seller_amount: r2(gross - commission),
-        bank_status: bankStatus[s.id] || null,
-      };
-    })
-    .sort((a, b) => b.gross_sales - a.gross_sales);
+      }, sellerBankStatus[s.id])
+    ),
+    ...vendors.map((v) =>
+      buildRow(`v:${v.id}`, {
+        row_key: `v-${v.id}`,
+        seller_id: v.id,
+        store_name: null,
+        full_name: v.full_name,
+        email: v.phone, // vendors have no email, show phone instead
+        seller_type: 'vendor',
+      }, vendorBankStatus[v.id])
+    ),
+  ].sort((a, b) => b.gross_sales - a.gross_sales);
 
   const summary = rows.reduce(
     (acc, r) => ({
