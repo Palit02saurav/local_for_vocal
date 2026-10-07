@@ -27,7 +27,6 @@ const EMPTY_FORM = {
   unit: "",
   shelfLife: "",
   prepTime: "",
-  returnAccepted: false,
 };
 let draftCounter = 0;
 const makeDraft = (overrides = {}) => ({
@@ -349,8 +348,6 @@ const validateForm = (f, draftImages = [], consent = false) => {
     if (!isVendor && (f.stock === "" || Number(f.stock) < 0)) newErrors.stock = "Enter a valid stock quantity.";
     if (!isVendor && (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0))
       newErrors.lowStockThreshold = "Enter a valid low stock threshold.";
-    if (isSeller && !f.returnAccepted)
-      newErrors.returnAccepted = "Please accept return or replacement for this product.";
     return newErrors;
   };
   const buildPayload = (draft, imageUrls) => ({
@@ -375,7 +372,7 @@ const validateForm = (f, draftImages = [], consent = false) => {
     brand: draft.form.brand.trim(),
     tags: draft.tags.join(","),
     seller_consent: draft.sellerConsent,
-    return_replace_accepted: isSeller ? !!draft.form.returnAccepted : false,
+    return_replace_accepted: isSeller,
     return_replace_days: 7,
     weight: draft.form.weight ? Number(draft.form.weight) : null,
     dimensions: {
@@ -964,37 +961,6 @@ const validateForm = (f, draftImages = [], consent = false) => {
             </div>
           </div>
         </div>
-
-        {isSeller && (
-          <div className="np-card np-consent-card">
-            <label className="np-consent-row">
-              <input
-                type="checkbox"
-                checked={form.returnAccepted}
-                onChange={(e) => handleChange("returnAccepted", e.target.checked)}
-              />
-              <span>
-                I accept that customers can <strong>return or replace</strong> this product after delivery.{" "}
-                <span className="np-required-tag">(Required)</span>
-              </span>
-            </label>
-            {errors.returnAccepted && <span className="np-error">{errors.returnAccepted}</span>}
-
-            {form.returnAccepted && (
-              <div className="np-field" style={{ marginTop: 12, maxWidth: 280 }}>
-                <label>Return / replacement window (days)</label>
-                <input
-                  type="number"
-                  value={7}
-                  readOnly
-                  disabled
-                  style={{ background: "#f3f4f6", cursor: "not-allowed" }}
-                />
-                <span className="np-hint">Fixed at 7 days after delivery.</span>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="np-card np-consent-card">
           <label className="np-consent-row">
