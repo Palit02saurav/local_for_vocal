@@ -409,7 +409,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
 
     // 2. SKUs must be unique inside this batch too, not just in the DB.
     const skus = all.map((d) => d.form.sku.trim().toLowerCase());
-    const dupAt = skus.findIndex((s, i) => skus.indexOf(s) !== i);
+    const dupAt = isVendor
+      ? -1 // vendors have no SKU field, so there is nothing to compare
+      : skus.findIndex((s, i) => skus.indexOf(s) !== i);
     if (dupAt > -1) {
       setActiveIndex(dupAt);
       loadDraft(all[dupAt]);
