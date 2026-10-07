@@ -89,6 +89,8 @@ export default function ProductDetail({ slug }) {
   const sellerName =
     product.seller?.store_name || product.seller?.full_name || product.vendor?.full_name || "Geoinformaticx";
   const sellerLocation = product.seller?.location || product.vendor?.address || "";
+  const sellerImage =
+    product.seller?.profile_image_url || product.vendor?.profile_image_url || "";
 
   const galleryImages = [
     product.image_url,
@@ -271,7 +273,13 @@ export default function ProductDetail({ slug }) {
           </p>
 
           <div className="pd-seller-row" id="pd-seller">
-            <img src={image} alt={sellerName} className="pd-seller-avatar" />
+            {sellerImage ? (
+              <img src={sellerImage} alt={sellerName} className="pd-seller-avatar" />
+            ) : (
+              <span className="pd-seller-avatar pd-seller-avatar-fallback">
+                {sellerName.charAt(0).toUpperCase()}
+              </span>
+            )}
             <div>
               <p className="pd-seller-name">Sold by <strong>{sellerName}</strong></p>
               {sellerLocation && <p className="pd-seller-loc">📍 {sellerLocation}</p>}

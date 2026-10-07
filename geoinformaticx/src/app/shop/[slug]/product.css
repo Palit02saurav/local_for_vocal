@@ -75,7 +75,8 @@
 .pd-stock.out { color: #d64545; }
 
 .pd-seller-row { display: flex; align-items: center; gap: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 0; margin: 16px 0; scroll-margin-top: 20px; }
-.pd-seller-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; }
+.pd-seller-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.pd-seller-avatar-fallback { display: flex; align-items: center; justify-content: center; background: var(--g); color: #fff; font-weight: 700; font-size: 20px; }
 .pd-seller-name { margin: 0; font-size: 15px; }
 .pd-seller-loc { margin: 3px 0 0; font-size: 13px; color: var(--muted); }
 .pd-store-btn { margin-left: auto; border: 1px solid #cfe3d7; background: var(--gl); color: var(--g); border-radius: 8px; padding: 9px 16px; font-weight: 600; font-size: 13px; text-decoration: none; white-space: nowrap; display: inline-block; }
