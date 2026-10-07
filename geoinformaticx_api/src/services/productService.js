@@ -105,13 +105,8 @@ const isFresh = delivery_type === 'Fresh';
   let returnAccepted = false;
   let returnDays = 7;
   if (created_by_role === 'SELLER') {
-    if (return_replace_accepted !== true && return_replace_accepted !== 'true') {
-      const err = new Error('Seller must accept return or replacement for this product.');
-      err.status = 400;
-      throw err;
-    }
     returnAccepted = true;
-    returnDays = 7; 
+    returnDays = 7;
   }
 
   const finalSku = sku || `VND-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
