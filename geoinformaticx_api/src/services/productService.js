@@ -328,8 +328,8 @@ exports.listPublicProducts = async () => {
       status: { [Op.ne]: 'Out of Stock' },
     },
     include: [
-      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude'] },
-      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name', 'address', 'latitude', 'longitude'] },
+      { model: Seller, as: 'seller', attributes: ['id', 'full_name', 'store_name', 'location', 'latitude', 'longitude', 'profile_image_url'] },
+      { model: Vendor, as: 'vendor', attributes: ['id', 'full_name', 'address', 'latitude', 'longitude', 'profile_image_url'] },
     ],
     order: [['created_at', 'DESC']],
   });
