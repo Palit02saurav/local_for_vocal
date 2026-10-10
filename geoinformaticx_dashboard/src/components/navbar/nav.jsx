@@ -74,9 +74,9 @@ const handleLogout = async () => {
       {/* Logo */}
 
       <Link href="/" className="admin-navbar-logo">
-        <img src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png" alt="Geoinformaticx" className="admin-navbar-logo-img" />
+        <img src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png" alt="Geomaticx" className="admin-navbar-logo-img" />
         <div className="admin-navbar-logo-text">
-          <span className="admin-navbar-title">Geoinformaticx</span>
+          <span className="admin-navbar-title">Geomaticx</span>
           <span className="admin-navbar-subtitle">
             {user?.role === "SUPER_ADMIN"
               ? "Super Admin Panel"

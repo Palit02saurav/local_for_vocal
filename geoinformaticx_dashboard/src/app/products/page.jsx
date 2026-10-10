@@ -1,7 +1,7 @@
 import Products from "./products";
 
 export const metadata = {
-  title: "Products | Geoinformaticx Admin",
+  title: "Products | Geomaticx Admin",
 };
 
 export default function ProductsPage() {

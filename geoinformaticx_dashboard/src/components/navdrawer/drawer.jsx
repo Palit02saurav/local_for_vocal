@@ -27,7 +27,9 @@ const menuItems = [
       { label: "Shipped", href: "/orders?status=shipped" },
       { label: "Delivered", href: "/orders?status=delivered" },
       { label: "Cancelled", href: "/orders?status=cancelled" },
-      { label: "Refunds", href: "/orders?status=refunds" },
+      { label: "Returns", href: "/returns?type=return" },
+      { label: "Refunds", href: "/returns?type=refund" },
+      { label: "Replaced", href: "/returns?type=replace" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -144,16 +146,16 @@ const menuItems = [
       </svg>
     ),
   },
-  // {
-  //   label: "Coupons & Offers",
-  //   href: "/coupons",
-  //   icon: (
-  //     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-  //       <path d="M9 5H2v7l9.29 9.29a1 1 0 0 0 1.42 0l6.58-6.58a1 1 0 0 0 0-1.42L9 5Z" />
-  //       <path d="M6 9.01V9" />
-  //     </svg>
-  //   ),
-  // },
+  {
+    label: "Coupons & Offers",
+    href: "/coupons",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M9 5H2v7l9.29 9.29a1 1 0 0 0 1.42 0l6.58-6.58a1 1 0 0 0 0-1.42L9 5Z" />
+        <path d="M6 9.01V9" />
+      </svg>
+    ),
+  },
   {
     label: "Banners",
     href: "/banners",

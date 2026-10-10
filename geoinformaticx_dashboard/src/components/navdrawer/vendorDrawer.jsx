@@ -26,7 +26,9 @@ const menuItems = [
       { label: "Shipped", href: "/orders?status=shipped" },
       { label: "Delivered", href: "/orders?status=delivered" },
       { label: "Cancelled", href: "/orders?status=cancelled" },
-      { label: "Refunds", href: "/orders?status=refunds" },
+      { label: "Returns", href: "/returns?type=return" },
+      { label: "Refunds", href: "/returns?type=refund" },
+      { label: "Replaced", href: "/returns?type=replace" },
     ],
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

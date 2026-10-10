@@ -1,7 +1,7 @@
 import Products from "../products/products";
 
 export const metadata = {
-  title: "Fresh Delivery | Geoinformaticx",
+  title: "Fresh Delivery | Geomaticx",
 };
 
 export default function FreshDeliveryPage() {

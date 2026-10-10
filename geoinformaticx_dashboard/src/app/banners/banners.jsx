@@ -21,7 +21,7 @@ export default function Banners() {
 //       key: keyId,
 //       amount,
 //       currency,
-//       name: "Geoinformaticx",
+//       name: "Geomaticx",
 //       description: "Banner Publishing Fee",
 //       order_id: orderId,
 //       handler: async (response) => {

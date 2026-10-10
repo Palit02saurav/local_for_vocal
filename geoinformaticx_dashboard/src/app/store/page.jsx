@@ -1,7 +1,7 @@
 import Store from "./Store";
 
 export const metadata = {
-  title: "My Store | Geoinformaticx Seller",
+  title: "My Store | Geomaticx Seller",
 };
 
 export default function StorePage() {

@@ -1,7 +1,7 @@
 import Services from "./services";
 
 export const metadata = {
-  title: "Services | Geoinformaticx",
+  title: "Services | Geomaticx",
 };
 
 export default function ServicesPage() {

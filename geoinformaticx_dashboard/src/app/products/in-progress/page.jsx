@@ -1,7 +1,7 @@
 import Products from "../products";
 
 export const metadata = {
-  title: "In Progress | Geoinformaticx",
+  title: "In Progress | Geomaticx",
 };
 
 export default function InProgressProductsPage() {

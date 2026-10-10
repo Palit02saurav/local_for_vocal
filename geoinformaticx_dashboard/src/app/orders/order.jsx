@@ -346,6 +346,12 @@ export default function OrdersPage({ orders = [], loading = false, onSelectOrder
               <span>Subtotal</span>
               <span>₹{Number(selected.subtotal || 0).toLocaleString("en-IN")}</span>
             </div>
+            {selected.discount > 0 && (
+              <div className="detail-price-row">
+                <span>Coupon Discount{selected.couponCode ? ` (${selected.couponCode})` : ""}</span>
+                <span>-₹{Number(selected.discount).toLocaleString("en-IN")}</span>
+              </div>
+            )}
             <div className="detail-price-row">
               <span>Delivery Charges</span>
               <span>₹{Number(selected.deliveryCharge || 0).toLocaleString("en-IN")}</span>

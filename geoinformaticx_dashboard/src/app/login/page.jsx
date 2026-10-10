@@ -1,7 +1,7 @@
 import AuthPage from "./login";
 
 export const metadata = {
-  title: "Login | Geoinformaticx Admin",
+  title: "Login | Geomaticx Admin",
 };
 
 export default function LoginPage() {

@@ -27,6 +27,7 @@ const EMPTY_FORM = {
   unit: "",
   shelfLife: "",
   prepTime: "",
+  returnConsent: false,
 };
 let draftCounter = 0;
 const makeDraft = (overrides = {}) => ({
@@ -339,6 +340,8 @@ const validateForm = (f, draftImages = [], consent = false) => {
       if (!consent)
         newErrors.consent = "Please confirm you can deliver within 10 minutes.";
     }
+    if (isSeller && !f.returnConsent)
+      newErrors.returnConsent = "Please confirm the 7-day return/replacement policy.";
     if (!f.name.trim()) newErrors.name = "Product name is required.";
     if (!isVendor && !f.sku.trim()) newErrors.sku = "SKU is required.";
     if (!f.category) newErrors.category = "Category is required.";
@@ -372,7 +375,7 @@ const validateForm = (f, draftImages = [], consent = false) => {
     brand: draft.form.brand.trim(),
     tags: draft.tags.join(","),
     seller_consent: draft.sellerConsent,
-    return_replace_accepted: isSeller,
+    return_replace_accepted: isSeller && !!draft.form.returnConsent,
     return_replace_days: 7,
     weight: draft.form.weight ? Number(draft.form.weight) : null,
     dimensions: {
@@ -961,6 +964,26 @@ const validateForm = (f, draftImages = [], consent = false) => {
             </div>
           </div>
         </div>
+
+        {isSeller && (
+          <div className="np-card np-consent-card">
+            <label className="np-consent-row">
+              <input
+                type="checkbox"
+                checked={!!form.returnConsent}
+                onChange={(e) => handleChange("returnConsent", e.target.checked)}
+              />
+              <span>
+                I confirm that if the customer wants, this product can be{" "}
+                <strong>returned or replaced within 7 days</strong> of delivery.{" "}
+                <span className="np-required-tag">(Required)</span>
+              </span>
+            </label>
+            {errors.returnConsent && (
+              <span className="np-error">{errors.returnConsent}</span>
+            )}
+          </div>
+        )}
 
         <div className="np-card np-consent-card">
           <label className="np-consent-row">

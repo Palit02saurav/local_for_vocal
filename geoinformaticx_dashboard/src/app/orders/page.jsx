@@ -20,6 +20,13 @@ function normalizeOrder(o, isSellerRow) {
     const customer = order.customer || {};
     const created = new Date(order.created_at || o.created_at);
 
+    const lineTotal = Number(o.price) * o.quantity;
+    const orderDiscount = Number(order.discount_amount || 0);
+    const orderSubtotal = Number(order.total || 0) + orderDiscount;
+    const discount =
+      orderDiscount > 0 && orderSubtotal > 0
+        ? Math.round(((orderDiscount * lineTotal) / orderSubtotal) * 100) / 100
+        : 0;
     return {
       orderId: `ORD${order.id ?? o.id}`,
       sellerName: o.seller_name || o.product?.vendor?.full_name || "—",
@@ -33,8 +40,10 @@ function normalizeOrder(o, isSellerRow) {
       itemImage: o.image_url,
       itemCount: 1,
       items: [{ name: o.name, image: o.image_url, price: o.price }],
-      amount: Number(o.price) * o.quantity,
-      subtotal: Number(o.price) * o.quantity,
+      amount: lineTotal - discount,
+      subtotal: lineTotal,
+      discount,
+      couponCode: order.coupon_code || null,
       deliveryCharge: 0,
       packagingCharge: 0,
       payment: order.payment_method,
@@ -62,8 +71,10 @@ function normalizeOrder(o, isSellerRow) {
     itemImage: first.image_url,
     itemCount: items.length,
     items: items.map((i) => ({ name: i.name, image: i.image_url, price: i.price })),
-    amount: o.total,
-    subtotal: o.total,
+    amount: Number(o.total),
+    subtotal: Number(o.total) + Number(o.discount_amount || 0),
+    discount: Number(o.discount_amount || 0),
+    couponCode: o.coupon_code || null,
     deliveryCharge: 0,
     packagingCharge: 0,
     payment: o.payment_method,

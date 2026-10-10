@@ -1,7 +1,7 @@
 import Banners from "./banners";
 
 export const metadata = {
-  title: "Banners | Geoinformaticx",
+  title: "Banners | Geomaticx",
 };
 
 export default function BannersPage() {

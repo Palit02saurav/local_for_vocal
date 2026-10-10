@@ -10,8 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Geoinformaticx | Admin Panel",
-  description: "Admin dashboard for Geoinformaticx",
+  title: "Geomaticx | Admin Panel",
+  description: "Admin dashboard for Geomaticx",
   icons: {
     icon: "https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png",
   },

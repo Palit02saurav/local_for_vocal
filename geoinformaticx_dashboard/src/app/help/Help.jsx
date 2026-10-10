@@ -46,7 +46,7 @@ export default function Help() {
           <p>
             The Admin Panel is a restricted internal tool used to manage
             sellers, products, services, orders, categories, and platform
-            content for the Geoinformaticx marketplace. Access is limited to
+            content for the Geomaticx marketplace. Access is limited to
             authorized personnel only — Super Admins and approved Sellers —
             and every action performed here should be for legitimate
             business purposes.
@@ -180,8 +180,8 @@ export default function Help() {
             proceeding.
           </p>
           <div className="help-contact-row">
-            <a href="mailto:support@geoinformaticx.com" className="help-contact-item">
-              support@geoinformaticx.com
+            <a href="mailto:support@geomaticx.com" className="help-contact-item">
+              support@geomaticx.com
             </a>
             <a href="tel:+919876543210" className="help-contact-item">
               +91 98765 43210

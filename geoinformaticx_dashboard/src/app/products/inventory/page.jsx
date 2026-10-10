@@ -1,7 +1,7 @@
 import Inventory from "./inventory";
 
 export const metadata = {
-  title: "Inventory | Geoinformaticx",
+  title: "Inventory | Geomaticx",
 };
 
 export default function InventoryPage() {
