@@ -13,7 +13,7 @@ async function getService(slug) {
       id: s.id,
       name: s.name,
       slug: s.sku,
-      seller: s.seller?.store_name || s.seller?.full_name || "Geoinformaticx",
+      seller: s.seller?.store_name || s.seller?.full_name || "Geomaticx",
       location: s.seller?.location || null,
       price: Number(s.price || 0),
       priceType: s.price_type || "Fixed",
@@ -34,9 +34,9 @@ async function getService(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const service = await getService(slug);
-  if (!service) return { title: "Service Not Found | Geoinformaticx" };
+  if (!service) return { title: "Service Not Found | Geomaticx" };
   return {
-    title: `${service.name} | Geoinformaticx`,
+    title: `${service.name} | Geomaticx`,
     description: service.description,
   };
 }

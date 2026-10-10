@@ -1,7 +1,7 @@
 import Service from "./services";
 
 export const metadata = {
-  title: "Service | Geoinformaticx",
+  title: "Service | Geomaticx",
   description: "Discover unique local products from trusted businesses in your area.",
 };
 

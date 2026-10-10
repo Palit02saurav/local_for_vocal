@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getProductOrders, cancelOrder, submitReview } from "@/lib/orders";
+import { getProductOrders, cancelOrder, submitReview, createReturnRequest } from "@/lib/orders";
 import "./trackorder.css";
 
 /* ---------- SVG ICONS (Lucide-style, 24x24) ---------- */
@@ -80,6 +80,20 @@ const STATUS_TO_STAGE = {
 
 const FALLBACK_IMG = "https://placehold.co/200x150?text=No+Image";
 
+const RETURN_STAGES = [
+  { label: "Return Requested", status: "Requested", icon: "box" },
+  { label: "Return Initiated", status: "Initiated", icon: "check" },
+  { label: "Shipped", status: "Shipped", icon: "truck" },
+  { label: "Out for Delivery", status: "Out for Delivery", icon: "truck" },
+  { label: "Delivered", status: "Delivered", icon: "check" },
+];
+
+const RETURN_TYPES = [
+  { value: "return", label: "Return" },
+  { value: "replace", label: "Replace" },
+  { value: "refund", label: "Refund" },
+];
+
 const fmt = (d) =>
   new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
@@ -97,12 +111,45 @@ export default function TrackOrder() {
   const [appliedQuery, setAppliedQuery] = useState("");
   const [filter, setFilter] = useState("all"); // all | transit | delivered
 
+    const [returnTarget, setReturnTarget] = useState(null);
+  const [returnType, setReturnType] = useState("return");
+  const [returnReason, setReturnReason] = useState("");
+  const [returnError, setReturnError] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+
+  const openReturn = (order) => {
+    setReturnTarget(order);
+    setReturnType("return");
+    setReturnReason("");
+    setReturnError("");
+  };
+
+  const handleReturnSubmit = async () => {
+    if (returnReason.trim().length < 10) {
+      setReturnError("Please describe the issue (at least 10 characters).");
+      return;
+    }
+    setSubmittingReturn(true);
+    const result = await createReturnRequest(returnTarget.orderId, returnType, returnReason.trim());
+    setSubmittingReturn(false);
+    if (result.success) {
+      setReturnTarget(null);
+      await loadOrders();
+    } else {
+      setReturnError(result.message || "Could not submit your request.");
+    }
+  };
+
   const loadOrders = async () => setOrders(await getProductOrders());
 
   useEffect(() => {
     loadOrders();
     window.addEventListener("storage", loadOrders);
-    return () => window.removeEventListener("storage", loadOrders);
+    const poll = setInterval(loadOrders, 15000); // refresh every 15s
+    return () => {
+      window.removeEventListener("storage", loadOrders);
+      clearInterval(poll);
+    };
   }, []);
 
   const handleCancel = async (groupId) => {
@@ -260,6 +307,12 @@ export default function TrackOrder() {
             const canCancel = !isCancelled && idx >= 0 && idx <= 1; // only before Shipped
             const statusClass = order.status.toLowerCase().replace(/\s/g, "-");
             const statusIcon = order.status === "Delivered" ? "check" : "truck";
+            const deliveredOn = order.updatedAt ? new Date(order.updatedAt) : null;
+            const canReturn =
+              order.status === "Delivered" &&
+              order.returnAccepted &&
+              deliveredOn &&
+              Date.now() - deliveredOn.getTime() <= (order.returnDays || 7) * 24 * 60 * 60 * 1000;
 
             return (
               <div key={order.orderId} className="track-card">
@@ -301,7 +354,7 @@ export default function TrackOrder() {
                     </div>
                     <div className="track-meta-item">
                       <span>Total Amount</span>
-                      <strong>₹{(order.price * order.quantity).toLocaleString("en-IN")}</strong>
+                      <strong>₹{order.payable.toLocaleString("en-IN")}</strong>
                     </div>
                   </div>
 
@@ -311,10 +364,10 @@ export default function TrackOrder() {
                   </span>
                 </div>
 
-                {/* timeline */}
+                {/* timeline – shown only after clicking "View Details" */}
                 {isCancelled ? (
                   <p className="track-cancelled-note">This order was cancelled.</p>
-                ) : (
+                ) : isExpanded && (
                   <div className="track-timeline">
                     {stages.map((stage, i) => {
                       const isDone = i <= idx;
@@ -340,7 +393,43 @@ export default function TrackOrder() {
                   </div>
                 )}
 
-                {/* footer buttons */}
+                {/* return / replace / refund progress – shown only after "View Details" */}
+                {isExpanded && order.returnRequest && (() => {
+                  const rr = order.returnRequest;
+                  const rIdx = RETURN_STAGES.findIndex((s) => s.status === rr.status);
+                  return (
+                    <div className="track-return">
+                      <p className="track-return-title">
+                        {RETURN_TYPES.find((t) => t.value === rr.type)?.label} request
+                      </p>
+                      {rr.status === "Rejected" ? (
+                        <p className="track-cancelled-note">This request was rejected by the seller.</p>
+                      ) : (
+                        <div className="track-timeline">
+                          {RETURN_STAGES.map((stage, i) => {
+                            const isDone = i <= rIdx;
+                            const isCurrent = i === rIdx && rIdx !== RETURN_STAGES.length - 1;
+                            const date = i === 0 ? rr.createdAt : isDone ? rr.updatedAt : null;
+                            return (
+                              <div
+                                key={stage.label}
+                                className={`track-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`}
+                              >
+                                <span className="track-step-circle">
+                                  <Icon name={isDone && !isCurrent ? "check" : stage.icon} size={14} stroke={2.4} />
+                                </span>
+                                <span className="track-step-label">{stage.label}</span>
+                                <span className="track-step-date">{date ? fmt(date) : ""}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* footer buttons */}  
                 <div className="track-card-footer">
                   {order.status === "Delivered" && !order.isRated && (
                     <button
@@ -356,12 +445,29 @@ export default function TrackOrder() {
                       Rate Now
                     </button>
                   )}
+                  {canReturn && (
+                    order.returnRequest && order.returnRequest.status !== "Rejected" ? (
+                      <button
+                        className="track-btn track-btn-return"
+                        disabled
+                        style={{ opacity: 0.6, cursor: "not-allowed" }}
+                      >
+                        <Icon name="box" size={16} />
+                        {`${RETURN_TYPES.find((t) => t.value === order.returnRequest.type)?.label} Initiated`}
+                      </button>
+                    ) : (
+                      <button className="track-btn track-btn-return" onClick={() => openReturn(order)}>
+                        <Icon name="box" size={16} />
+                        {order.returnRequest ? "Request Again" : "Return / Replace"}
+                      </button>
+                    )
+                  )}
                   <button
                     className="track-btn track-btn-outline"
                     onClick={() => setExpandedId(isExpanded ? null : order.orderId)}
                   >
                     <Icon name="file" size={16} />
-                    View Details
+                    {isExpanded ? "Hide Details" : "View Details"}
                   </button>
                   <button
                     className="track-btn track-btn-solid"
@@ -376,10 +482,9 @@ export default function TrackOrder() {
                 {isExpanded && (
                   <div className="track-expand-panel">
                     <div className="track-detail-grid">
-                      <div><span>Unit Price</span><strong>₹{order.price.toLocaleString("en-IN")}</strong></div>
                       <div><span>Seller</span><strong>{order.seller}</strong></div>
                       <div><span>Last Updated</span><strong>{fmt(order.updatedAt || order.date)}</strong></div>
-                    </div>
+                  </div>
 
                     {canCancel && (
                       <button
@@ -442,6 +547,68 @@ export default function TrackOrder() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ---------- Return / Replace modal ---------- */}
+      {returnTarget && (
+        <div className="track-modal-backdrop" onClick={() => !submittingReturn && setReturnTarget(null)}>
+          <div className="track-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="track-modal-head">
+              <h3>Return / Replace</h3>
+              <button className="track-modal-close" onClick={() => setReturnTarget(null)}>×</button>
+            </div>
+
+            <div className="track-modal-product">
+              <img
+                src={returnTarget.image}
+                alt={returnTarget.name}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMG; }}
+              />
+              <div>
+                <p className="track-modal-product-name">{returnTarget.name}</p>
+                <p className="track-modal-product-sub">
+                  Order #{returnTarget.groupId} · ₹{returnTarget.payable.toLocaleString("en-IN")}
+                </p>
+              </div>
+            </div>
+
+            <p className="track-modal-label">What would you like?</p>
+            <div className="track-modal-types">
+              {RETURN_TYPES.map((t) => (
+                <label key={t.value} className={`track-modal-type ${returnType === t.value ? "active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="returnType"
+                    value={t.value}
+                    checked={returnType === t.value}
+                    onChange={() => setReturnType(t.value)}
+                  />
+                  {t.label}
+                </label>
+              ))}
+            </div>
+
+            <p className="track-modal-label">What is the issue?</p>
+            <textarea
+              className="track-modal-text"
+              rows={4}
+              maxLength={1000}
+              placeholder="Tell us what went wrong with this product"
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+            />
+            {returnError && <p className="track-modal-error">{returnError}</p>}
+
+            <div className="track-modal-actions">
+              <button className="track-rate-cancel-btn" onClick={() => setReturnTarget(null)} disabled={submittingReturn}>
+                Cancel
+              </button>
+              <button className="track-rate-submit-btn" onClick={handleReturnSubmit} disabled={submittingReturn}>
+                {submittingReturn ? "Submitting..." : "Submit Request"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

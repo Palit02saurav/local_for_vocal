@@ -325,7 +325,7 @@ useEffect(() => {
               <p className="details-about">
                 {selectedService.name} offered by {selectedService.seller?.store_name}, a trusted local
                 provider in the {selectedService.category} category. Book with confidence —
-                every service on Geoinformaticx is backed by verified local professionals.
+                every service on Geomaticx is backed by verified local professionals.
               </p>
 
               <div className="details-price-row">

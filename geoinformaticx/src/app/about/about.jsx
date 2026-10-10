@@ -41,14 +41,14 @@ export default function About() {
         <div className="about-hero-overlay" />
 
         <div className="about-hero-text">
-          <span className="about-eyebrow">About Geoinformaticx</span>
+          <span className="about-eyebrow">About Geomaticx</span>
           <h1>
             Empowering Local.
             <br />
             <span className="highlight">Enriching Communities.</span>
           </h1>
           <p>
-            Geoinformaticx is a local marketplace that connects you with
+            Geomaticx is a local marketplace that connects you with
             unique products and trusted businesses from your community. We
             believe in supporting local artisans, farmers, entrepreneurs,
             and traditions that make our region special.
@@ -132,7 +132,7 @@ export default function About() {
 
       {/* Why Choose Us */}
       <section className="about-why">
-        <h2>Why Choose Geoinformaticx?</h2>
+        <h2>Why Choose Geomaticx?</h2>
         <div className="why-grid">
           <div className="why-item">
             <span className="why-icon">

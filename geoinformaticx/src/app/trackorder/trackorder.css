@@ -310,6 +310,8 @@
 .track-btn-solid:hover { background: #154a2f; }
 .track-btn-rate { background: #fff7e6; color: #b26a00; border: 1.5px solid #f5a623; }
 .track-btn-rate:hover { background: #ffefcc; }
+.track-btn-return { background: #fff; color: #c0392b; border: 1.5px solid #c0392b; text-decoration: none; }
+.track-btn-return:hover { background: #fdecea; }
 
 /* ---------- Details panel ---------- */
 .track-expand-panel {
@@ -432,3 +434,38 @@
   .track-timeline { overflow-x: auto; grid-auto-columns: minmax(110px, 1fr); }
   .track-detail-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Return progress ---------- */
+.track-return { margin-top: 12px; }
+.track-return-title { font-weight: 600; font-size: 14px; color: #1b5e3b; margin: 0 0 6px; }
+
+/* ---------- Return modal ---------- */
+.track-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+}
+.track-modal {
+  background: #fff; border-radius: 14px; width: 100%; max-width: 480px;
+  padding: 20px; max-height: 90vh; overflow-y: auto;
+}
+.track-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.track-modal-head h3 { margin: 0; font-size: 18px; }
+.track-modal-close { background: none; border: 0; font-size: 26px; cursor: pointer; line-height: 1; }
+.track-modal-product { display: flex; gap: 12px; align-items: center; background: #f3f8f5; border-radius: 10px; padding: 10px; margin-bottom: 16px; }
+.track-modal-product img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+.track-modal-product-name { margin: 0; font-weight: 600; }
+.track-modal-product-sub { margin: 2px 0 0; font-size: 13px; color: #666; }
+.track-modal-label { font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+.track-modal-types { display: flex; gap: 8px; margin-bottom: 16px; }
+.track-modal-type {
+  flex: 1; text-align: center; padding: 9px 6px; border: 1px solid #d5d5d5;
+  border-radius: 8px; cursor: pointer; font-size: 14px;
+}
+.track-modal-type input { display: none; }
+.track-modal-type.active { border-color: #1b5e3b; background: #e8f4ec; color: #1b5e3b; font-weight: 600; }
+.track-modal-text {
+  width: 100%; box-sizing: border-box; border: 1px solid #d5d5d5; border-radius: 8px;
+  padding: 10px; font: inherit; resize: vertical;
+}
+.track-modal-error { color: #d64545; font-size: 13px; margin: 6px 0 0; }
+.track-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }

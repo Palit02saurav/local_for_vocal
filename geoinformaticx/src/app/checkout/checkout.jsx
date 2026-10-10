@@ -6,6 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import { getCart, clearCart } from "@/lib/cart";
 import { getCurrentUser } from "@/lib/auth";
+import { validateCoupon, getSavedCoupon, saveCoupon } from "@/lib/coupons";
 import { createOrderFromCart, verifyRazorpayPayment, abortRazorpayPayment } from "@/lib/orders";
 import "./checkout.css";
 
@@ -23,6 +24,7 @@ export default function Checkout() {
   });
   const [errors, setErrors] = useState({});
   const [paying, setPaying] = useState(false);
+  const [coupon, setCoupon] = useState(null);
 
   useEffect(() => {
     const loadCart = async () => {
@@ -32,6 +34,13 @@ export default function Checkout() {
         return;
       }
       setItems(cartItems);
+
+      const saved = getSavedCoupon();
+      if (saved) {
+        const r = await validateCoupon(saved, cartItems);
+        if (r.success) setCoupon({ code: r.code, discount: r.discount });
+        else saveCoupon("");
+      }
 
       const user = getCurrentUser();
       if (user) {
@@ -57,6 +66,8 @@ export default function Checkout() {
   }, [router]);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = coupon ? coupon.discount : 0;
+  const total = Math.max(0, subtotal - discount);
 
   const handleChange = (field, value) => {
     setForm((f) => ({ ...f, [field]: value }));
@@ -87,21 +98,19 @@ const handlePlaceOrder = async (e) => {
   setPaying(true);
 
   const { success, message, hasProducts, hasServices, razorpay } =
-    await createOrderFromCart(items, form);
+    await createOrderFromCart(items, { ...form, couponCode: coupon?.code || "" });
   if (!success) {
     setPaying(false);
     alert(message || "Could not place the order. Please try again.");
     return;
   }
 
-  // Cash on delivery: same as before
   if (form.paymentMethod !== "razorpay") {
     await clearCart();
     goToTracking(hasProducts, hasServices);
     return;
   }
 
-  // Online payment
   if (!window.Razorpay) {
     await abortRazorpayPayment(razorpay.orderId);
     setPaying(false);
@@ -114,7 +123,7 @@ const handlePlaceOrder = async (e) => {
     amount: razorpay.amount,
     currency: razorpay.currency,
     order_id: razorpay.orderId,
-    name: "Geoinformaticx",
+    name: "Geomaticx",
     description: "Order payment",
     prefill: { name: form.name, email: form.email, contact: form.phone },
     theme: { color: "#2f6f4e" },
@@ -232,7 +241,7 @@ const handlePlaceOrder = async (e) => {
           </div>
 
         <button type="submit" className="checkout-place-order-btn" disabled={paying}>
-          {paying ? "Please wait..." : form.paymentMethod === "razorpay" ? `Pay ₹${subtotal.toLocaleString("en-IN")}` : "Place Order"}
+          {paying ? "Please wait..." : form.paymentMethod === "razorpay" ? `Pay ₹${total.toLocaleString("en-IN")}` : "Place Order"}
         </button>
         </form>
 
@@ -254,9 +263,15 @@ const handlePlaceOrder = async (e) => {
             ))}
           </div>
           <div className="checkout-summary-divider" />
+          {coupon && (
+            <div className="checkout-summary-total">
+              <span>Coupon ({coupon.code})</span>
+              <span>- ₹{discount.toLocaleString("en-IN")}</span>
+            </div>
+          )}
           <div className="checkout-summary-total">
             <span>Total</span>
-            <span>₹{subtotal.toLocaleString("en-IN")}</span>
+            <span>₹{total.toLocaleString("en-IN")}</span>
           </div>
         </aside>
       </div>

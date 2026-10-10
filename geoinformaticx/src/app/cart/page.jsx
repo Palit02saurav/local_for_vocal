@@ -1,7 +1,7 @@
 import Cart from "./cart";
 
 export const metadata = {
-  title: "My Cart | Geoinformaticx",
+  title: "My Cart | Geomaticx",
   description: "Review items in your cart before checkout.",
 };
 

@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400');
+
+/* Same grey background as your demo, so the white tiles and 3D sides show up */
+.social3d {
+  background: #f1f1f1;
+  margin-top: -80px;
+  min-height: 230px;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: clip;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.social3d ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.social3d ul li {
+  list-style: none;
+  margin: 0 5px;
+}
+
+.social3d ul li a .fa {
+  height: 40px;
+  width: auto;
+  vertical-align: middle;
+  color: #262626;
+  line-height: 80px;
+  transition: .5s;
+  padding-right: 14px;
+}
+
+.social3d ul li a span {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  top: 30px;
+  color: #262626;
+  letter-spacing: 4px;
+  transition: .5s;
+}
+
+.social3d ul li a {
+  text-decoration: none;
+  display: block;
+  width: 210px;
+  height: 80px;
+  background: #fff;
+  text-align: left;
+  padding-left: 20px;
+  transform: rotate(-30deg) skew(25deg) translate(0, 0);
+  transition: .5s;
+  box-shadow: -20px 20px 10px rgba(0,0,0,.5);
+}
+
+.social3d ul li a:before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  height: 100%;
+  width: 20px;
+  background: #b1b1b1;
+  transform: rotate(0deg) skewY(-45deg);
+}
+
+.social3d ul li a:after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: -10px;
+  height: 20px;
+  width: 100%;
+  background: #b1b1b1;
+  transform: rotate(0deg) skewX(-45deg);
+}
+
+.social3d ul li a:hover {
+  transform: rotate(-30deg) skew(25deg) translate(20px, -15px);
+  box-shadow: -50px 50px 50px rgba(0,0,0,.5);
+}
+
+.social3d ul li:hover .fa { color: #fff; }
+.social3d ul li:hover span { color: #fff; }
+
+.social3d ul li:hover:nth-child(1) a        { background: #3b5998; }
+.social3d ul li:hover:nth-child(1) a:before { background: #365492; }
+.social3d ul li:hover:nth-child(1) a:after  { background: #4a69ad; }
+
+.social3d ul li:hover:nth-child(2) a        { background: #000000; }
+.social3d ul li:hover:nth-child(2) a:before { background: #1a1a1a; }
+.social3d ul li:hover:nth-child(2) a:after  { background: #3a3a3a; }
+
+.social3d ul li:hover:nth-child(3) a        { background: #0077b5; }
+.social3d ul li:hover:nth-child(3) a:before { background: #005983; }
+.social3d ul li:hover:nth-child(3) a:after  { background: #2d93c4; }
+
+.social3d ul li:hover:nth-child(4) a        { background: #e4405f; }
+.social3d ul li:hover:nth-child(4) a:before { background: #d81c3f; }
+.social3d ul li:hover:nth-child(4) a:after  { background: #e46880; }
+
+/* So it still fits on tablets and phones */
+@media (max-width: 1000px) { .social3d ul { transform: scale(.7); } }
+@media (max-width: 700px)  { .social3d ul { transform: scale(.45); } }

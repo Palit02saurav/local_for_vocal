@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Shop from "./shop";
 
 export const metadata = {
-  title: "Shop | Geoinformaticx",
+  title: "Shop | Geomaticx",
   description:
     "Discover unique local products from trusted businesses in your area.",
 };

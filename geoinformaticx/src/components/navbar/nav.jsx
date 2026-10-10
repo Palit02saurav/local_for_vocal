@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getWishlist } from "@/lib/wishlist";
 import { getCurrentUser, signOut } from "@/lib/auth";
+import api from "@/lib/api";
 // import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import {
   FaHome,
@@ -19,6 +20,7 @@ import {
   FaArrowRight,
   FaChevronDown,
   FaSearch,
+  FaTimes,
 } from "react-icons/fa";
 import "./nav.css";
 
@@ -30,32 +32,37 @@ export default function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const router = useRouter();
 
-  const allSuggestions = [
-    "Handicrafts", "Handmade Tribal Bag", "Handwoven Wall Hanging", "Handmade Herbal Soap",
-    "Organic Wild Honey", "Organic Spices", "Organic Cotton",
-    "Local Food", "Local Artisans", "Local Businesses",
-    "Terracotta Cooking Pot", "Terracotta Decor",
-    "Masala Tea Blend", "Masala Spices",
-    "Bamboo Craft Set", "Bamboo Products",
-    "Wooden Jewellery Box", "Wooden Decor",
-    "Handwoven Cotton Stole", "Handwoven Baskets",
-    "Cold Pressed Mustard Oil", "Clay Diya Set",
-    "Clothing", "Clothing Accessories",
-    "Home Decor", "Home Essentials",
-    "Agriculture", "Art & Decor",
-    "Traditional", "Regional Specialties", "Services",
-  ];
+  const [suggestions, setSuggestions] = useState([]);
 
-const filteredSuggestions = searchQuery.trim().length > 0
-    ? allSuggestions.filter((s) =>
-        s.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 6)
-    : [];
+  // fetch suggestions from the database, 250ms after the user stops typing
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/search/suggestions?q=${encodeURIComponent(q)}`);
+        if (!cancelled) setSuggestions(res.data?.data?.suggestions || []);
+      } catch {
+        if (!cancelled) setSuggestions([]);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   const handleSuggestionClick = (s) => {
-    setSearchQuery(s);
+    setSearchQuery(s.label);
     setShowSuggestions(false);
-    router.push(`/shop?q=${encodeURIComponent(s)}`);
+    if (s.type === "store" && s.id) router.push(`/store/${s.id}`);
+    else if (s.type === "service" && s.sku) router.push(`/services/${s.sku}`);
+    else if (s.type === "product" && s.sku) router.push(`/shop/${s.sku}`);
+    else router.push(`/shop?q=${encodeURIComponent(s.label)}`);
   };
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [cartCount, setCartCount] = useState(0);
@@ -157,12 +164,12 @@ const handleLogout = async () => {
               src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png"
               width="46"
               height="46"
-              alt="Geoinformaticx"
+              alt="Geomaticx"
             />
           </div>
           <div className="logo-text">
             <span className="logo-name">
-              Geo<span className="logo-accent">informaticx</span>
+              Geo<span className="logo-accent">maticx</span>
             </span>
             <span className="logo-tagline">Discover. Support. Grow Local.</span>
           </div>
@@ -204,6 +211,22 @@ const handleLogout = async () => {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               autoComplete="off"
             />
+            {searchQuery.length > 0 && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                aria-label="Clear search"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setSearchQuery("");
+                  setSuggestions([]);
+                  setShowSuggestions(false);
+                  if (pathname === "/shop") router.push("/shop");
+                }}
+              >
+                <FaTimes />
+              </button>
+            )}
           </div>
 
           <button
@@ -219,20 +242,23 @@ const handleLogout = async () => {
             <span>Search</span>
           </button>
 
-          {showSuggestions && filteredSuggestions.length > 0 && (
+          {showSuggestions && suggestions.length > 0 && (
             <div className="search-suggestions">
-              {filteredSuggestions.map((s) => (
+              {suggestions.map((s) => (
                 <div
-                  key={s}
+                  key={`${s.type}-${s.label}`}
                   className="suggestion-item"
                   onMouseDown={() => handleSuggestionClick(s)}
                 >
                   <FaSearch size={12} color="#888" />
-                  {s}
+                  <span style={{ flex: 1 }}>{s.label}</span>
+                  <span style={{ fontSize: 11, color: "#888", textTransform: "capitalize" }}>
+                    {s.type}
+                  </span>
                 </div>
               ))}
             </div>
-          )}
+          )}  
         </div>
 
         <div className="navbar-icons">

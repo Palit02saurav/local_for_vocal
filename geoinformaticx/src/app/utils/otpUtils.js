@@ -16,7 +16,7 @@ exports.generateOtp = () => {
 
 exports.sendOtpEmail = async (email, name, otp) => {
   await transporter.sendMail({
-    from: `"Geoinformaticx" <${process.env.SMTP_USER}>`,
+    from: `"Geomaticx" <${process.env.SMTP_USER}>`,
     to: email,
     subject: 'Your Verification Code',
     html: `

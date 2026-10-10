@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import axios from "axios";
+import { feature, mesh } from "topojson-client";
 import SellerMapModal from "@/components/SellerMapModal/SellerMapModal";
 import DistrictSellersModal from "@/components/DistrictSellersModal/DistrictSellersModal";
 import "./map.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const DISTRICT_ZOOM_THRESHOLD = 9;
+const INDIA_TOPO_URL =
+  "https://cdn.jsdelivr.net/gh/udit-001/india-maps-data@2884453/topojson/india.json";
 const GUIDE_STORAGE_KEY = "geoinformaticx_map_guide_seen";
 
 const districts = [
@@ -82,12 +87,13 @@ function districtForSeller(seller) {
   return best ? best.name : null;
 }
 
-const categoryOptions = {
-  Products: ["All Categories", "Handicrafts", "Household", "Pottery", "Food", "Beverages"],
-  // Services: ["All Categories", "Maid", "Teacher", "Plumber"],
-};
+// const categoryOptions = {
+//   Products: ["All Categories", "Handicrafts", "Household", "Pottery", "Food", "Beverages"],
+//   // Services: ["All Categories", "Maid", "Teacher", "Plumber"],
+// };
 
 export default function MapExplore() {
+  const router = useRouter();
   const mapRef = useRef(null);
   const [type, setType] = useState("Products");
   const [category, setCategory] = useState("All Categories");
@@ -98,21 +104,28 @@ export default function MapExplore() {
   const [liveListings, setLiveListings] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [serviceCategories, setServiceCategories] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE}/categories/public`, { params: { type: "service" } })
-      .then((res) => {
-        const cats = res.data.data?.categories || [];
-        setServiceCategories(cats.map((c) => c.name));
-      })
-      .catch((err) => console.error("Failed to load service categories:", err));
+    const loadCategories = async () => {
+      try {
+        const [serviceRes, productRes] = await Promise.all([
+          axios.get(`${API_BASE}/categories/public`, { params: { type: "service" } }),
+          axios.get(`${API_BASE}/categories/public`, { params: { type: "product" } }),
+        ]);
+        setServiceCategories((serviceRes.data.data?.categories || []).map((c) => c.name));
+        setProductCategories((productRes.data.data?.categories || []).map((c) => c.name));
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    };
+    loadCategories();
   }, []);
 
-  const currentCategoryOptions =
-    type === "Services"
-      ? ["All Categories", ...serviceCategories]
-      : categoryOptions.Products;
+  const currentCategoryOptions = [
+    "All Categories",
+    ...(type === "Services" ? serviceCategories : productCategories),
+  ];
   const [showGuide, setShowGuide] = useState(false);
   const [selectedSellerId, setSelectedSellerId] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -302,10 +315,19 @@ export default function MapExplore() {
 
     // Dedupe filtered listings down to one entry per seller.
     const sellersSeen = new Map();
+    // All matching services of each seller (for the "View Detail" buttons).
+    const servicesBySeller = new Map();
     listings.forEach((item) => {
-      if (!item.sellerId || sellersSeen.has(item.sellerId)) return;
+      if (!item.sellerId) return;
+      if (item.type === "Services" && item.sku) {
+        if (!servicesBySeller.has(item.sellerId)) servicesBySeller.set(item.sellerId, []);
+        servicesBySeller.get(item.sellerId).push(item);
+      }
+      if (sellersSeen.has(item.sellerId)) return;
       sellersSeen.set(item.sellerId, item);
     });
+    const escapeHtml = (str = "") =>
+      String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
     sellersSeen.forEach((item) => {
       const position = { lat: item.lat, lng: item.lng };
@@ -320,14 +342,28 @@ export default function MapExplore() {
 
       const popupId = `seller-popup-${item.sellerId}`;
       const viewStoreBtnId = `view-store-btn-${item.sellerId}`;
+      // Only for the Services tab: one "View Detail" button per matching service (max 3)
+      const sellerServices =
+        item.type === "Services" ? (servicesBySeller.get(item.sellerId) || []).slice(0, 3) : [];
 
       marker.addListener("mouseover", () => {
         cancelPendingClose();
+
+        const detailButtonsHtml = sellerServices
+          .map(
+            (svc, i) => `
+            <button id="view-detail-btn-${item.sellerId}-${i}" style="width:100%;padding:6px 0;margin-bottom:6px;background:#fff;color:#2d6a4f;border:1.5px solid #2d6a4f;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
+              ${sellerServices.length > 1 ? `View Detail – ${escapeHtml(svc.name)}` : "View Detail"}
+            </button>`
+          )
+          .join("");
+
         infoWindow.setContent(`
           <div id="${popupId}" style="width:190px;font-family:Segoe UI, Arial, sans-serif;">
             <img src="${item.img}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;margin-bottom:6px;" />
             <div style="font-weight:700;font-size:13px;color:#1a1a1a;">${item.seller}</div>
             <div style="font-size:11.5px;color:#888;margin-bottom:8px;">${item.sellerLocation || "Location not set"}</div>
+            ${detailButtonsHtml}
             <button id="${viewStoreBtnId}" style="width:100%;padding:6px 0;background:#2d6a4f;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
               View Store
             </button>
@@ -342,6 +378,16 @@ export default function MapExplore() {
 
           popupEl.addEventListener("mouseenter", cancelPendingClose);
           popupEl.addEventListener("mouseleave", () => scheduleClose(infoWindow));
+
+          sellerServices.forEach((svc, i) => {
+            const detailBtn = document.getElementById(`view-detail-btn-${item.sellerId}-${i}`);
+            if (!detailBtn) return;
+            detailBtn.addEventListener("click", () => {
+              cancelPendingClose();
+              infoWindow.close();
+              router.push(`/services/${encodeURIComponent(svc.sku)}`);
+            });
+          });
 
           btnEl.addEventListener("click", () => {
             cancelPendingClose();
@@ -383,6 +429,71 @@ export default function MapExplore() {
     });
 
     overlaysRef.current.boundaryLayers = [stateLayer, districtLayer];
+  };
+
+    const renderIndiaBoundaries = async (map) => {
+    try {
+      const res = await fetch(INDIA_TOPO_URL);
+      const topo = await res.json();
+      const obj = topo.objects.districts;
+      const notWB = (d) => d.properties.st_nm !== "West Bengal";
+
+      // 1) district borders of all states (thin) - West Bengal skipped
+      const districtFC = feature(topo, obj);
+      districtFC.features = districtFC.features.filter(
+        (f) => f.properties.st_nm !== "West Bengal"
+      );
+      const indiaDistrictLayer = new window.google.maps.Data({ map });
+      indiaDistrictLayer.addGeoJson(districtFC);
+      indiaDistrictLayer.setStyle({
+        strokeColor: "#000000",
+        strokeWeight: 0.8,
+        strokeOpacity: 0.6,
+        fillOpacity: 0,
+        clickable: false,
+        zIndex: 1,
+      });
+
+      // 2) state borders (medium) - only lines where two different states meet
+      const stateLines = mesh(
+        topo,
+        obj,
+        (a, b) =>
+          a !== b &&
+          a.properties.st_nm !== b.properties.st_nm &&
+          notWB(a) &&
+          notWB(b)
+      );
+      const indiaStateLayer = new window.google.maps.Data({ map });
+      indiaStateLayer.addGeoJson({ type: "Feature", properties: {}, geometry: stateLines });
+      indiaStateLayer.setStyle({
+        strokeColor: "#000000",
+        strokeWeight: 2,
+        strokeOpacity: 1,
+        clickable: false,
+        zIndex: 2,
+      });
+
+      // 3) India outer border (thick) - only the outside edge
+      const countryLines = mesh(topo, obj, (a, b) => a === b && notWB(a));
+      const indiaCountryLayer = new window.google.maps.Data({ map });
+      indiaCountryLayer.addGeoJson({ type: "Feature", properties: {}, geometry: countryLines });
+      indiaCountryLayer.setStyle({
+        strokeColor: "#000000",
+        strokeWeight: 3.5,
+        strokeOpacity: 1,
+        clickable: false,
+        zIndex: 3,
+      });
+
+      overlaysRef.current.boundaryLayers.push(
+        indiaDistrictLayer,
+        indiaStateLayer,
+        indiaCountryLayer
+      );
+    } catch (err) {
+      console.error("Failed to load India boundaries:", err);
+    }
   };
 
   const renderDistrictSpecialtyMarkers = (map, infoWindow) => {
@@ -504,6 +615,7 @@ export default function MapExplore() {
       infoWindowRef.current = new window.google.maps.InfoWindow();
 
       renderDistrictBoundaries(map);
+      renderIndiaBoundaries(map);
       redrawForZoom(map, infoWindowRef.current);
 
       map.addListener("idle", () => {

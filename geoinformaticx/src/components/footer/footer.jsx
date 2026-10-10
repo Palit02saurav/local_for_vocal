@@ -101,14 +101,14 @@ const Footer = () => {
           <div className="footer-logo">
             <Image
               src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png"
-              alt="Geoinformaticx"
+              alt="Geomaticx"
               width={52}
               height={52}
               unoptimized
             />
             <div>
               <h2>
-                Geoin<span className="footer-logo-accent">forma</span>ticx
+                Geo<span className="footer-logo-accent">maticx</span>
               </h2>
               <p className="footer-tagline">Discover. Support. Grow Local.</p>
             </div>
@@ -203,7 +203,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <p className="footer-copy">
-          &copy; {new Date().getFullYear()} Geoinformaticx. All Rights Reserved.
+          &copy; {new Date().getFullYear()} Geomaticx. All Rights Reserved.
         </p>
 
         <div className="footer-bottom-links">

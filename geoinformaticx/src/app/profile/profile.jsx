@@ -628,7 +628,7 @@ const handleLogout = async () => {
                         </span>
                         <p className="prf-orders-item-qty">Qty: {order.quantity}</p>
                         <p className="prf-orders-item-price">
-                          ₹{(order.price * order.quantity).toLocaleString("en-IN")}
+                          ₹{order.payable.toLocaleString("en-IN")}
                         </p>
                       </div>
                     </div>

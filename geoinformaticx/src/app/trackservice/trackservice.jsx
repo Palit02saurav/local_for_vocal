@@ -285,7 +285,7 @@ export default function TrackService() {
                         <Icon name="rupee" size={20} />
                         <div>
                           <span>Total Amount</span>
-                          <strong className="ts-amount">₹{(order.price * order.quantity).toLocaleString("en-IN")}</strong>
+                          <strong className="ts-amount">₹{order.payable.toLocaleString("en-IN")}</strong>
                         </div>
                       </div>
                     </div>

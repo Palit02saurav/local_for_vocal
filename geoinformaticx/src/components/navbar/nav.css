@@ -139,6 +139,27 @@
   font-family: inherit;
 }
 
+.search-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #eef1ef;
+  color: #6b756f;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-clear-btn:hover {
+  background: #dfe5e1;
+  color: #222;
+}
+
 .search-input::placeholder {
   color: #8f9a94;
 }

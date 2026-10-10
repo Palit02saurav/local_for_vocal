@@ -15,6 +15,7 @@ import {
   FaHeadset,
   FaArrowRight,
 } from "react-icons/fa";
+import Social3D from "@/components/social3d/Social3D";
 import "./contact.css";
 
 export default function Contact() {
@@ -127,9 +128,9 @@ export default function Contact() {
             <div>
               <p className="contact-info-title">Email Us</p>
               <p className="contact-info-text">
-                info@geoinformaticx.com
+                info@geomaticx.com
                 <br />
-                support@geoinformaticx.com
+                support@geomaticx.com
               </p>
             </div>
           </div>
@@ -240,7 +241,7 @@ export default function Contact() {
         </div>
 
         <iframe
-          title="Geoinformaticx location"
+          title="Geomaticx location"
                     src="https://www.google.com/maps?q=Sagnik+Apartment,+3/81,+Raja+S.C.+Mullick+Road,+Kolkata-700032&z=19&output=embed"
           width="100%"
           height="360"
@@ -288,6 +289,8 @@ export default function Contact() {
           <p>Reach us via phone, email or visit us anytime.</p>
         </div>
       </section>
+
+      <Social3D />
     </main>
   );
 }

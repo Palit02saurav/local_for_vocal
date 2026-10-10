@@ -1,7 +1,7 @@
 import Checkout from "./checkout";
 
 export const metadata = {
-  title: "Checkout | Geoinformaticx",
+  title: "Checkout | Geomaticx",
   description: "Complete your order.",
 };
 

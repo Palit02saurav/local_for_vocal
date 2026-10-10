@@ -54,6 +54,32 @@ export const submitReview = async (orderItemId, rating, comment) => {
   }
 };
 
+export const createReturnRequest = async (orderItemId, type, reason) => {
+  try {
+    const res = await fetch(`${API_BASE}/returns`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ orderItemId, type, reason }),
+    });
+    const data = await res.json();
+    return { success: res.ok, message: data.message };
+  } catch (err) {
+    return { success: false, message: "Could not reach the server." };
+  }
+};
+
+
+const getItemAmounts = (raw) => {
+  const lineTotal = Number(raw.price) * raw.quantity;
+  const orderDiscount = Number(raw.order?.discount_amount || 0);
+  const orderSubtotal = Number(raw.order?.total || 0) + orderDiscount;
+  const discount =
+    orderDiscount > 0 && orderSubtotal > 0
+      ? Math.round(((orderDiscount * lineTotal) / orderSubtotal) * 100) / 100
+      : 0;
+  return { discount, payable: lineTotal - discount };
+};
 const normalizeOrder = (raw) => ({
   orderId: raw.id,
   groupId: raw.order?.id,
@@ -62,14 +88,27 @@ const normalizeOrder = (raw) => ({
   image: raw.image_url || "https://placehold.co/100x100?text=No+Image",
   price: Number(raw.price),
   quantity: raw.quantity,
+  ...getItemAmounts(raw),
+  couponCode: raw.order?.coupon_code || null,
   status: raw.order?.status || "Pending",
   date: raw.order?.created_at || raw.created_at,
   updatedAt: raw.order?.updated_at,
   isFreshDelivery: raw.product?.delivery_type === "Fresh",
+  returnAccepted: !!raw.product?.return_replace_accepted,
+  returnDays: raw.product?.return_replace_days ?? 7,
   isRated: !!raw.review,
+  returnRequest: raw.returnRequest
+    ? {
+        id: raw.returnRequest.id,
+        type: raw.returnRequest.type,
+        status: raw.returnRequest.status,
+        createdAt: raw.returnRequest.created_at,
+        updatedAt: raw.returnRequest.updated_at,
+      }
+    : null,
 });
 
-export const getProductOrders = async () => {
+export const getProductOrders= async () => {
   try {
     const res = await fetch(`${API_BASE}/orders/products`, { credentials: "include" });
     const data = await res.json();

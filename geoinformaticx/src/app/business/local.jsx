@@ -91,7 +91,7 @@ function createCategoryOverlay(position, categories) {
     div.innerHTML = categories
       .map((cat, i) => {
         const n = categories.length;
-        const spread = 70; // degrees the fan covers when there's more than one
+        const spread = 70; 
         const start = -90 - spread / 2;
         const angleDeg = n === 1 ? -90 : start + (spread / (n - 1)) * i;
         const angle = (angleDeg * Math.PI) / 180;
@@ -162,7 +162,7 @@ export default function LocalBusinesses() {
   const infoWindowRef = useRef(null);
   const addedProductIdsRef = useRef(new Set());
 
-  const [listingType, setListingType] = useState("All"); // "All" | "Products" | "Services"
+  const [listingType, setListingType] = useState("All"); 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [businessType, setBusinessType] = useState("All");
   const [minRating, setMinRating] = useState(0);
@@ -193,7 +193,7 @@ export default function LocalBusinesses() {
   }, [searchQuery]);
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [userLocation, setUserLocation] = useState(null); 
-  const [viewMode, setViewMode] = useState("map"); // "map" | "list"
+  const [viewMode, setViewMode] = useState("map"); 
   const [favorites, setFavorites] = useState(new Set());
   const [mapReady, setMapReady] = useState(false);
   const [allBusinesses, setAllBusinesses] = useState([]);
@@ -279,8 +279,6 @@ const businessesWithDistance = useMemo(() => {
     }
   }
 
-  // Init the map ONCE (and re-center/redraw the radius circle when the user
-  // location or distance filter changes) — this never rebuilds the map itself.
   useEffect(() => {
     if (viewMode !== "map") return;
 
@@ -304,7 +302,6 @@ const businessesWithDistance = useMemo(() => {
       userMarkerRef.current = userLocation && new window.google.maps.Marker({
         position: userLocation,
         map: mapInstance.current,
-        // title: "Your location",
         zIndex: 1000, 
       });
 
@@ -679,7 +676,7 @@ const businessesWithDistance = useMemo(() => {
   // }
 
 
-          function openInfoWindow(biz, marker, closeTimeoutSetter) {
+  function openInfoWindow(biz, marker, closeTimeoutSetter) {
     if (!mapInstance.current || !window.google) return;
     const infoWindow = infoWindowRef.current;
 

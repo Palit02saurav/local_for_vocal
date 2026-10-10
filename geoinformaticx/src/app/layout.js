@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Geoinformaticx",
+  title: "Geomaticx",
   description: "Discover. Support. Grow Local.",
 };
 

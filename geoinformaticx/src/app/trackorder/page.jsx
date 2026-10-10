@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import TrackOrder from "./trackorder";
 
 export const metadata = {
-  title: "Track Order | Geoinformaticx",
+  title: "Track Order | Geomaticx",
   description: "Track your product orders.",
 };
 

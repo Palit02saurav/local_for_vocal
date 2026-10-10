@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Login from "./login";
 
 export const metadata = {
-  title: "Login | Geoinformaticx",
+  title: "Login | Geomaticx",
   description: "Sign in or create an account.",
 };
 

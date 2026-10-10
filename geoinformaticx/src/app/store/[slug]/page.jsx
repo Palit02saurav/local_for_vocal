@@ -3,7 +3,7 @@ import StoreDetail from "./store";
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   return {
-    title: `Store | Geoinformaticx`,
+    title: `Store | Geomaticx`,
   };
 }
 

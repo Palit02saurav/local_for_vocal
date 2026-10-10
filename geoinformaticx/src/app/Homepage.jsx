@@ -208,7 +208,7 @@ const handleToggleWishlist = async (item, type = "product") => {
           id: p.id,
           name: p.name,
           slug: p.sku,
-          seller: p.seller?.store_name || p.seller?.full_name || "Geoinformaticx",
+          seller: p.seller?.store_name || p.seller?.full_name || "Geomaticx",
           price: `₹${Number(p.price).toLocaleString("en-IN")}`,
           rating: p.avg_rating ?? 0,
           reviews: p.review_count ?? 0,
@@ -241,7 +241,7 @@ const handleToggleWishlist = async (item, type = "product") => {
             id: p.id,
             name: p.name,
             slug: p.sku,
-            seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geoinformaticx",
+            seller: p.seller?.store_name || p.seller?.full_name || p.vendor?.full_name || "Geomaticx",
             price: `₹${Number(p.price).toLocaleString("en-IN")}`,
             rating: p.avg_rating ?? 0,
             reviews: p.review_count ?? 0,
@@ -376,7 +376,6 @@ loadSellers();
   const [servAtStart, setServAtStart] = useState(true);
   const [servAtEnd, setServAtEnd] = useState(true);
 
-  // Show the arrows only when a row has more cards than fit on screen
   useEffect(() => {
     const check = (id, setStart, setEnd) => {
       const el = document.getElementById(id);
@@ -392,7 +391,7 @@ loadSellers();
     };
 
     checkAll();
-    const timer = setTimeout(checkAll, 300); // re-check once cards/images settle
+    const timer = setTimeout(checkAll, 300); 
     window.addEventListener("resize", checkAll);
     return () => {
       clearTimeout(timer);
@@ -456,7 +455,6 @@ loadSellers();
     setBizAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
   };
 
-  // const popularSearches = ["Handicrafts", "Organic", "Handmade", "Local Food"];
 
   return (
     <main>
@@ -557,7 +555,6 @@ loadSellers();
                   className={`hero-banner-slide ${i === currentSlide ? "active" : ""}`}
                 />
               );
-              // Seller banner -> that seller's store page. Admin banner -> its link_url (if any).
               const bannerHref = b.seller_id ? `/store/${b.seller_id}` : b.link_url;
               return bannerHref ? (
                 <Link href={bannerHref} key={b.id || i} className={`hero-banner-slide-link ${i === currentSlide ? "active" : ""}`}>
@@ -657,7 +654,6 @@ loadSellers();
         </section>
       )}  
 
-      {/* ===== 10 Min Fresh Delivery ===== */}
       <section className="featured-section fresh-section">
         <div className="section-header">
           <div>
@@ -902,3 +898,5 @@ loadSellers();
     </main>
   );
 }
+
+

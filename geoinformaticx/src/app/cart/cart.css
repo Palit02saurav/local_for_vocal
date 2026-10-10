@@ -372,3 +372,7 @@
   .ct-promo-input { flex: 1 1 100%; }
   .ct-perks { grid-template-columns: 1fr; }
 }
+
+.ct-promo-msg { margin: 8px 0 0; font-size: 13px; }
+.ct-promo-msg.ok { color: #1b5e3b; }
+.ct-promo-msg.err { color: #c0392b; }

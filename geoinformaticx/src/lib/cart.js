@@ -1,5 +1,6 @@
 import axios from "axios";
 import { showToast } from "./toast";
+import { saveCoupon } from "./coupons";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const client = axios.create({ baseURL: API_BASE, withCredentials: true });
@@ -75,6 +76,7 @@ export const removeFromCart = async (cartItemId) => {
 export const clearCart = async () => {
   try {
     const res = await client.delete("/cart");
+    saveCoupon("");
     window.dispatchEvent(new Event("storage"));
     return { success: true, message: res.data.message };
   } catch (err) {

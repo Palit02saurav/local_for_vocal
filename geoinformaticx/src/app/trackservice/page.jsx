@@ -1,7 +1,7 @@
 import TrackService from "./trackservice";
 
 export const metadata = {
-  title: "Track Service | Geoinformaticx",
+  title: "Track Service | Geomaticx",
   description: "Track your booked services.",
 };
 

@@ -27,6 +27,12 @@ const Icon = ({ children, size = 22 }) => (
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
+const couponOffer = (c) =>
+  c.discount_type === "PERCENT" ? `${Number(c.discount_value)}% OFF` : `₹${Number(c.discount_value)} OFF`;
+
+const couponValidity = (c) =>
+  c.end_date ? `Valid till ${formatDate(`${c.end_date}T00:00:00`)}` : "No expiry";
+
 export default function ProductDetail({ slug }) {
   const router = useRouter();
   const [product, setProduct] = useState(null);
@@ -37,6 +43,8 @@ export default function ProductDetail({ slug }) {
   const [imgIndex, setImgIndex] = useState(0);
   const [wishlistItemId, setWishlistItemId] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
+  const [coupons, setCoupons] = useState([]);
+  const [copiedCode, setCopiedCode] = useState("");
   const [zoom, setZoom] = useState(null); 
 
   const syncWishlist = async (productId) => {
@@ -54,12 +62,21 @@ export default function ProductDetail({ slug }) {
         const found = products.find((p) => p.sku === slug) || null;
         if (!alive) return;
         setProduct(found);
+        setCoupons([]);
+        setActiveTab("description");
         setRelated(products.filter((p) => p.sku !== slug).slice(0, 4));
         if (found) {
           axios
             .get(`${API_BASE}/reviews/product/${found.id}`)
             .then((r) => alive && setReviewData(r.data.data))
             .catch(() => {});
+          const sellerId = found.seller_id ?? found.seller?.id;
+          if (sellerId) {
+            axios
+              .get(`${API_BASE}/coupons/public`, { params: { seller_id: sellerId } })
+              .then((r) => alive && setCoupons(r.data.data?.coupons || []))
+              .catch(() => {});
+          }
           syncWishlist(found.id);
         }
       } catch (err) {
@@ -139,9 +156,18 @@ export default function ProductDetail({ slug }) {
   const TABS = [
     { key: "description", label: "Description", target: "pd-details" },
     { key: "reviews", label: `Reviews (${count})`, target: "pd-reviews" },
+    { key: "coupons", label: `Coupons (${coupons.length})`, target: "pd-coupons" },
   ];
   const goTo = (t) => setActiveTab(t.key);
 
+
+    const copyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(""), 1500);
+    } catch {}
+  };
   const toggleWishlist = async () => {
     if (wishlistItemId) {
       await removeFromWishlist(wishlistItemId);
@@ -329,7 +355,7 @@ export default function ProductDetail({ slug }) {
       </div>
 
       {/* ===== Tabs ===== */}
-      <div className="pd-tabs">
+      <div className="pd-tabs" style={{ gridTemplateColumns: `repeat(${TABS.length}, 1fr)` }}>
         {TABS.map((t) => (
           <button key={t.key} className={activeTab === t.key ? "active" : ""} onClick={() => goTo(t)}>
             {t.label}
@@ -423,6 +449,48 @@ export default function ProductDetail({ slug }) {
           </div>
         )}
       </section>
+      )}
+
+            {/* ===== Coupons ===== */}
+      {activeTab === "coupons" && (
+        <section className="pd-card pd-coupons" id="pd-coupons">
+          <div className="pd-card-head">
+            <div className="pd-card-title">
+              <span className="pd-badge-icon">
+                <Icon size={20}>
+                  <path d="M9 5H2v7l9.29 9.29a1 1 0 0 0 1.42 0l6.58-6.58a1 1 0 0 0 0-1.42L9 5Z" />
+                  <path d="M6 9.01V9" />
+                </Icon>
+              </span>
+              <h3>Offers from {sellerName}</h3>
+            </div>
+          </div>
+
+          {coupons.length === 0 && <p className="pd-muted">No offers available from this seller right now.</p>}
+          <div className="pd-coupon-grid">
+            {coupons.map((c) => (
+              <div className="pd-coupon" key={c.id}>
+                <div className="pd-coupon-main">
+                  <p className="pd-coupon-offer">{couponOffer(c)}</p>
+                  <p className="pd-coupon-title">{c.title}</p>
+                  {c.description && <p className="pd-muted">{c.description}</p>}
+                  <p className="pd-muted pd-coupon-meta">
+                    {Number(c.min_order_amount) > 0 ? `Min order ₹${Number(c.min_order_amount)}` : "No minimum order"}
+                    {c.max_discount_amount ? ` · Up to ₹${Number(c.max_discount_amount)} off` : ""}
+                    {" · "}
+                    {couponValidity(c)}
+                  </p>
+                </div>
+                <div className="pd-coupon-side">
+                  <span className="pd-coupon-code">{c.code}</span>
+                  <button type="button" onClick={() => copyCode(c.code)}>
+                    {copiedCode === c.code ? "Copied ✓" : "Copy code"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ===== Related ===== */}

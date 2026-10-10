@@ -82,7 +82,7 @@ export default function Sell() {
       <section className="sell-hero">
         <div className="sell-hero-text">
           <h1>
-            Sell With <span className="highlight">Geoinformaticx</span>
+            Sell With <span className="highlight">Geomaticx</span>
           </h1>
           <p className="sell-subheading">
             Grow your business. Reach more customers. Sell more.
@@ -219,7 +219,7 @@ export default function Sell() {
 
           {/* Why Sell */}
           <section className="why-sell">
-            <h2>Why Sell With Geoinformaticx?</h2>
+            <h2>Why Sell With Geomaticx?</h2>
             <div className="why-sell-grid">
               <div className="why-sell-item">
                 <span className="why-sell-icon">
@@ -413,8 +413,8 @@ export default function Sell() {
           </div>
         </div>
         <div className="need-help-right">
-          <a href="mailto:sellersupport@geoinformaticx.com">
-            <FaEnvelope /> sellersupport@geoinformaticx.com
+          <a href="mailto:sellersupport@geomaticx.com">
+            <FaEnvelope /> sellersupport@geomaticx.com
           </a>
           <a href="tel:+919876543210">
             <FaPhoneAlt /> +91 98765 43210

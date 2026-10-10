@@ -10,6 +10,7 @@ import {
   clearCart as clearCartStore,
 } from "@/lib/cart";
 import { isLoggedIn } from "@/lib/auth";
+import { validateCoupon, getSavedCoupon, saveCoupon } from "@/lib/coupons";
 import "./cart.css";
 
 /* ---------- SVG ICONS (Lucide-style, 24x24) ---------- */
@@ -167,6 +168,8 @@ export default function Cart() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [promoCode, setPromoCode] = useState("");
+  const [applied, setApplied] = useState(null);
+  const [promoMsg, setPromoMsg] = useState({ text: "", ok: false });
 
   useEffect(() => {
     const syncCart = async () => setItems(await getCart());
@@ -174,6 +177,52 @@ export default function Cart() {
     window.addEventListener("storage", syncCart);
     return () => window.removeEventListener("storage", syncCart);
   }, []);
+
+  useEffect(() => {
+    const code = applied?.code || getSavedCoupon();
+    if (!code || items.length === 0) return;
+    let alive = true;
+    validateCoupon(code, items).then((r) => {
+      if (!alive) return;
+      if (r.success) {
+        setApplied({ code: r.code, title: r.title, discount: r.discount });
+        setPromoCode(r.code);
+      } else {
+        setApplied(null);
+        saveCoupon("");
+        setPromoMsg({ text: r.message, ok: false });
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [items]);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    if (!isLoggedIn()) {
+      router.push("/login?redirect=/cart");
+      return;
+    }
+    const r = await validateCoupon(promoCode, items);
+    if (!r.success) {
+      setApplied(null);
+      saveCoupon("");
+      setPromoMsg({ text: r.message, ok: false });
+      return;
+    }
+    setApplied({ code: r.code, title: r.title, discount: r.discount });
+    setPromoCode(r.code);
+    saveCoupon(r.code);
+    setPromoMsg({ text: `${r.code} applied. You saved ${inr(r.discount)}.`, ok: true });
+  };
+
+  const handleRemovePromo = () => {
+    setApplied(null);
+    setPromoCode("");
+    saveCoupon("");
+    setPromoMsg({ text: "", ok: false });
+  };
 
   const handleQtyChange = async (cartItemId, delta) => {
     const item = items.find((i) => i.cartItemId === cartItemId);
@@ -189,6 +238,7 @@ export default function Cart() {
 
   const handleClearCart = async () => {
     await clearCartStore();
+    handleRemovePromo();
     setItems([]);
   };
 
@@ -207,7 +257,7 @@ export default function Cart() {
 
   const subtotal = sumOf(items);
   const deliveryFee = 0; // TODO: plug in real delivery fee logic
-  const discount = 0;    // TODO: plug in promo code logic
+  const discount = applied ? applied.discount : 0;
   const total = subtotal + deliveryFee - discount;
 
   return (
@@ -268,14 +318,20 @@ export default function Cart() {
                     placeholder="Enter promo code"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
+                    readOnly={!!applied}
                   />
                 </div>
-                <button className="ct-apply">Apply</button>
+                {applied ? (
+                  <button className="ct-apply" onClick={handleRemovePromo}>Remove</button>
+                ) : (
+                  <button className="ct-apply" onClick={handleApplyPromo}>Apply</button>
+                )}
                 <button className="ct-clear" onClick={handleClearCart}>
                   <Icon name="trash" size={18} />
                   Clear Cart
                 </button>
               </div>
+              {promoMsg.text && <p className={`ct-promo-msg ${promoMsg.ok ? "ok" : "err"}`}>{promoMsg.text}</p>}
             </div>
 
             {/* ---------- Right: summary ---------- */}
