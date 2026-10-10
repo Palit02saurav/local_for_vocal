@@ -18,6 +18,8 @@ const Order = sequelize.define('Order', {
     defaultValue: 'Pending',
   },
   total: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  coupon_code: { type: DataTypes.STRING(30), allowNull: true },
+  discount_amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
 }, {
   tableName: 'orders',
   underscored: true,

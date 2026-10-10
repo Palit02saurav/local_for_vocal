@@ -2,7 +2,7 @@
 // Render blocks outbound SMTP. Same interface as before: transporter.sendMail / verify.
 const API_URL = 'https://api.brevo.com/v3';
 
-// '"Geoinformaticx" <info@site.com>'  ->  { name: 'Geoinformaticx', email: 'info@site.com' }
+// '"Geomaticx" <info@site.com>'  ->  { name: 'Geomaticx', email: 'info@site.com' }
 const parseAddress = (value) => {
   const str = String(value || '').trim();
   const m = str.match(/^"?([^"<]*?)"?\s*<([^>]+)>$/);

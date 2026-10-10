@@ -16,7 +16,7 @@ exports.generateOtp = () => {
 
 exports.sendOtpEmail = async (email, name, otp) => {
   await transporter.sendMail({
-    from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
+    from: `"Geomaticx" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Your Verification Code',
     html: `
@@ -47,12 +47,12 @@ exports.sendServiceBookingEmail = async ({ to, sellerName, orderId, customer, it
     .join('');
 
   await transporter.sendMail({
-    from: `"Geoinformaticx" <${process.env.EMAIL_USER}>`,
+    from: `"Geomaticx" <${process.env.EMAIL_USER}>`,
     to,
     subject: `New service booking #${orderId}`,
     html: `
       <p>Hi ${esc(sellerName)},</p>
-      <p>You have a new service booking on Geoinformaticx.</p>
+      <p>You have a new service booking on Geomaticx.</p>
 
       <h3>Customer details</h3>
       <p>

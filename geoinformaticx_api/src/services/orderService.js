@@ -1,5 +1,6 @@
-const { Order, OrderItem, Customer, Product, Service, Seller, Review, Vendor } = require('../models');
-const { Op } = require('sequelize');
+const { Order, OrderItem, Customer, Product, Service, Seller, Review, Vendor, ReturnRequest } = require('../models');
+const { Op, literal } = require('sequelize');
+const CouponService = require('./couponService');
 const { sendServiceBookingEmail } = require('../utils/otpUtils');
 
 
@@ -20,6 +21,58 @@ const getRazorpay = () => {
 
 const paidOrCod = {
   [Op.or]: [{ payment_method: { [Op.ne]: 'razorpay' } }, { payment_status: 'Paid' }],
+};
+
+const stockStatus = (stock) => (stock <= 0 ? 'Out of Stock' : stock <= 10 ? 'Low Stock' : 'Active');
+
+const syncProductStatus = async (productId) => {
+  const p = await Product.findByPk(productId, { attributes: ['id', 'stock', 'status'] });
+  if (!p || p.status === 'Inactive') return;
+  const status = stockStatus(p.stock);
+  if (status !== p.status) await p.update({ status });
+};
+
+const releaseStock = async (items) => {
+  for (const item of items) {
+    const qty = parseInt(item.quantity, 10);
+    if (!item.id || !(qty > 0)) continue;
+    await Product.update({ stock: literal(`stock + ${qty}`) }, { where: { id: item.id } });
+    await syncProductStatus(item.id);
+  }
+};
+
+// Atomic: only succeeds if enough stock is left, so two buyers can't oversell.
+const reserveStock = async (items) => {
+  const done = [];
+  try {
+    for (const item of items) {
+      const qty = parseInt(item.quantity, 10);
+      if (!(qty > 0)) {
+        const err = new Error('Invalid quantity.');
+        err.status = 400;
+        throw err;
+      }
+      const [affected] = await Product.update(
+        { stock: literal(`stock - ${qty}`) },
+        { where: { id: item.id, stock: { [Op.gte]: qty } } }
+      );
+      if (!affected) {
+        const err = new Error(`"${item.name}" does not have enough stock.`);
+        err.status = 400;
+        throw err;
+      }
+      done.push(item);
+    }
+  } catch (e) {
+    await releaseStock(done);
+    throw e;
+  }
+  for (const item of items) await syncProductStatus(item.id);
+};
+
+const restoreOrderStock = async (orderId) => {
+  const rows = await OrderItem.findAll({ where: { order_id: orderId, item_type: 'product' } });
+  await releaseStock(rows.filter((r) => r.product_id).map((r) => ({ id: r.product_id, quantity: r.quantity })));
 };
 const notifyServiceSellers = async (serviceItems, order, form) => {
   const services = await Service.findAll({
@@ -125,21 +178,41 @@ exports.createOrder = async (customerId, rawItems, form) => {
   const cartItems = await Promise.all(
     rawItems.map(async (item) => {
       const Model = item.type === 'service' ? Service : Product;
-      const row = await Model.findByPk(item.id, { attributes: ['id', 'price'] });
+      const row = await Model.findByPk(item.id, { attributes: ['id', 'price', 'seller_id'] });
       if (!row) {
         const err = new Error(`"${item.name}" is no longer available.`);
         err.status = 400;
         throw err;
       }
-      return { ...item, price: Number(row.price) };
+      return { ...item, price: Number(row.price), seller_id: row.seller_id };
     })
   );
 
   const productItems = cartItems.filter((i) => (i.type || 'product') === 'product');
   const serviceItems = cartItems.filter((i) => i.type === 'service');
 
-  const createGroup = async (items, status) => {
-    const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+  const couponResult = form.couponCode ? await CouponService.evaluate(form.couponCode, cartItems) : null;
+  const eligibleSum = (items) =>
+    couponResult
+      ? items.filter((i) => couponResult.eligibleItems.includes(i)).reduce((s, i) => s + i.price * i.quantity, 0)
+      : 0;
+  const productDiscount = couponResult
+    ? Math.round(((couponResult.discount * eligibleSum(productItems)) / couponResult.eligibleTotal) * 100) / 100
+    : 0;
+  const serviceDiscount = couponResult ? Math.round((couponResult.discount - productDiscount) * 100) / 100 : 0;
+
+  await reserveStock(productItems);
+  if (couponResult) {
+    try {
+      await CouponService.reserve(couponResult.coupon.id);
+    } catch (e) {
+      await releaseStock(productItems);
+      throw e;
+    }
+  }
+
+  const createGroup = async (items, status, discount) => {
+    const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0) - discount;
 
     const order = await Order.create({
       customer_id: customerId,
@@ -150,6 +223,8 @@ exports.createOrder = async (customerId, rawItems, form) => {
       payment_method: form.paymentMethod || 'cod',
       status,
       total,
+      coupon_code: couponResult ? couponResult.coupon.code : null,
+      discount_amount: discount,
     });
 
     await OrderItem.bulkCreate(
@@ -169,9 +244,16 @@ exports.createOrder = async (customerId, rawItems, form) => {
     return order;
   };
 
-  const productOrder = productItems.length ? await createGroup(productItems, isOnline ? 'Pending' : 'Processing') : null;
-  const serviceOrder = serviceItems.length ? await createGroup(serviceItems, isOnline ? 'Pending' : 'Confirmed') : null;
-
+  let productOrder = null;
+  let serviceOrder = null;
+  try {
+    productOrder = productItems.length ? await createGroup(productItems, isOnline ? 'Pending' : 'Processing', productDiscount) : null;
+    serviceOrder = serviceItems.length ? await createGroup(serviceItems, isOnline ? 'Pending' : 'Confirmed', serviceDiscount) : null;
+  } catch (e) {
+    if (couponResult) await CouponService.release(couponResult.coupon.code);
+    await releaseStock(productItems);
+    throw e;
+  }
   let razorpay = null;
   if (isOnline) {
     const orders = [productOrder, serviceOrder].filter(Boolean);
@@ -202,7 +284,9 @@ exports.createOrder = async (customerId, rawItems, form) => {
         { status: 'Cancelled', payment_status: 'Failed' },
         { where: { id: orders.map((o) => o.id) } }
       );
-      if (e.status) throw e; 
+      if (couponResult) await CouponService.release(couponResult.coupon.code);
+      await releaseStock(productItems);
+      if (e.status) throw e;
       const err = new Error(e?.error?.description || e.message || 'Could not start payment.');
       err.status = 500;
       throw err;
@@ -274,10 +358,12 @@ exports.verifyPayment = async (customerId, body) => {
 };
 
 exports.abortPayment = async (customerId, razorpayOrderId) => {
-  await Order.update(
-    { status: 'Cancelled', payment_status: 'Failed' },
-    { where: { customer_id: customerId, razorpay_order_id: razorpayOrderId, payment_status: 'Unpaid' } }
-  );
+  const where = { customer_id: customerId, razorpay_order_id: razorpayOrderId, payment_status: 'Unpaid' };
+  const orders = await Order.findAll({ where });
+  if (!orders.length) return;
+  await Order.update({ status: 'Cancelled', payment_status: 'Failed' }, { where });
+  for (const o of orders) await restoreOrderStock(o.id);
+  if (orders[0].coupon_code) await CouponService.release(orders[0].coupon_code);
 };
 
 exports.listProductOrders = async (customerId) => {
@@ -288,13 +374,13 @@ exports.listProductOrders = async (customerId) => {
         model: Order,
         as: 'order',
         where: { customer_id: customerId, ...paidOrCod },
-        attributes: ['id', 'status', 'created_at', 'updated_at'],
+        attributes: ['id', 'status', 'total', 'discount_amount', 'coupon_code', 'created_at', 'updated_at'],
       },
       {
         model: Product,
         as: 'product',
         required: false,
-        attributes: ['id', 'delivery_type'],
+        attributes: ['id', 'delivery_type', 'return_replace_accepted', 'return_replace_days'],
       },
       {
         model: Review,
@@ -302,13 +388,19 @@ exports.listProductOrders = async (customerId) => {
         required: false,
         attributes: ['id', 'rating'],
       },
+      {
+        model: ReturnRequest,
+        as: 'returnRequest',
+        required: false,
+        attributes: ['id', 'type', 'status', 'created_at', 'updated_at'],
+      },
     ],
     order: [['created_at', 'DESC']],
   });
   return items;
 };
 
-exports.listServiceOrders = async (customerId) => {
+exports.listServiceOrders= async (customerId) => {
   const items = await OrderItem.findAll({
     where: { item_type: 'service' },
     include: [
@@ -316,7 +408,7 @@ exports.listServiceOrders = async (customerId) => {
         model: Order,
         as: 'order',
         where: { customer_id: customerId, ...paidOrCod },
-        attributes: ['id', 'status', 'address', 'created_at', 'updated_at'],
+        attributes: ['id', 'status', 'address', 'total', 'discount_amount', 'coupon_code', 'created_at', 'updated_at'],
       },
       {
         model: Service,
@@ -362,8 +454,10 @@ exports.updateOrderStatus = async (orderId, status) => {
     err.status = 404;
     throw err;
   }
+  const wasCancelled = order.status === 'Cancelled';
   order.status = status;
   await order.save();
+  if (status === 'Cancelled' && !wasCancelled) await restoreOrderStock(order.id);
   return order;
 };
 
@@ -412,8 +506,10 @@ exports.cancelOrder = async (orderId, customerId) => {
     err.status = 400;
     throw err;
   }
+  const wasCancelled = order.status === 'Cancelled';
   order.status = 'Cancelled';
   await order.save();
+  if (!wasCancelled) await restoreOrderStock(order.id);
   return order;
 };
 

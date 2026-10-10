@@ -105,6 +105,11 @@ const isFresh = delivery_type === 'Fresh';
   let returnAccepted = false;
   let returnDays = 7;
   if (created_by_role === 'SELLER') {
+    if (return_replace_accepted !== true && return_replace_accepted !== 'true') {
+      const err = new Error('Sellers must accept the 7-day return/replacement policy.');
+      err.status = 400;
+      throw err;
+    }
     returnAccepted = true;
     returnDays = 7;
   }
