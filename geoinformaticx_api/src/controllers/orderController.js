@@ -94,3 +94,14 @@ exports.abortPayment = async (req, res) => {
     CommonService.sendResponse(res, 500, false, 'Server error.');
   }
 };
+
+
+exports.startCall = async (req, res) => {
+  try {
+    await OrderService.startProviderCall(req.customerId, req.params.id);
+    CommonService.sendResponse(res, 200, true, 'Calling you now. Please pick up your phone.');
+  } catch (err) {
+    console.error('Start call error:', err);
+    CommonService.sendResponse(res, err.status || 500, false, err.message || 'Server error starting call.');
+  }
+};

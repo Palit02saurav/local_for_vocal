@@ -7,6 +7,7 @@ router.use('/products', require('./productRoutes'));
 router.use('/sellers', require('./sellerRoutes'));
 router.use('/vendors', require('./vendorRoutes'));
 router.use('/categories', require('./categoryRoutes'));
+router.use('/geo', require('./geoRoutes'));
 router.use('/services', require('./serviceRoutes'));
 router.use('/banners', require('./bannerRoutes'));
 router.use('/coupons', require('./couponRoutes'));

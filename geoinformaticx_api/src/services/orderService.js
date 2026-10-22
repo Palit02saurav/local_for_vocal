@@ -1,6 +1,7 @@
 const { Order, OrderItem, Customer, Product, Service, Seller, Review, Vendor, ReturnRequest } = require('../models');
 const { Op, literal } = require('sequelize');
 const CouponService = require('./couponService');
+const CallService = require('./callService');
 const { sendServiceBookingEmail } = require('../utils/otpUtils');
 
 
@@ -419,7 +420,7 @@ exports.listServiceOrders= async (customerId) => {
           model: Seller,
           as: 'seller',
           required: false,
-          attributes: ['id', 'store_name', 'phone', 'location'],
+          attributes: ['id', 'store_name', 'location'],
         }],
       },
       {
@@ -539,4 +540,33 @@ exports.listVendorOrders = async (vendorId) => {
     ],
     order: [['created_at', 'DESC']],
   });
+};
+
+
+exports.startProviderCall = async (customerId, orderItemId) => {
+  const item = await OrderItem.findOne({
+    where: { id: orderItemId, item_type: 'service' },
+    include: [
+      { model: Order, as: 'order', where: { customer_id: customerId } },
+      {
+        model: Service, as: 'service',
+        include: [{ model: Seller, as: 'seller', attributes: ['id', 'phone'] }],
+      },
+    ],
+  });
+
+  const fail = (status, msg) => { const e = new Error(msg); e.status = status; throw e; };
+
+  if (!item) fail(404, 'Booking not found.');
+  if (['Cancelled', 'Delivered'].includes(item.order.status)) fail(400, 'This booking is closed.');
+
+  const hours = Number(process.env.CALL_WINDOW_HOURS || 24);
+  if (Date.now() - new Date(item.order.created_at).getTime() > hours * 3600 * 1000) {
+    fail(410, 'The call window for this booking has expired.');
+  }
+
+  const providerPhone = item.service?.seller?.phone;
+  if (!providerPhone) fail(400, 'Provider contact is not available.');
+
+  await CallService.connectCall({ from: item.order.phone, to: providerPhone });
 };

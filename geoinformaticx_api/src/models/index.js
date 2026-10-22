@@ -18,6 +18,11 @@ const Mail = require('./Mail');
 const Review = require('./Review');
 const SellerPayoutAccount = require('./SellerPayoutAccount');
 const ReturnRequest = require('./ReturnRequest');
+const GeoState = require('./GeoState');
+const GeoDistrict = require('./GeoDistrict');
+
+GeoDistrict.belongsTo(GeoState, { foreignKey: 'state_id', as: 'state' });
+GeoState.hasMany(GeoDistrict, { foreignKey: 'state_id', as: 'districts' });
 
 Service.belongsTo(Seller, { foreignKey: 'seller_id', as: 'seller' });
 Review.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
@@ -69,4 +74,6 @@ module.exports = {
   Review,
   SellerPayoutAccount,
   ReturnRequest,
+  GeoState,
+  GeoDistrict,
 };
