@@ -120,10 +120,15 @@ export const getProductOrders= async () => {
   }
 };
 
+const CALL_WINDOW_HOURS = 24;
+
 const normalizeServiceOrder = (raw) => ({
   ...normalizeOrder(raw),
   isRated: !!raw.review,
-  providerPhone: raw.service?.seller?.phone || "",
+  hasProvider: !!raw.service?.seller?.id,
+  callExpiresAt: new Date(
+    new Date(raw.order?.created_at).getTime() + CALL_WINDOW_HOURS * 3600 * 1000
+  ),
   location: raw.service?.seller?.location || "",
   serviceAddress: raw.order?.address || "",
 });
@@ -140,6 +145,18 @@ export const getServiceOrders = async () => {
   }
 };
 
+export const startProviderCall = async (orderItemId) => {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderItemId}/call`, {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await res.json();
+    return { success: res.ok, message: data.message };
+  } catch (err) {
+    return { success: false, message: "Could not reach the server." };
+  }
+};
 
 export const verifyRazorpayPayment = async (payload) => {
   try {

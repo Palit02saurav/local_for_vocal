@@ -5,6 +5,14 @@ import "./social3d.css";
 export default function Social3D() {
   return (
     <section className="social3d">
+      <div className="social3d-heading">
+        <div className="social3d-eyebrow">
+          <span className="social3d-line" />
+          <span className="social3d-eyebrow-text">Follow Us</span>
+          <span className="social3d-line" />
+        </div>
+        <h2>Stay Connected With Us</h2>
+      </div>
       <ul>
         <li>
           <a href="#">

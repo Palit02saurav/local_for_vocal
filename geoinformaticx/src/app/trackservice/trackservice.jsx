@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getServiceOrders, submitReview } from "@/lib/orders";
+import { getServiceOrders, submitReview, startProviderCall } from "@/lib/orders";
 import "./trackservice.css";
 
 /* ---------- SVG ICONS (Lucide-style, 24x24) ---------- */
@@ -299,7 +299,11 @@ export default function TrackService() {
                       <span className="ts-contact-ico"><Icon name="phone" size={20} /></span>
                       <div>
                         <strong>Provider Contact</strong>
-                        <span>{order.providerPhone || "Not available"}</span>
+                        <span>
+                          {order.hasProvider && new Date() < order.callExpiresAt
+                            ? `Private call · valid till ${order.callExpiresAt.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}`
+                            : "Call window closed"}
+                        </span>
                       </div>
                     </div>
                     <span className="ts-contact-sep" />
@@ -326,17 +330,17 @@ export default function TrackService() {
                     </button>
                   )}
 
-                  {order.providerPhone ? (
-                    <a href={`tel:${order.providerPhone}`} className="ts-btn ts-btn-outline">
-                      <Icon name="message" size={20} />
-                      Contact Provider
-                    </a>
-                  ) : (
-                    <button className="ts-btn ts-btn-outline" disabled>
-                      <Icon name="message" size={20} />
-                      Contact Provider
-                    </button>
-                  )}
+                  <button
+                    className="ts-btn ts-btn-outline"
+                    disabled={!order.hasProvider || new Date() >= order.callExpiresAt}
+                    onClick={async () => {
+                      const r = await startProviderCall(order.orderId);
+                      alert(r.message);
+                    }}
+                  >
+                    <Icon name="message" size={20} />
+                    Contact Provider
+                  </button>
 
                   <button
                     className="ts-btn ts-btn-solid"

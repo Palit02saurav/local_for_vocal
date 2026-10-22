@@ -63,14 +63,14 @@ export default function Explore({
     selectedCategory !== "All" ||
     businessType !== "All" ||
     minRating !== 0 ||
-    distanceKm !== 5;
+    distanceKm !== 1;
 
   function clearAll() {
     setListingType("All");
     setSelectedCategory("All");
     setBusinessType("All");
     setMinRating(0);
-    setDistanceKm(5);
+    setDistanceKm(1);
   }
 
   function handleListingTypeChange(value) {
@@ -177,7 +177,7 @@ export default function Explore({
         </div>
 
         <div className="filter-row distance-row">
-          <label htmlFor="filter-distance">Distance</label>
+          <label htmlFor="filter-distance">Distance: {distanceKm} km</label>
           <input
             id="filter-distance"
             type="range"

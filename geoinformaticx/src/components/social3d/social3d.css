@@ -5,13 +5,57 @@
   background: #f1f1f1;
   margin-top: -80px;
   min-height: 230px;
-  padding-bottom: 20px;
+  padding-top: 20px;
+  padding-bottom: 80px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: clip;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.social3d-heading {
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.social3d-eyebrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow-x: clip;
-  font-family: 'Roboto Condensed', sans-serif;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.social3d-eyebrow-text {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3aa66a;
+}
+
+.social3d-line {
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #3aa66a);
+}
+
+.social3d-line:last-child {
+  background: linear-gradient(90deg, #3aa66a, transparent);
+}
+
+.social3d-heading h2 {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f3d2e;
 }
 
 .social3d ul {

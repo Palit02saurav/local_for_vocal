@@ -166,7 +166,7 @@ export default function LocalBusinesses() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [businessType, setBusinessType] = useState("All");
   const [minRating, setMinRating] = useState(0);
-  const [distanceKm, setDistanceKm] = useState(2);
+  const [distanceKm, setDistanceKm] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [detailsBiz, setDetailsBiz] = useState(null);
   const [detailsQty, setDetailsQty] = useState(1);
@@ -304,11 +304,6 @@ const businessesWithDistance = useMemo(() => {
         map: mapInstance.current,
         zIndex: 1000, 
       });
-
-      if (userLocation && zoomedForRef.current !== userLocation) {
-        mapInstance.current.setZoom(USER_ZOOM);
-        zoomedForRef.current = userLocation;
-      }
       const userMarker = userMarkerRef.current;
       if (userMarker) {
         if (!userInfoRef.current) {
@@ -338,11 +333,18 @@ const businessesWithDistance = useMemo(() => {
         center: userLocation,
         radius: distanceKm * 1000,
         fillColor: "#ea4335",
-        fillOpacity: 0,
+        fillOpacity: 0.06,
         strokeColor: "#ea4335",
-        strokeOpacity: 0.3,
-        strokeWeight: 1,
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        clickable: false,
       });
+
+      // zoom so the whole circle is visible:
+      // 1 km on entry, and it grows as the user increases the range
+      if (circleRef.current) {
+        mapInstance.current.fitBounds(circleRef.current.getBounds(), 30);
+      }
 
       setMapReady(true);
     });
@@ -1016,7 +1018,7 @@ const businessesWithDistance = useMemo(() => {
       </div>
 
 
-            {detailsBiz && (
+      {detailsBiz && (
         <div className="business-detail-modal-overlay" onClick={() => setDetailsBiz(null)}>
           <div className="business-detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="pd-main-img-wrap">
@@ -1026,7 +1028,6 @@ const businessesWithDistance = useMemo(() => {
                 src={detailsBiz.images?.[activeImgIdx] || detailsBiz.img}
                 alt={detailsBiz.name}
               />
-              <button className="pd-wishlist-btn"><FaRegHeart /></button>
               {detailsBiz.images?.length > 1 && (
                 <span className="pd-img-counter">{activeImgIdx + 1} / {detailsBiz.images.length}</span>
               )}
@@ -1272,7 +1273,6 @@ const businessesWithDistance = useMemo(() => {
                 src={detailsBiz.images?.[activeImgIdx] || detailsBiz.img}
                 alt={detailsBiz.name}
               />
-              <button className="pd-wishlist-btn"><FaRegHeart /></button>
               {detailsBiz.images?.length > 1 && (
                 <span className="pd-img-counter">{activeImgIdx + 1} / {detailsBiz.images.length}</span>
               )}
