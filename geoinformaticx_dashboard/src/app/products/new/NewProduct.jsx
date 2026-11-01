@@ -40,9 +40,9 @@ const makeDraft = (overrides = {}) => ({
 
 const STANDARD_MIN_IMAGES = 3;
 const STANDARD_MAX_IMAGES = 5;
-const FRESH_MIN_IMAGES = 1; 
+const FRESH_MIN_IMAGES = 1;
 const FRESH_MAX_IMAGES = 3;
-const COMPRESSION_QUALITY = 0.7; 
+const COMPRESSION_QUALITY = 0.7;
 
 async function compressImage(file) {
   if (!file.type.startsWith("image/")) return file;
@@ -58,7 +58,7 @@ async function compressImage(file) {
 
     const outType = file.type === "image/png" ? "image/webp" : "image/jpeg";
     const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, outType, COMPRESSION_QUALITY)
+      canvas.toBlob(resolve, outType, COMPRESSION_QUALITY),
     );
 
     // If the re-encode came out bigger (already-optimised source), keep the original.
@@ -83,7 +83,7 @@ export default function NewProduct({ fresh = false }) {
   const basePath = fresh ? "/fresh-delivery" : "/products";
   const descRef = useRef(null);
 
-const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const isSeller = currentUser?.role === "SELLER";
   const isVendor = currentUser?.role === "VENDOR";
 
@@ -126,20 +126,20 @@ const [currentUser, setCurrentUser] = useState(null);
   const [compressing, setCompressing] = useState(false);
   const errorBannerRef = useRef(null);
 
-  const generateSku = () => `PRD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const generateSku = () =>
+    `PRD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
+    const init = async () => {
+      const user = getCurrentUser();
+      setCurrentUser(user);
 
-   
-    if (user?.role === "SELLER" || user?.role === "VENDOR") {
-      setForm((f) => ({ ...f, sellerId: user.id }));
-      setLoadingSellers(false);
-      return;
-    }
+      if (user?.role === "SELLER" || user?.role === "VENDOR") {
+        setForm((f) => ({ ...f, sellerId: user.id }));
+        setLoadingSellers(false);
+        return;
+      }
 
-    const loadSellers = async () => {
       try {
         const res = await api.get("/sellers");
         setSellers(res.data.data?.sellers || []);
@@ -149,7 +149,8 @@ const [currentUser, setCurrentUser] = useState(null);
         setLoadingSellers(false);
       }
     };
-    loadSellers();
+
+    init();
   }, []);
 
   const handleChange = (field, value) => {
@@ -160,7 +161,7 @@ const [currentUser, setCurrentUser] = useState(null);
   // Fold the live fields back into the drafts array before we switch away.
   const captureActive = (list = drafts) =>
     list.map((d, i) =>
-      i === activeIndex ? { ...d, form, tags, images, sellerConsent } : d
+      i === activeIndex ? { ...d, form, tags, images, sellerConsent } : d,
     );
 
   const loadDraft = (draft) => {
@@ -216,14 +217,13 @@ const [currentUser, setCurrentUser] = useState(null);
       idx === activeIndex
         ? Math.max(0, idx - 1)
         : idx < activeIndex
-        ? activeIndex - 1
-        : activeIndex;
+          ? activeIndex - 1
+          : activeIndex;
     setDrafts(next);
     setActiveIndex(nextActive);
     loadDraft(next[nextActive]);
     setSubmitError("");
   };
-  
 
   const [showRegionalConfirm, setShowRegionalConfirm] = useState(false);
 
@@ -276,13 +276,15 @@ const [currentUser, setCurrentUser] = useState(null);
     let wrapped;
     if (tag === "bold") wrapped = `**${selected || "bold text"}**`;
     else if (tag === "italic") wrapped = `_${selected || "italic text"}_`;
-    else if (tag === "underline") wrapped = `__${selected || "underlined text"}__`;
+    else if (tag === "underline")
+      wrapped = `__${selected || "underlined text"}__`;
     else if (tag === "ul") wrapped = `\n- ${selected || "list item"}`;
     else if (tag === "ol") wrapped = `\n1. ${selected || "list item"}`;
     else if (tag === "link") wrapped = `[${selected || "link text"}](url)`;
     else wrapped = selected;
 
-    const newValue = form.description.slice(0, start) + wrapped + form.description.slice(end);
+    const newValue =
+      form.description.slice(0, start) + wrapped + form.description.slice(end);
     handleChange("description", newValue);
     setTimeout(() => textarea.focus(), 0);
   };
@@ -290,7 +292,7 @@ const [currentUser, setCurrentUser] = useState(null);
     const files = Array.from(fileList).slice(0, MAX_IMAGES - images.length);
     if (files.length === 0) return;
 
-    const MAX_FILE_BYTES = 5 * 1024 * 1024; 
+    const MAX_FILE_BYTES = 5 * 1024 * 1024;
     const tooBig = files.filter((f) => f.size > MAX_FILE_BYTES);
     const okFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
 
@@ -324,14 +326,15 @@ const [currentUser, setCurrentUser] = useState(null);
     e.preventDefault();
     setDragActive(false);
     if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
-  };  
+  };
 
-const validateForm = (f, draftImages = [], consent = false) => {
+  const validateForm = (f, draftImages = [], consent = false) => {
     const newErrors = {};
     if (draftImages.length < MIN_IMAGES)
       newErrors.images = `Add at least ${MIN_IMAGES} image${MIN_IMAGES > 1 ? "s" : ""} (${draftImages.length} added so far).`;
     if (fresh) {
-      if (!f.unit.trim()) newErrors.unit = "Pack size / unit is required (e.g. 500 g).";
+      if (!f.unit.trim())
+        newErrors.unit = "Pack size / unit is required (e.g. 500 g).";
       if (!isVendor) {
         const prep = Number(f.prepTime);
         if (!f.prepTime || prep < 1 || prep > 5)
@@ -341,15 +344,22 @@ const validateForm = (f, draftImages = [], consent = false) => {
         newErrors.consent = "Please confirm you can deliver within 10 minutes.";
     }
     if (isSeller && !f.returnConsent)
-      newErrors.returnConsent = "Please confirm the 7-day return/replacement policy.";
+      newErrors.returnConsent =
+        "Please confirm the 7-day return/replacement policy.";
     if (!f.name.trim()) newErrors.name = "Product name is required.";
     if (!isVendor && !f.sku.trim()) newErrors.sku = "SKU is required.";
     if (!f.category) newErrors.category = "Category is required.";
     if (!f.sellerId) newErrors.sellerId = "Seller is required.";
-    if (!f.description.trim()) newErrors.description = "Description is required.";
-    if (!f.price || Number(f.price) <= 0) newErrors.price = "Enter a valid price.";
-    if (!isVendor && (f.stock === "" || Number(f.stock) < 0)) newErrors.stock = "Enter a valid stock quantity.";
-    if (!isVendor && (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0))
+    if (!f.description.trim())
+      newErrors.description = "Description is required.";
+    if (!f.price || Number(f.price) <= 0)
+      newErrors.price = "Enter a valid price.";
+    if (!isVendor && (f.stock === "" || Number(f.stock) < 0))
+      newErrors.stock = "Enter a valid stock quantity.";
+    if (
+      !isVendor &&
+      (f.lowStockThreshold === "" || Number(f.lowStockThreshold) < 0)
+    )
       newErrors.lowStockThreshold = "Enter a valid low stock threshold.";
     return newErrors;
   };
@@ -361,7 +371,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
     description: draft.form.description.trim(),
     price: Number(draft.form.price),
     ...(!isVendor && { stock: Number(draft.form.stock) }),
-    ...(!isVendor && { low_stock_threshold: Number(draft.form.lowStockThreshold) }),
+    ...(!isVendor && {
+      low_stock_threshold: Number(draft.form.lowStockThreshold),
+    }),
     status: draft.form.status,
     product_type: fresh ? "Regular" : draft.form.productType,
     delivery_type: fresh ? "Fresh" : "Standard",
@@ -370,8 +382,8 @@ const validateForm = (f, draftImages = [], consent = false) => {
       shelf_life: draft.form.shelfLife.trim(),
       ...(!isVendor && { prep_time_minutes: Number(draft.form.prepTime) }),
     }),
-    image_url: imageUrls[0] || "",       // main/cover image
-    gallery_urls: imageUrls.join(","),   // every uploaded image
+    image_url: imageUrls[0] || "", // main/cover image
+    gallery_urls: imageUrls.join(","), // every uploaded image
     brand: draft.form.brand.trim(),
     tags: draft.tags.join(","),
     seller_consent: draft.sellerConsent,
@@ -393,7 +405,11 @@ const validateForm = (f, draftImages = [], consent = false) => {
 
     // 1. Validate every product; jump to the first broken one.
     for (let i = 0; i < all.length; i++) {
-      const errs = validateForm(all[i].form, all[i].images, all[i].sellerConsent);
+      const errs = validateForm(
+        all[i].form,
+        all[i].images,
+        all[i].sellerConsent,
+      );
       if (Object.keys(errs).length > 0) {
         setActiveIndex(i);
         loadDraft(all[i]);
@@ -401,7 +417,7 @@ const validateForm = (f, draftImages = [], consent = false) => {
         setSubmitError(
           all.length === 1
             ? "Please fix the highlighted fields."
-            : `Product ${i + 1} has missing or invalid fields.`
+            : `Product ${i + 1} has missing or invalid fields.`,
         );
         return;
       }
@@ -415,8 +431,12 @@ const validateForm = (f, draftImages = [], consent = false) => {
     if (dupAt > -1) {
       setActiveIndex(dupAt);
       loadDraft(all[dupAt]);
-      setErrors({ sku: "This SKU is already used by another product in this batch." });
-      setSubmitError(`Product ${dupAt + 1} reuses a SKU from another product above.`);
+      setErrors({
+        sku: "This SKU is already used by another product in this batch.",
+      });
+      setSubmitError(
+        `Product ${dupAt + 1} reuses a SKU from another product above.`,
+      );
       return;
     }
 
@@ -429,7 +449,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
       const draft = all[i];
       try {
         const imageUrls = await Promise.all(
-          draft.images.filter((img) => img.file).map((img) => uploadImage(img.file))
+          draft.images
+            .filter((img) => img.file)
+            .map((img) => uploadImage(img.file)),
         );
         await api.post("/products", buildPayload(draft, imageUrls));
       } catch (err) {
@@ -443,7 +465,11 @@ const validateForm = (f, draftImages = [], consent = false) => {
 
     if (failures.length === 0) {
       router.push(
-        fresh ? (isVendor ? "/fresh-delivery" : "/fresh-delivery/in-progress") : "/products"
+        fresh
+          ? isVendor
+            ? "/fresh-delivery"
+            : "/fresh-delivery/in-progress"
+          : "/products",
       );
       return;
     }
@@ -454,18 +480,23 @@ const validateForm = (f, draftImages = [], consent = false) => {
     setActiveIndex(0);
     loadDraft(remaining[0]);
     setErrors(
-      /sku/i.test(failures[0].message) ? { sku: failures[0].message } : {}
+      /sku/i.test(failures[0].message) ? { sku: failures[0].message } : {},
     );
     setSubmitError(
       `${saved} of ${all.length} products saved. Still to fix: ` +
-        failures.map((f) => `Product ${f.index + 1} — ${f.message}`).join(" | ")
+        failures
+          .map((f) => `Product ${f.index + 1} — ${f.message}`)
+          .join(" | "),
     );
     setSubmitting(false);
   };
 
   useEffect(() => {
     if (submitError) {
-      errorBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      errorBannerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [submitError]);
 
@@ -474,7 +505,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
       <Link href={basePath} className="np-back-link">
         ← Back to {fresh ? "Fresh Delivery" : "Products"}
       </Link>
-      <h1 className="np-title">{fresh ? "Add Fresh Delivery Product" : "Add New Product"}</h1>
+      <h1 className="np-title">
+        {fresh ? "Add Fresh Delivery Product" : "Add New Product"}
+      </h1>
       <p className="np-subtitle">
         {fresh
           ? "Add products you can deliver within 10 minutes. You can add several at once."
@@ -482,9 +515,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
       </p>
       {fresh && (
         <div className="np-fresh-banner">
-          ⚡ These products appear in the <strong>10 Min Fresh Delivery</strong> section on the
-          storefront, for customers within <strong>3 km</strong> of your store. Add at least{" "}
-          <strong>1 image</strong> (up to 3).
+          ⚡ These products appear in the <strong>10 Min Fresh Delivery</strong>{" "}
+          section on the storefront, for customers within <strong>3 km</strong>{" "}
+          of your store. Add at least <strong>1 image</strong> (up to 3).
         </div>
       )}
 
@@ -499,7 +532,11 @@ const validateForm = (f, draftImages = [], consent = false) => {
                 key={d.key}
                 className={`np-draft-tab ${i === activeIndex ? "active" : ""}`}
               >
-                <button type="button" onClick={() => switchDraft(i)} title={label}>
+                <button
+                  type="button"
+                  onClick={() => switchDraft(i)}
+                  title={label}
+                >
                   <span className="np-draft-num">{i + 1}</span>
                   <span className="np-draft-label">{label}</span>
                 </button>
@@ -522,14 +559,20 @@ const validateForm = (f, draftImages = [], consent = false) => {
           <button type="button" className="np-draft-add" onClick={addDraft}>
             + Add another product
           </button>
-          <button type="button" className="np-draft-dup" onClick={duplicateDraft}>
+          <button
+            type="button"
+            className="np-draft-dup"
+            onClick={duplicateDraft}
+          >
             ⧉ Duplicate this one
           </button>
         </div>
       </div>
 
       {submitError && (
-        <div className="np-submit-error" ref={errorBannerRef}>{submitError}</div>
+        <div className="np-submit-error" ref={errorBannerRef}>
+          {submitError}
+        </div>
       )}
 
       <form onSubmit={handleSubmit}>
@@ -551,7 +594,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                     value={form.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                   />
-                  {errors.name && <span className="np-error">{errors.name}</span>}
+                  {errors.name && (
+                    <span className="np-error">{errors.name}</span>
+                  )}
                 </div>
 
                 {!isVendor && (
@@ -572,8 +617,13 @@ const validateForm = (f, draftImages = [], consent = false) => {
                         Generate
                       </button>
                     </div>
-                    <span className="np-hint">Unique identifier for inventory — must not match any existing product</span>
-                    {errors.sku && <span className="np-error">{errors.sku}</span>}
+                    <span className="np-hint">
+                      Unique identifier for inventory — must not match any
+                      existing product
+                    </span>
+                    {errors.sku && (
+                      <span className="np-error">{errors.sku}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -587,24 +637,36 @@ const validateForm = (f, draftImages = [], consent = false) => {
                     disabled={loadingCategories}
                   >
                     <option value="">
-                      {loadingCategories ? "Loading categories..." : "Select Category"}
+                      {loadingCategories
+                        ? "Loading categories..."
+                        : "Select Category"}
                     </option>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
                     ))}
                   </select>
-                  {errors.category && <span className="np-error">{errors.category}</span>}
-                  {!loadingCategories && categories.length === 0 && (
-                    <span className="np-hint">No categories available yet — ask an admin to add one.</span>
+                  {errors.category && (
+                    <span className="np-error">{errors.category}</span>
                   )}
-                </div>  
+                  {!loadingCategories && categories.length === 0 && (
+                    <span className="np-hint">
+                      No categories available yet — ask an admin to add one.
+                    </span>
+                  )}
+                </div>
 
-                                <div className="np-field">
+                <div className="np-field">
                   <label>Seller *</label>
                   {isSeller || isVendor ? (
                     <input
                       type="text"
-                      value={currentUser?.store_name || currentUser?.full_name || "You"}
+                      value={
+                        currentUser?.store_name ||
+                        currentUser?.full_name ||
+                        "You"
+                      }
                       disabled
                       className="np-locked-input"
                     />
@@ -614,7 +676,11 @@ const validateForm = (f, draftImages = [], consent = false) => {
                       onChange={(e) => handleChange("sellerId", e.target.value)}
                       disabled={loadingSellers}
                     >
-                      <option value="">{loadingSellers ? "Loading sellers..." : "Select Seller"}</option>
+                      <option value="">
+                        {loadingSellers
+                          ? "Loading sellers..."
+                          : "Select Seller"}
+                      </option>
                       {sellers.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.store_name || s.full_name}
@@ -622,7 +688,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                       ))}
                     </select>
                   )}
-                  {errors.sellerId && <span className="np-error">{errors.sellerId}</span>}
+                  {errors.sellerId && (
+                    <span className="np-error">{errors.sellerId}</span>
+                  )}
                 </div>
                 {/* <div className="np-field">
                   <label>Seller *</label>
@@ -654,12 +722,27 @@ const validateForm = (f, draftImages = [], consent = false) => {
               <div className="np-field">
                 <label>Description *</label>
                 <div className="np-editor-toolbar">
-                  <button type="button" onClick={() => applyFormat("bold")}><b>B</b></button>
-                  <button type="button" onClick={() => applyFormat("italic")}><i>I</i></button>
-                  <button type="button" onClick={() => applyFormat("underline")}><u>U</u></button>
-                  <button type="button" onClick={() => applyFormat("ul")}>≡</button>
-                  <button type="button" onClick={() => applyFormat("ol")}>☰</button>
-                  <button type="button" onClick={() => applyFormat("link")}>🔗</button>
+                  <button type="button" onClick={() => applyFormat("bold")}>
+                    <b>B</b>
+                  </button>
+                  <button type="button" onClick={() => applyFormat("italic")}>
+                    <i>I</i>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyFormat("underline")}
+                  >
+                    <u>U</u>
+                  </button>
+                  <button type="button" onClick={() => applyFormat("ul")}>
+                    ≡
+                  </button>
+                  <button type="button" onClick={() => applyFormat("ol")}>
+                    ☰
+                  </button>
+                  <button type="button" onClick={() => applyFormat("link")}>
+                    🔗
+                  </button>
                 </div>
                 <textarea
                   ref={descRef}
@@ -668,7 +751,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                   value={form.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                 />
-                {errors.description && <span className="np-error">{errors.description}</span>}
+                {errors.description && (
+                  <span className="np-error">{errors.description}</span>
+                )}
               </div>
             </div>
 
@@ -678,8 +763,8 @@ const validateForm = (f, draftImages = [], consent = false) => {
                 <h3>Product Images</h3>
               </div>
               <p className="np-images-hint">
-                Upload at least {MIN_IMAGES} images (up to {MAX_IMAGES}). Images are
-                uploaded in their original quality.
+                Upload at least {MIN_IMAGES} images (up to {MAX_IMAGES}). Images
+                are uploaded in their original quality.
               </p>
 
               <div className="np-image-counter">
@@ -692,7 +777,11 @@ const validateForm = (f, draftImages = [], consent = false) => {
                   />
                 </div>
                 <span
-                  className={images.length >= MIN_IMAGES ? "np-count-ok" : "np-count-short"}
+                  className={
+                    images.length >= MIN_IMAGES
+                      ? "np-count-ok"
+                      : "np-count-short"
+                  }
                 >
                   {images.length >= MIN_IMAGES
                     ? `${images.length} of ${MAX_IMAGES} added ✓`
@@ -704,7 +793,10 @@ const validateForm = (f, draftImages = [], consent = false) => {
                 className={`np-dropzone ${dragActive ? "active" : ""} ${
                   images.length >= MAX_IMAGES ? "full" : ""
                 }`}
-                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
               >
@@ -733,18 +825,30 @@ const validateForm = (f, draftImages = [], consent = false) => {
                     </label>
                   </>
                 )}
-                <p className="np-dropzone-note">JPG, PNG or WEBP (Max. 5MB each)</p>
+                <p className="np-dropzone-note">
+                  JPG, PNG or WEBP (Max. 5MB each)
+                </p>
               </div>
 
-              {errors.images && <span className="np-error">{errors.images}</span>}
+              {errors.images && (
+                <span className="np-error">{errors.images}</span>
+              )}
 
               {images.length > 0 && (
                 <div className="np-image-previews">
                   {images.map((img, i) => (
                     <div key={img.previewUrl} className="np-image-preview">
                       <img src={img.previewUrl} alt={`Preview ${i + 1}`} />
-                      <button type="button" onClick={() => removeImage(i)} aria-label="Remove image">✕</button>
-                      {i === 0 && <span className="np-image-main-badge">Main</span>}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        aria-label="Remove image"
+                      >
+                        ✕
+                      </button>
+                      {i === 0 && (
+                        <span className="np-image-main-badge">Main</span>
+                      )}
                       {img.originalSize > img.size && (
                         <span className="np-image-size">
                           {formatKb(img.originalSize)} → {formatKb(img.size)}
@@ -777,7 +881,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                     onChange={(e) => handleChange("price", e.target.value)}
                   />
                 </div>
-                {errors.price && <span className="np-error">{errors.price}</span>}
+                {errors.price && (
+                  <span className="np-error">{errors.price}</span>
+                )}
               </div>
 
               {!isVendor && (
@@ -791,7 +897,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                       value={form.stock}
                       onChange={(e) => handleChange("stock", e.target.value)}
                     />
-                    {errors.stock && <span className="np-error">{errors.stock}</span>}
+                    {errors.stock && (
+                      <span className="np-error">{errors.stock}</span>
+                    )}
                   </div>
 
                   <div className="np-field">
@@ -801,9 +909,15 @@ const validateForm = (f, draftImages = [], consent = false) => {
                       min="0"
                       placeholder="Enter low stock alert"
                       value={form.lowStockThreshold}
-                      onChange={(e) => handleChange("lowStockThreshold", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("lowStockThreshold", e.target.value)
+                      }
                     />
-                    {errors.lowStockThreshold && <span className="np-error">{errors.lowStockThreshold}</span>}
+                    {errors.lowStockThreshold && (
+                      <span className="np-error">
+                        {errors.lowStockThreshold}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
@@ -824,7 +938,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
                     value={form.unit}
                     onChange={(e) => handleChange("unit", e.target.value)}
                   />
-                  {errors.unit && <span className="np-error">{errors.unit}</span>}
+                  {errors.unit && (
+                    <span className="np-error">{errors.unit}</span>
+                  )}
                 </div>
 
                 {!isVendor && (
@@ -837,18 +953,24 @@ const validateForm = (f, draftImages = [], consent = false) => {
                         max="5"
                         placeholder="1 - 5"
                         value={form.prepTime}
-                        onChange={(e) => handleChange("prepTime", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("prepTime", e.target.value)
+                        }
                       />
-                      {errors.prepTime && <span className="np-error">{errors.prepTime}</span>}
+                      {errors.prepTime && (
+                        <span className="np-error">{errors.prepTime}</span>
+                      )}
                     </div>
-
+                    {/* good */}
                     <div className="np-field">
                       <label>Shelf Life</label>
                       <input
                         type="text"
                         placeholder="e.g. 2 days"
                         value={form.shelfLife}
-                        onChange={(e) => handleChange("shelfLife", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("shelfLife", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -863,24 +985,37 @@ const validateForm = (f, draftImages = [], consent = false) => {
               </div>
               <div className="np-field">
                 <label>Status *</label>
-                <select value={form.status} onChange={(e) => handleChange("status", e.target.value)}>
+                <select
+                  value={form.status}
+                  onChange={(e) => handleChange("status", e.target.value)}
+                >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
-                <span className="np-hint">Inactive products will not be visible to customers</span>
+                <span className="np-hint">
+                  Inactive products will not be visible to customers
+                </span>
               </div>
 
               {!fresh && (
                 <div className="np-field">
                   <label>Product Type *</label>
-                  <select value={form.productType} onChange={(e) => handleProductTypeChange(e.target.value)}>
+                  <select
+                    value={form.productType}
+                    onChange={(e) => handleProductTypeChange(e.target.value)}
+                  >
                     <option value="Regular">Regular Product</option>
-                    <option value="Regional Famous">Regional Famous Product</option>
+                    <option value="Regional Famous">
+                      Regional Famous Product
+                    </option>
                   </select>
-                  <span className="np-hint">Regional Famous Products are reviewed separately by the admin</span>
+                  <span className="np-hint">
+                    Regional Famous Products are reviewed separately by the
+                    admin
+                  </span>
                 </div>
               )}
-            </div>  
+            </div>
 
             <div className="np-card">
               <div className="np-card-title">
@@ -906,19 +1041,31 @@ const validateForm = (f, draftImages = [], consent = false) => {
                   {tags.map((tag, i) => (
                     <span key={tag} className="np-tag-chip">
                       {tag}
-                      <button type="button" onClick={() => removeTag(i)} aria-label={`Remove ${tag}`}>✕</button>
+                      <button
+                        type="button"
+                        onClick={() => removeTag(i)}
+                        aria-label={`Remove ${tag}`}
+                      >
+                        ✕
+                      </button>
                     </span>
                   ))}
                   <input
                     type="text"
-                    placeholder={tags.length === 0 ? "Type a tag and press Enter (e.g. Organic)" : ""}
+                    placeholder={
+                      tags.length === 0
+                        ? "Type a tag and press Enter (e.g. Organic)"
+                        : ""
+                    }
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagInputKeyDown}
                     onBlur={() => tagInput.trim() && addTag(tagInput)}
                   />
                 </div>
-                <span className="np-hint">Press Enter or comma to add a tag — # is added automatically</span>
+                <span className="np-hint">
+                  Press Enter or comma to add a tag — # is added automatically
+                </span>
               </div>
 
               <div className="np-field">
@@ -971,7 +1118,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
               <input
                 type="checkbox"
                 checked={!!form.returnConsent}
-                onChange={(e) => handleChange("returnConsent", e.target.checked)}
+                onChange={(e) =>
+                  handleChange("returnConsent", e.target.checked)
+                }
               />
               <span>
                 I confirm that if the customer wants, this product can be{" "}
@@ -1010,7 +1159,9 @@ const validateForm = (f, draftImages = [], consent = false) => {
         </div>
 
         <div className="np-actions">
-          <Link href={basePath} className="np-cancel-btn">Cancel</Link>
+          <Link href={basePath} className="np-cancel-btn">
+            Cancel
+          </Link>
           <button type="submit" className="np-save-btn" disabled={submitting}>
             {submitting
               ? `Saving ${drafts.length} product${drafts.length > 1 ? "s" : ""}...`
@@ -1021,15 +1172,28 @@ const validateForm = (f, draftImages = [], consent = false) => {
 
       {showRegionalConfirm && (
         <div className="np-confirm-overlay" onClick={cancelRegionalType}>
-          <div className="np-confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="np-confirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="np-confirm-icon">🏷️</div>
             <h3>Mark as Regional Famous Product?</h3>
-            <p>Regional Famous Product means a region's specific famous product.</p>
+            <p>
+              Regional Famous Product means a regions specific famous product.
+            </p>
             <div className="np-confirm-actions">
-              <button type="button" className="np-confirm-cancel" onClick={cancelRegionalType}>
+              <button
+                type="button"
+                className="np-confirm-cancel"
+                onClick={cancelRegionalType}
+              >
                 Cancel
               </button>
-              <button type="button" className="np-confirm-ok" onClick={confirmRegionalType}>
+              <button
+                type="button"
+                className="np-confirm-ok"
+                onClick={confirmRegionalType}
+              >
                 Confirm
               </button>
             </div>
