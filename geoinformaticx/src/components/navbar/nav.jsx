@@ -37,14 +37,13 @@ export default function Navbar() {
   // fetch suggestions from the database, 250ms after the user stops typing
   useEffect(() => {
     const q = searchQuery.trim();
-    if (!q) {
-      setSuggestions([]);
-      return;
-    }
+    if (!q) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const res = await api.get(`/search/suggestions?q=${encodeURIComponent(q)}`);
+        const res = await api.get(
+          `/search/suggestions?q=${encodeURIComponent(q)}`,
+        );
         if (!cancelled) setSuggestions(res.data?.data?.suggestions || []);
       } catch {
         if (!cancelled) setSuggestions([]);
@@ -64,6 +63,7 @@ export default function Navbar() {
     else if (s.type === "product" && s.sku) router.push(`/shop/${s.sku}`);
     else router.push(`/shop?q=${encodeURIComponent(s.label)}`);
   };
+  const visibleSuggestions = searchQuery.trim() ? suggestions : [];
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [cartCount, setCartCount] = useState(0);
 
@@ -102,11 +102,11 @@ export default function Navbar() {
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-const handleLogout = async () => {
-  setShowProfileMenu(false);
-  await signOut();
-  router.replace("/");
-};
+  const handleLogout = async () => {
+    setShowProfileMenu(false);
+    await signOut();
+    router.replace("/");
+  };
   const categories = [
     "All Categories",
     "Handicrafts",
@@ -144,18 +144,17 @@ const handleLogout = async () => {
   //   { label: "Contact Us", href: "/contact", icon: FaPhoneAlt },
   // ];
 
+  const navLinks = [
+    { label: "Home", href: "/", icon: FaHome },
+    { label: "Region Famous", href: "/map", icon: FaRegStar },
+    { label: "10-Min Fresh Delivery", href: "/business", icon: FaBolt },
+    { label: "Products", href: "/shop", icon: FaShoppingBag },
+    { label: "Services", href: "/services", icon: FaThLarge },
+    { label: "About Us", href: "/about", icon: FaRegFileAlt },
+    { label: "Contact Us", href: "/contact", icon: FaPhoneAlt },
+  ];
 
-    const navLinks = [
-      { label: "Home", href: "/", icon: FaHome },
-      { label: "Region Famous", href: "/map", icon: FaRegStar },
-      { label: "10-Min Fresh Delivery", href: "/business", icon: FaBolt },
-      { label: "Products", href: "/shop", icon: FaShoppingBag },
-      { label: "Services", href: "/services", icon: FaThLarge },
-      { label: "About Us", href: "/about", icon: FaRegFileAlt },
-      { label: "Contact Us", href: "/contact", icon: FaPhoneAlt },
-    ];
-
-    return (
+  return (
     <header className="navbar-header">
       <div className="navbar-top">
         <Link href="/" className="navbar-logo">
@@ -194,7 +193,9 @@ const handleLogout = async () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchQuery.trim()) {
                   setShowSuggestions(false);
-                  router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+                  router.push(
+                    `/shop?q=${encodeURIComponent(searchQuery.trim())}`,
+                  );
                 }
                 if (e.key === "Escape") {
                   setShowSuggestions(false);
@@ -234,7 +235,9 @@ const handleLogout = async () => {
             aria-label="Search"
             onClick={() => {
               if (searchQuery.trim()) {
-                router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+                router.push(
+                  `/shop?q=${encodeURIComponent(searchQuery.trim())}`,
+                );
               }
             }}
           >
@@ -242,9 +245,9 @@ const handleLogout = async () => {
             <span>Search</span>
           </button>
 
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && visibleSuggestions.length > 0 && (
             <div className="search-suggestions">
-              {suggestions.map((s) => (
+              {visibleSuggestions.map((s) => (
                 <div
                   key={`${s.type}-${s.label}`}
                   className="suggestion-item"
@@ -252,19 +255,37 @@ const handleLogout = async () => {
                 >
                   <FaSearch size={12} color="#888" />
                   <span style={{ flex: 1 }}>{s.label}</span>
-                  <span style={{ fontSize: 11, color: "#888", textTransform: "capitalize" }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "#888",
+                      textTransform: "capitalize",
+                    }}
+                  >
                     {s.type}
                   </span>
                 </div>
               ))}
             </div>
-          )}  
+          )}
         </div>
 
         <div className="navbar-icons">
-          <Link href="/trackorder" className={`nav-icon-btn ${iconActive("/trackorder")}`}>
+          <Link
+            href="/trackorder"
+            className={`nav-icon-btn ${iconActive("/trackorder")}`}
+          >
             <span className="nav-icon-circle">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#333"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <rect x="1" y="3" width="15" height="13" rx="2" />
                 <path d="M16 8h4l3 3v5h-7V8z" />
                 <circle cx="5.5" cy="18.5" r="2.5" />
@@ -274,30 +295,68 @@ const handleLogout = async () => {
             <span className="icon-label">Track Order</span>
           </Link>
 
-          <Link href="/trackservice" className={`nav-icon-btn ${iconActive("/trackservice")}`}>
+          <Link
+            href="/trackservice"
+            className={`nav-icon-btn ${iconActive("/trackservice")}`}
+          >
             <span className="nav-icon-circle">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#333"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
             </span>
             <span className="icon-label">Track Services</span>
           </Link>
 
-          <Link href="/wishlist" className={`nav-icon-btn ${iconActive("/wishlist")}`}>
+          <Link
+            href="/wishlist"
+            className={`nav-icon-btn ${iconActive("/wishlist")}`}
+          >
             <span className="nav-icon-circle">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#333"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
               {wishlistCount > 0 && (
-                <span className="cart-badge wishlist-badge">{wishlistCount}</span>
+                <span className="cart-badge wishlist-badge">
+                  {wishlistCount}
+                </span>
               )}
             </span>
             <span className="icon-label">Wishlist</span>
           </Link>
 
-          <Link href="/cart" className={`nav-icon-btn cart-icon-btn ${iconActive("/cart")}`}>
+          <Link
+            href="/cart"
+            className={`nav-icon-btn cart-icon-btn ${iconActive("/cart")}`}
+          >
             <span className="nav-icon-circle">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#333"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="9" cy="21" r="1" />
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -310,7 +369,8 @@ const handleLogout = async () => {
           <div
             className="nav-profile-wrapper"
             onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget)) setShowProfileMenu(false);
+              if (!e.currentTarget.contains(e.relatedTarget))
+                setShowProfileMenu(false);
             }}
           >
             {user ? (
@@ -322,13 +382,24 @@ const handleLogout = async () => {
                 <span className="profile-avatar-circle">
                   {user.name?.charAt(0).toUpperCase() || "?"}
                 </span>
-                <span className="profile-name">{user.name?.split(" ")[0] || "Profile"}</span>
+                <span className="profile-name">
+                  {user.name?.split(" ")[0] || "Profile"}
+                </span>
                 <FaChevronDown className="profile-chevron" />
               </button>
             ) : (
               <Link href="/login" className="nav-icon-btn">
                 <span className="nav-icon-circle">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#333"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
@@ -364,7 +435,9 @@ const handleLogout = async () => {
           {navLinks.map((link) => {
             const Icon = link.icon;
             const active =
-              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
             return (
               <div key={link.label} className="nav-item">
                 <Link
@@ -382,7 +455,11 @@ const handleLogout = async () => {
                   <div className="nav-dropdown">
                     <div className="nav-dropdown-card">
                       {link.menu.map((item) => (
-                        <Link key={item.label} href={item.href} className="nav-dropdown-item">
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="nav-dropdown-item"
+                        >
                           {item.label}
                         </Link>
                       ))}
@@ -396,7 +473,7 @@ const handleLogout = async () => {
 
         <Link href="/sell" className="sell-with-us-btn">
           <FaStore />
-          <span>Sell With Us</span>
+          <span>Marketplace</span>
           <FaArrowRight />
         </Link>
       </div>
@@ -405,11 +482,11 @@ const handleLogout = async () => {
 
   // return (
   //   <header className="navbar-header">
-     
+
   //     <div className="navbar-top">
-       
+
   //       <Link href="/" className="navbar-logo">
-      
+
   //         <div className="logo-icon">
   //           <img src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png" width="36" height="36" />
   //         </div>
@@ -419,7 +496,6 @@ const handleLogout = async () => {
   //         </div>
   //       </Link>
 
-        
   //       <div className="navbar-search" style={{ position: "relative" }}>
   //         <input
   //           type="text"
@@ -506,9 +582,8 @@ const handleLogout = async () => {
   //         </button>
   //       </div>
 
-     
   //       <div className="navbar-icons">
-      
+
   //         <Link href="/trackorder" className="nav-icon-btn">
   //           <svg
   //             width="22"
@@ -544,7 +619,6 @@ const handleLogout = async () => {
   //           <span className="icon-label">Track Services</span>
   //         </Link>
 
-        
   //         <Link href="/wishlist" className="nav-icon-btn">
   //           <div className="cart-wrapper">
   //             <svg
@@ -566,7 +640,6 @@ const handleLogout = async () => {
   //           <span className="icon-label">Wishlist</span>
   //         </Link>
 
-          
   //         <Link href="/cart" className="nav-icon-btn cart-icon-btn">
   //           <div className="cart-wrapper">
   //             <svg
@@ -640,9 +713,8 @@ const handleLogout = async () => {
   //           )}
   //         </div>
   //       </div>
-  //     </div>    
+  //     </div>
 
-     
   //     <div className="navbar-bottom">
   //       <nav className="nav-links">
   //         {navLinks.map((link) => (

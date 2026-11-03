@@ -75,7 +75,7 @@ export default function Sell() {
       <div className="sell-breadcrumb">
         <Link href="/">Home</Link>
         <span>&gt;</span>
-        <span className="current">Sell With Us</span>
+        <span className="current">Marketplace</span>
       </div>
 
       {/* Hero */}
@@ -88,9 +88,9 @@ export default function Sell() {
             Grow your business. Reach more customers. Sell more.
           </p>
           <p className="sell-description">
-            Join our local marketplace and be a part of a trusted platform
-            that supports local businesses and brings your products to
-            thousands of happy customers.
+            Join our local marketplace and be a part of a trusted platform that
+            supports local businesses and brings your products to thousands of
+            happy customers.
           </p>
 
           <div className="sell-perks">
@@ -118,7 +118,7 @@ export default function Sell() {
               </span>
               <div>
                 <h4>Dedicated Support</h4>
-                <p>We're here to help you</p>
+                <p>We are here to help you</p>
               </div>
             </div>
           </div>
@@ -126,7 +126,10 @@ export default function Sell() {
 
         <div className="sell-hero-visual">
           <div className="sell-hero-image">
-            <img src="/images/sell-hero.png" alt="Local seller preparing products" />
+            <img
+              src="/images/sell-hero.png"
+              alt="Local seller preparing products"
+            />
           </div>
 
           <div className="floating-card card-1">
@@ -384,12 +387,17 @@ export default function Sell() {
                   required
                 />
                 <span>
-                  I agree to the <Link href="/terms">Terms &amp; Conditions</Link>{" "}
-                  and <Link href="/seller-policy">Seller Policy</Link>
+                  I agree to the{" "}
+                  <Link href="/terms">Terms &amp; Conditions</Link> and{" "}
+                  <Link href="/seller-policy">Seller Policy</Link>
                 </span>
               </label>
 
-              <button type="submit" className="submit-btn" disabled={submitting}>
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={submitting}
+              >
                 {submitting ? "Submitting..." : "Submit Application"}
               </button>
 

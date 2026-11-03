@@ -61,7 +61,10 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
 }
 
 .map-type-toggle button.active {
@@ -188,7 +191,9 @@
   padding: 11px 22px;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .view-toggle button.active {
@@ -272,8 +277,12 @@
 }
 
 @keyframes seller-panel-slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .seller-panel-header {
@@ -473,8 +482,12 @@
   display: flex;
 }
 
-.map-select-icon { left: 14px; }
-.map-select-chevron { right: 14px; }
+.map-select-icon {
+  left: 14px;
+}
+.map-select-chevron {
+  right: 14px;
+}
 
 /* ---------- distance ---------- */
 .map-distance-head {
@@ -593,11 +606,97 @@
   z-index: 5;
 }
 
+/* ===== MOBILE FRIENDLY REGION FAMOUS PAGE (keep this at the very bottom of the file) ===== */
 @media (max-width: 900px) {
+  .map-explore-page {
+    padding: 12px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  /* map first, filters below it */
+  .map-canvas-wrapper {
+    order: -1;
+    min-height: 70vh;
+    min-height: 70dvh;
+  }
+  .map-canvas {
+    min-height: 70vh;
+    min-height: 70dvh;
+  }
+
+  .map-filter-panel {
+    padding: 16px;
+  }
+
+  /* Products / Services toggle spans the top, search sits under it */
+  .map-explore-page .map-toolbar {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+  .map-explore-page .view-toggle {
+    width: 100%;
+  }
+  .map-explore-page .view-toggle button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+
   .map-search {
-    top: 70px;
+    top: 72px;
+    left: 12px;
+    right: 12px;
     width: auto;
-    right: 14px;
+    max-width: none;
+    height: 46px;
+    padding: 0 14px;
+  }
+  .map-search input {
+    font-size: 16px;
+  }
+  .map-category-select {
+    font-size: 16px;
+  }
+
+  .map-ctrl-stack {
+    right: 12px;
+    gap: 10px;
+  }
+  .map-ctrl-card button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* quick guide becomes a bottom card instead of covering the search bar */
+  .map-guide-overlay {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
     max-width: none;
   }
-} 
+  .map-guide-card li:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .map-explore-page {
+    padding: 8px;
+  }
+  .map-canvas-wrapper {
+    border-radius: 12px;
+  }
+  .map-fs-btn {
+    display: none;
+  }
+  .map-filter-title {
+    font-size: 18px;
+  }
+  .map-filter-section {
+    margin-bottom: 18px;
+  }
+}

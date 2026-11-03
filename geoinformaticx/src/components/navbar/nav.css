@@ -71,7 +71,9 @@
   border-radius: 16px;
   padding: 5px;
   box-shadow: 0 2px 12px rgba(20, 60, 40, 0.08);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .navbar-search:focus-within {
@@ -152,7 +154,9 @@
   color: #6b756f;
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .search-clear-btn:hover {
@@ -257,7 +261,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  transition:
+    transform 0.18s,
+    border-color 0.18s,
+    box-shadow 0.18s;
 }
 
 .nav-icon-btn:hover .nav-icon-circle {
@@ -434,7 +441,9 @@
   text-decoration: none;
   white-space: nowrap;
   border-radius: 999px;
-  transition: background 0.18s, color 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 
 .nav-link-icon {
@@ -514,7 +523,9 @@
   text-decoration: none;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(31, 122, 77, 0.35);
-  transition: transform 0.18s, box-shadow 0.18s;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
 }
 
 .sell-with-us-btn:hover {
@@ -631,8 +642,12 @@
   background: transparent;
 }
 
-.nav-links .nav-link:hover::before { opacity: 1; }
-.nav-links .nav-link:hover::after  { opacity: 0.5; }
+.nav-links .nav-link:hover::before {
+  opacity: 1;
+}
+.nav-links .nav-link:hover::after {
+  opacity: 0.5;
+}
 
 .nav-links .nav-link-icon {
   transition: transform 0.5s;
@@ -641,17 +656,39 @@
   transform: scale(1.25) rotate(-8deg);
 }
 
-.nav-links .nav-item:nth-child(1) .nav-link { --i: #a955ff; --j: #ea51ff; } /* Home */
-.nav-links .nav-item:nth-child(2) .nav-link { --i: #56ccf2; --j: #2f80ed; } /* Region Famous */
-.nav-links .nav-item:nth-child(3) .nav-link { --i: #ff9966; --j: #ff5e62; } /* 10-Min Fresh Delivery */
-.nav-links .nav-item:nth-child(4) .nav-link { --i: #38ef7d; --j: #11998e; } /* Products */
-.nav-links .nav-item:nth-child(5) .nav-link { --i: #ffa9c6; --j: #f434e2; } /* Services */
-.nav-links .nav-item:nth-child(6) .nav-link { --i: #667eea; --j: #764ba2; } /* About Us */
-.nav-links .nav-item:nth-child(7) .nav-link { --i: #ee0979; --j: #ff6a00; } /* Contact Us */
+.nav-links .nav-item:nth-child(1) .nav-link {
+  --i: #a955ff;
+  --j: #ea51ff;
+} /* Home */
+.nav-links .nav-item:nth-child(2) .nav-link {
+  --i: #56ccf2;
+  --j: #2f80ed;
+} /* Region Famous */
+.nav-links .nav-item:nth-child(3) .nav-link {
+  --i: #ff9966;
+  --j: #ff5e62;
+} /* 10-Min Fresh Delivery */
+.nav-links .nav-item:nth-child(4) .nav-link {
+  --i: #38ef7d;
+  --j: #11998e;
+} /* Products */
+.nav-links .nav-item:nth-child(5) .nav-link {
+  --i: #ffa9c6;
+  --j: #f434e2;
+} /* Services */
+.nav-links .nav-item:nth-child(6) .nav-link {
+  --i: #667eea;
+  --j: #764ba2;
+} /* About Us */
+.nav-links .nav-item:nth-child(7) .nav-link {
+  --i: #ee0979;
+  --j: #ff6a00;
+} /* Contact Us */
 
-.nav-links .nav-item .nav-link.active { --i: #23895a; --j: #1f7a4d; }
-
-
+.nav-links .nav-item .nav-link.active {
+  --i: #23895a;
+  --j: #1f7a4d;
+}
 
 /* .nav-links {
   gap: 14px;
@@ -805,7 +842,9 @@
 .navbar-icons .nav-icon-btn .nav-icon-circle svg {
   position: relative;
   z-index: 2;
-  transition: transform 0.5s, stroke 0.5s;
+  transition:
+    transform 0.5s,
+    stroke 0.5s;
 }
 
 .navbar-icons .nav-icon-btn:hover .nav-icon-circle svg {
@@ -823,7 +862,81 @@
 }
 
 /* one color per button */
-.navbar-icons .nav-icon-btn:nth-of-type(1) .nav-icon-circle { --fill: #ff5e62; } /* Track Order */
-.navbar-icons .nav-icon-btn:nth-of-type(2) .nav-icon-circle { --fill: #2f80ed; } /* Track Services */
-.navbar-icons .nav-icon-btn:nth-of-type(3) .nav-icon-circle { --fill: #ee0979; } /* Wishlist */
-.navbar-icons .nav-icon-btn:nth-of-type(4) .nav-icon-circle { --fill: #11998e; } /* Cart */
+.navbar-icons .nav-icon-btn:nth-of-type(1) .nav-icon-circle {
+  --fill: #ff5e62;
+} /* Track Order */
+.navbar-icons .nav-icon-btn:nth-of-type(2) .nav-icon-circle {
+  --fill: #2f80ed;
+} /* Track Services */
+.navbar-icons .nav-icon-btn:nth-of-type(3) .nav-icon-circle {
+  --fill: #ee0979;
+} /* Wishlist */
+/* ===== MOBILE NAVBAR (keep this at the very bottom of the file) ===== */
+@media (max-width: 600px) {
+  .navbar-header {
+    position: relative;
+  }
+
+  .navbar-top {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .navbar-logo {
+    gap: 8px;
+  }
+  .logo-icon img {
+    width: 36px;
+    height: 36px;
+  }
+  .logo-name {
+    font-size: 18px;
+  }
+
+  .navbar-icons {
+    gap: 8px;
+  }
+  .navbar-icons .nav-icon-circle {
+    width: 38px;
+    height: 38px;
+  }
+  .navbar-icons .nav-icon-circle svg {
+    width: 18px;
+    height: 18px;
+  }
+  .profile-avatar-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+  .nav-profile-wrapper {
+    padding-left: 8px;
+  }
+
+  .navbar-bottom {
+    margin: 0 12px 10px;
+  }
+  .nav-links {
+    flex-shrink: 0;
+  }
+  .sell-with-us-btn {
+    flex-shrink: 0;
+    margin-left: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+  .search-btn span {
+    display: none;
+  }
+  .category-select {
+    padding-left: 12px;
+    font-size: 13px;
+  }
+  .search-input {
+    font-size: 16px;
+  }
+}

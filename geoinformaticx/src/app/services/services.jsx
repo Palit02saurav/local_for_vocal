@@ -18,29 +18,28 @@ export default function Services() {
   const [selectedRating, setSelectedRating] = useState(null);
   const [sortBy, setSortBy] = useState("Popularity");
   const [selectedService, setSelectedService] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const [allServices, setAllServices] = useState([]);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-useEffect(() => {
-  axios
-    .get(`${API_BASE}/services/public`)
-    .then((res) => {
-      const services = (
-        res.data.data?.products ||
-        res.data.data?.services ||
-        []
-      ).map((s) => ({
-        ...s,
-        slug: s.sku,
-        img:
-          s.image_url ||
-          "https://placehold.co/300x300?text=No+Image",
-      }));
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  useEffect(() => {
+    axios
+      .get(`${API_BASE}/services/public`)
+      .then((res) => {
+        const services = (
+          res.data.data?.products ||
+          res.data.data?.services ||
+          []
+        ).map((s) => ({
+          ...s,
+          slug: s.sku,
+          img: s.image_url || "https://placehold.co/300x300?text=No+Image",
+        }));
 
-      setAllServices(services);
-    })
-    .catch((err) => console.error("Failed to load services:", err));
-}, []);
+        setAllServices(services);
+      })
+      .catch((err) => console.error("Failed to load services:", err));
+  }, []);
 
   const syncWishlist = async () => {
     const list = await getWishlist();
@@ -83,7 +82,10 @@ useEffect(() => {
     if (wishlisted[service.id]) {
       await removeFromWishlist(wishlisted[service.id]);
     } else {
-      const result = await addToWishlist({ productId: service.id, type: "service" });
+      const result = await addToWishlist({
+        productId: service.id,
+        type: "service",
+      });
       if (result.requiresLogin) {
         router.push("/login?redirect=/services");
         return;
@@ -92,27 +94,47 @@ useEffect(() => {
     syncWishlist();
   };
 
-  const categories = ["All Categories", "Cleaning", "Repair", "Fashion", "Creative", "Food", "Education", "Wellness", "Beauty"];
+  const categories = [
+    "All Categories",
+    "Cleaning",
+    "Repair",
+    "Fashion",
+    "Creative",
+    "Food",
+    "Education",
+    "Wellness",
+    "Beauty",
+  ];
 
   const filteredServices = allServices
     .filter((s) => {
-      if (selectedCategory !== "All Categories" && s.category !== selectedCategory) return false;
+      if (
+        selectedCategory !== "All Categories" &&
+        s.category !== selectedCategory
+      )
+        return false;
       if (Number(s.price) > priceRange) return false;
-      if (selectedRating !== null && Number(s.avg_rating || 0) < selectedRating) return false;
+      if (selectedRating !== null && Number(s.avg_rating || 0) < selectedRating)
+        return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === "Price Low to High") return Number(a.price) - Number(b.price);
-      if (sortBy === "Price High to Low") return Number(b.price) - Number(a.price);
+      if (sortBy === "Price Low to High")
+        return Number(a.price) - Number(b.price);
+      if (sortBy === "Price High to Low")
+        return Number(b.price) - Number(a.price);
       return Number(b.review_count || 0) - Number(a.review_count || 0);
     });
 
   const paginatedServices = filteredServices.slice(
     (currentPage - 1) * cardsPerPage,
-    currentPage * cardsPerPage
+    currentPage * cardsPerPage,
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredServices.length / cardsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredServices.length / cardsPerPage),
+  );
 
   return (
     <div className="services-page">
@@ -120,7 +142,10 @@ useEffect(() => {
       <div className="services-header">
         <div className="services-title">
           <h1>Services</h1>
-          <p>Discover trusted local services from skilled professionals in your area.</p>
+          <p>
+            Discover trusted local services from skilled professionals in your
+            area.
+          </p>
         </div>
         <div className="services-header-right">
           <span className="result-text">
@@ -128,7 +153,14 @@ useEffect(() => {
               ? `Showing ${(currentPage - 1) * cardsPerPage + 1} - ${Math.min(currentPage * cardsPerPage, filteredServices.length)} of ${filteredServices.length} results`
               : "No results found"}
           </span>
-          <select className="sort-dropdown" value={sortBy} onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}>
+          <select
+            className="sort-dropdown"
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
             <option>Popularity</option>
             <option>Newest</option>
             <option>Price Low to High</option>
@@ -137,20 +169,45 @@ useEffect(() => {
         </div>
       </div>
 
+      <button
+        type="button"
+        className="services-filter-toggle"
+        onClick={() => setShowFilters((v) => !v)}
+      >
+        {showFilters ? "Hide Filters" : "Show Filters"}
+      </button>
+
       <div className="services-content">
         {/* Filter Sidebar */}
-        <aside className="services-filter">
+        <aside className={`services-filter ${showFilters ? "open" : ""}`}>
           <div className="filter">
             <div className="filter-header">
               <h3>Filters</h3>
-              <button className="clear-btn" onClick={() => { setSelectedCategory("All Categories"); setPriceRange(10000); setSelectedRating(null); setCurrentPage(1); }}>Clear All</button>
+              <button
+                className="clear-btn"
+                onClick={() => {
+                  setSelectedCategory("All Categories");
+                  setPriceRange(10000);
+                  setSelectedRating(null);
+                  setCurrentPage(1);
+                }}
+              >
+                Clear All
+              </button>
             </div>
 
             <div className="filter-section">
               <h4>Category</h4>
               {categories.map((cat) => (
                 <label key={cat}>
-                  <input type="checkbox" checked={selectedCategory === cat} onChange={() => { setSelectedCategory(cat); setCurrentPage(1); }} />
+                  <input
+                    type="checkbox"
+                    checked={selectedCategory === cat}
+                    onChange={() => {
+                      setSelectedCategory(cat);
+                      setCurrentPage(1);
+                    }}
+                  />
                   {cat}
                 </label>
               ))}
@@ -158,7 +215,13 @@ useEffect(() => {
 
             <div className="filter-section">
               <h4>Price Range</h4>
-              <input type="range" min="0" max="10000" value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} />
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                value={priceRange}
+                onChange={(e) => setPriceRange(Number(e.target.value))}
+              />
               <div className="price-range">
                 <span>₹0</span>
                 <span>₹{priceRange.toLocaleString()}+</span>
@@ -174,13 +237,21 @@ useEffect(() => {
                 { min: 2, label: "★★☆☆☆ 2 & above" },
               ].map((r) => (
                 <label key={r.min}>
-                  <input type="checkbox" checked={selectedRating === r.min} onChange={() => setSelectedRating(selectedRating === r.min ? null : r.min)} />
+                  <input
+                    type="checkbox"
+                    checked={selectedRating === r.min}
+                    onChange={() =>
+                      setSelectedRating(selectedRating === r.min ? null : r.min)
+                    }
+                  />
                   {r.label}
                 </label>
               ))}
             </div>
 
-            <button className="apply-filter" onClick={() => setCurrentPage(1)}>Apply Filters</button>
+            <button className="apply-filter" onClick={() => setCurrentPage(1)}>
+              Apply Filters
+            </button>
           </div>
         </aside>
 
@@ -190,7 +261,10 @@ useEffect(() => {
             {paginatedServices.map((service) => (
               <div key={service.id} className="product-card">
                 <div className="product-img-wrapper">
-                  <button className="product-wishlist-btn" onClick={() => handleToggleWishlist(service)}>
+                  <button
+                    className="product-wishlist-btn"
+                    onClick={() => handleToggleWishlist(service)}
+                  >
                     <svg
                       width="16"
                       height="16"
@@ -202,14 +276,22 @@ useEffect(() => {
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
                   </button>
-                  <img src={service.img} alt={service.name} className="product-img" />
+                  <img
+                    src={service.img}
+                    alt={service.name}
+                    className="product-img"
+                  />
                 </div>
                 <div className="product-info">
                   <p className="product-name">{service.name}</p>
                   <p className="product-seller">{service.seller?.store_name}</p>
                   <div className="product-meta">
-                    <span className="product-price">₹{Number(service.price || 0).toLocaleString("en-IN")}</span>
-                    <span className="product-rating">⭐ {service.avg_rating ?? 0} ({service.review_count ?? 0})</span>
+                    <span className="product-price">
+                      ₹{Number(service.price || 0).toLocaleString("en-IN")}
+                    </span>
+                    <span className="product-rating">
+                      ⭐ {service.avg_rating ?? 0} ({service.review_count ?? 0})
+                    </span>
                   </div>
                   <button
                     className="product-add-to-cart-btn"
@@ -218,7 +300,10 @@ useEffect(() => {
                   >
                     {bookedServices[service.id] ? "✓ Booked" : "📋 Book Now"}
                   </button>
-                  <Link href={`/services/${service.slug}`} className="product-details-btn">
+                  <Link
+                    href={`/services/${service.slug}`}
+                    className="product-details-btn"
+                  >
                     View Details
                   </Link>
                 </div>
@@ -228,11 +313,29 @@ useEffect(() => {
 
           {/* Pagination */}
           <div className="pagination">
-            <button className="page-btn" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>‹ Prev</button>
+            <button
+              className="page-btn"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              ‹ Prev
+            </button>
             {Array.from({ length: totalPages }).map((_, i) => (
-              <button key={i} className={`page-btn ${currentPage === i + 1 ? "active" : ""}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
+              <button
+                key={i}
+                className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
             ))}
-            <button className="page-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next ›</button>
+            <button
+              className="page-btn"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Next ›
+            </button>
           </div>
         </section>
 
@@ -241,43 +344,68 @@ useEffect(() => {
           <div className="card">
             <div className="card-title">
               <h3>Explore on Map</h3>
-              <button onClick={() => window.location.href = '/business'}>View Full Map →</button>
+              <button onClick={() => (window.location.href = "/business")}>
+                View Full Map →
+              </button>
             </div>
             <div className="map-image">
-              <div ref={(el) => {
-                if (!el) return;
-                const loadMap = () => {
-                  if (!window.google) return;
-                  new window.google.maps.Map(el, {
-                    center: { lat: 22.5726, lng: 88.3639 },
-                    zoom: 12,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false,
-                  });
-                };
-                if (window.google) {
-                  loadMap();
-                } else if (!document.getElementById("google-maps-script")) {
-                  const script = document.createElement("script");
-                  script.id = "google-maps-script";
-                  script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`;
-                  script.async = true;
-                  script.defer = true;
-                  script.onload = loadMap;
-                  document.head.appendChild(script);
-                } else {
-                  document.getElementById("google-maps-script").addEventListener("load", loadMap);
-                }
-              }} style={{ width: "100%", height: "100%" }} />
+              <div
+                ref={(el) => {
+                  if (!el) return;
+                  const loadMap = () => {
+                    if (!window.google) return;
+                    new window.google.maps.Map(el, {
+                      center: { lat: 22.5726, lng: 88.3639 },
+                      zoom: 12,
+                      mapTypeControl: false,
+                      streetViewControl: false,
+                      fullscreenControl: false,
+                    });
+                  };
+                  if (window.google) {
+                    loadMap();
+                  } else if (!document.getElementById("google-maps-script")) {
+                    const script = document.createElement("script");
+                    script.id = "google-maps-script";
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`;
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = loadMap;
+                    document.head.appendChild(script);
+                  } else {
+                    document
+                      .getElementById("google-maps-script")
+                      .addEventListener("load", loadMap);
+                  }
+                }}
+                style={{ width: "100%", height: "100%" }}
+              />
             </div>
             <div className="map-legend">
-              <div className="legend-item"><img src="/images/handic.png" alt="" /><span>Handicrafts</span></div>
-              <div className="legend-item"><img src="/images/local.png" alt="" /><span>Local Food</span></div>
-              <div className="legend-item"><img src="/images/organic.png" alt="" /><span>Organic</span></div>
-              <div className="legend-item"><img src="/images/clothing.png" alt="" /><span>Clothing</span></div>
-              <div className="legend-item"><img src="/images/home.png" alt="" /><span>Home Decor</span></div>
-              <div className="legend-item"><img src="/images/others.png" alt="" /><span>Other Shops</span></div>
+              <div className="legend-item">
+                <img src="/images/handic.png" alt="" />
+                <span>Handicrafts</span>
+              </div>
+              <div className="legend-item">
+                <img src="/images/local.png" alt="" />
+                <span>Local Food</span>
+              </div>
+              <div className="legend-item">
+                <img src="/images/organic.png" alt="" />
+                <span>Organic</span>
+              </div>
+              <div className="legend-item">
+                <img src="/images/clothing.png" alt="" />
+                <span>Clothing</span>
+              </div>
+              <div className="legend-item">
+                <img src="/images/home.png" alt="" />
+                <span>Home Decor</span>
+              </div>
+              <div className="legend-item">
+                <img src="/images/others.png" alt="" />
+                <span>Other Shops</span>
+              </div>
             </div>
           </div>
 
@@ -296,7 +424,10 @@ useEffect(() => {
       </div>
 
       {selectedService && (
-        <div className="details-overlay" onClick={() => setSelectedService(null)}>
+        <div
+          className="details-overlay"
+          onClick={() => setSelectedService(null)}
+        >
           <div className="details-modal" onClick={(e) => e.stopPropagation()}>
             <button
               className="details-close-btn"
@@ -317,20 +448,28 @@ useEffect(() => {
               <p className="details-seller">
                 By {selectedService.seller?.store_name}
                 {selectedService.verified && (
-                  <img src="/images/verified.png" alt="" className="details-verified-icon" />
+                  <img
+                    src="/images/verified.png"
+                    alt=""
+                    className="details-verified-icon"
+                  />
                 )}
               </p>
 
               <h3 className="details-section-title">About This Service</h3>
               <p className="details-about">
-                {selectedService.name} offered by {selectedService.seller?.store_name}, a trusted local
-                provider in the {selectedService.category} category. Book with confidence —
-                every service on Geomaticx is backed by verified local professionals.
+                {selectedService.name} offered by{" "}
+                {selectedService.seller?.store_name}, a trusted local provider
+                in the {selectedService.category} category. Book with confidence
+                — every service on Geomaticx is backed by verified local
+                professionals.
               </p>
 
               <div className="details-price-row">
                 <span className="details-price-label">Price</span>
-                <span className="details-price-value">₹{Number(selectedService.price || 0).toLocaleString("en-IN")}</span>
+                <span className="details-price-value">
+                  ₹{Number(selectedService.price || 0).toLocaleString("en-IN")}
+                </span>
               </div>
 
               <button
@@ -341,7 +480,9 @@ useEffect(() => {
                   setSelectedService(null);
                 }}
               >
-                {bookedServices[selectedService.id] ? "✓ Booked" : "📋 Book Now"}
+                {bookedServices[selectedService.id]
+                  ? "✓ Booked"
+                  : "📋 Book Now"}
               </button>
             </div>
           </div>

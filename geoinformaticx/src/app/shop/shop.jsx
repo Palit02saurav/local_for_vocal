@@ -45,7 +45,9 @@ export default function Shop() {
       script.onload = loadMap;
       document.head.appendChild(script);
     } else {
-      document.getElementById("google-maps-script").addEventListener("load", loadMap);
+      document
+        .getElementById("google-maps-script")
+        .addEventListener("load", loadMap);
     }
   }, []);
 
@@ -72,6 +74,7 @@ export default function Shop() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [wishlisted, setWishlisted] = useState({});
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleClearAll = () => {
     setSelectedCategory("All Categories");
@@ -104,7 +107,7 @@ export default function Shop() {
         setAllProducts(products);
       })
       .catch((err) => console.error("Failed to load products:", err));
-  }, []); 
+  }, []);
 
   useEffect(() => {
     const syncWishlist = async () => {
@@ -124,7 +127,10 @@ export default function Shop() {
     if (wishlisted[product.id]) {
       await removeFromWishlist(wishlisted[product.id]);
     } else {
-      const result = await addToWishlist({ productId: product.id, type: "product" });
+      const result = await addToWishlist({
+        productId: product.id,
+        type: "product",
+      });
       if (result.requiresLogin) {
         router.push("/login?redirect=/shop");
         return;
@@ -140,27 +146,43 @@ export default function Shop() {
 
   const filteredProducts = allProducts
     .filter((p) => {
-      if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (selectedCategory !== "All Categories" && p.category !== selectedCategory) return false;
+      if (
+        searchQuery &&
+        !p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+        return false;
+      if (
+        selectedCategory !== "All Categories" &&
+        p.category !== selectedCategory
+      )
+        return false;
       if (Number(p.price) > priceRange) return false;
       if (verifiedOnly && !p.verified) return false;
-      if (selectedRating && Number(p.rating || 0) < selectedRating) return false;
+      if (selectedRating && Number(p.rating || 0) < selectedRating)
+        return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === "Price Low to High") return Number(a.price) - Number(b.price);
-      if (sortBy === "Price High to Low") return Number(b.price) - Number(a.price);
-      if (sortBy === "Newest") return (b.badge === "New" ? 1 : 0) - (a.badge === "New" ? 1 : 0);
-      if (sortBy === "Popularity") return Number(b.reviews || 0) - Number(a.reviews || 0);
+      if (sortBy === "Price Low to High")
+        return Number(a.price) - Number(b.price);
+      if (sortBy === "Price High to Low")
+        return Number(b.price) - Number(a.price);
+      if (sortBy === "Newest")
+        return (b.badge === "New" ? 1 : 0) - (a.badge === "New" ? 1 : 0);
+      if (sortBy === "Popularity")
+        return Number(b.reviews || 0) - Number(a.reviews || 0);
       return 0;
     });
 
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * cardsPerPage,
-    currentPage * cardsPerPage
+    currentPage * cardsPerPage,
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / cardsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / cardsPerPage),
+  );
 
   return (
     <div className="shop-page">
@@ -168,8 +190,7 @@ export default function Shop() {
         <div className="shop-title">
           <h1>Shop</h1>
           <p>
-            Discover unique local products from trusted businesses in your
-            area.
+            Discover unique local products from trusted businesses in your area.
           </p>
           <div
             className="all-categories-dropdown"
@@ -177,19 +198,40 @@ export default function Shop() {
             onMouseLeave={() => setAllCategoriesOpen(false)}
           >
             <button className="all-categories-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
               All Categories
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {allCategoriesOpen && (
               <div className="categories-menu">
-                {["Handicrafts", "Local Food", "Organic", "Clothing", "Home Decor"].map((cat) => (
+                {[
+                  "Handicrafts",
+                  "Local Food",
+                  "Organic",
+                  "Clothing",
+                  "Home Decor",
+                ].map((cat) => (
                   <button
                     key={cat}
                     className="category-item"
@@ -229,16 +271,31 @@ export default function Shop() {
         </div>
       </div>
 
+      <button
+        type="button"
+        className="shop-filter-toggle"
+        onClick={() => setShowFilters((v) => !v)}
+      >
+        {showFilters ? "Hide Filters" : "Show Filters"}
+      </button>
+
       <div className="shop-content">
-        <aside className="shop-filter">
+        <aside className={`shop-filter ${showFilters ? "open" : ""}`}>
           <Filter
-            selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
-            priceRange={priceRange} setPriceRange={setPriceRange}
-            verifiedOnly={verifiedOnly} setVerifiedOnly={setVerifiedOnly}
-            localArtisans={localArtisans} setLocalArtisans={setLocalArtisans}
-            homeBusinesses={homeBusinesses} setHomeBusinesses={setHomeBusinesses}
-            selectedRating={selectedRating} setSelectedRating={setSelectedRating}
-            inStockOnly={inStockOnly} setInStockOnly={setInStockOnly}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            verifiedOnly={verifiedOnly}
+            setVerifiedOnly={setVerifiedOnly}
+            localArtisans={localArtisans}
+            setLocalArtisans={setLocalArtisans}
+            homeBusinesses={homeBusinesses}
+            setHomeBusinesses={setHomeBusinesses}
+            selectedRating={selectedRating}
+            setSelectedRating={setSelectedRating}
+            inStockOnly={inStockOnly}
+            setInStockOnly={setInStockOnly}
             onClearAll={handleClearAll}
             onApply={handleApply}
           />
@@ -249,12 +306,16 @@ export default function Shop() {
               <div key={product.name} className="product-card">
                 <div className="product-img-wrapper">
                   {product.badge && (
-                    <span className={`product-badge ${product.badge === "Bestseller" ? "badge-orange" : "badge-green"}`}>
+                    <span
+                      className={`product-badge ${product.badge === "Bestseller" ? "badge-orange" : "badge-green"}`}
+                    >
                       {product.badge}
                     </span>
                   )}
                   {product.delivery_type === "Fresh" && (
-                    <span className="product-10min-badge">⚡ 10-Min Delivery</span>
+                    <span className="product-10min-badge">
+                      ⚡ 10-Min Delivery
+                    </span>
                   )}
                   <button
                     className="product-wishlist-btn"
@@ -272,17 +333,29 @@ export default function Shop() {
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
                   </button>
-                  <img src={product.img} alt={product.name} className="product-img" />
+                  <img
+                    src={product.img}
+                    alt={product.name}
+                    className="product-img"
+                  />
                 </div>
                 <div className="product-info">
                   <p className="product-name">{product.name}</p>
                   <p className="product-seller">
                     {product.seller?.store_name || product.vendor?.full_name}
-                    <img src="/images/verified.png" alt="" className="product-verified-icon" />
+                    <img
+                      src="/images/verified.png"
+                      alt=""
+                      className="product-verified-icon"
+                    />
                   </p>
                   <div className="product-meta">
-                   <span className="product-price">₹{Number(product.price || 0).toLocaleString("en-IN")}</span>
-                    <span className="product-rating">⭐ {product.rating} ({product.reviews})</span>
+                    <span className="product-price">
+                      ₹{Number(product.price || 0).toLocaleString("en-IN")}
+                    </span>
+                    <span className="product-rating">
+                      ⭐ {product.rating} ({product.reviews})
+                    </span>
                   </div>
                   <p className="product-distance">📍 {product.distance}</p>
                   <button
@@ -334,7 +407,9 @@ export default function Shop() {
           <div className="card">
             <div className="card-title">
               <h3>Explore on Map</h3>
-              <button onClick={() => window.location.href = '/business'}>View Full Map →</button>
+              <button onClick={() => (window.location.href = "/business")}>
+                View Full Map →
+              </button>
             </div>
 
             <div className="map-image">
@@ -367,7 +442,7 @@ export default function Shop() {
                 <span>Other Shops</span>
               </div>
             </div>
-          {/* </div>
+            {/* </div>
 
           <div className="card featured-card">
             <h3 className="featured-title">Featured Local Business</h3>
@@ -391,17 +466,15 @@ export default function Shop() {
           </div>
 
           <div className="card support-card"> */}
-
-      </div>
+          </div>
 
           <div className="card support-card">
             <div className="support-content">
               <div className="support-left">
                 <h3>Support Local</h3>
                 <p>
-                  Every purchase you make
-                  helps local artisans and
-                  small businesses grow.
+                  Every purchase you make helps local artisans and small
+                  businesses grow.
                 </p>
               </div>
               <div className="support-right">
@@ -413,7 +486,10 @@ export default function Shop() {
       </div>
 
       {selectedProduct && (
-        <div className="details-overlay" onClick={() => setSelectedProduct(null)}>
+        <div
+          className="details-overlay"
+          onClick={() => setSelectedProduct(null)}
+        >
           <div className="details-modal" onClick={(e) => e.stopPropagation()}>
             <button
               className="details-close-btn"
@@ -422,28 +498,48 @@ export default function Shop() {
             >
               ✕
             </button>
-            <img src={selectedProduct.img} alt={selectedProduct.name} className="details-img" />
+            <img
+              src={selectedProduct.img}
+              alt={selectedProduct.name}
+              className="details-img"
+            />
             <div className="details-body">
               <h2 className="details-name">{selectedProduct.name}</h2>
               <p className="details-seller">
-                By {selectedProduct.seller?.store_name || selectedProduct.vendor?.full_name}
+                By{" "}
+                {selectedProduct.seller?.store_name ||
+                  selectedProduct.vendor?.full_name}
                 {selectedProduct.verified && (
-                  <img src="/images/verified.png" alt="" className="details-verified-icon" />
+                  <img
+                    src="/images/verified.png"
+                    alt=""
+                    className="details-verified-icon"
+                  />
                 )}
               </p>
               <div className="details-meta">
-                <span className="details-rating">⭐ {selectedProduct.rating} ({selectedProduct.reviews} reviews)</span>
-                <span className="details-distance">📍 {selectedProduct.distance}</span>
+                <span className="details-rating">
+                  ⭐ {selectedProduct.rating} ({selectedProduct.reviews}{" "}
+                  reviews)
+                </span>
+                <span className="details-distance">
+                  📍 {selectedProduct.distance}
+                </span>
               </div>
               <h3 className="details-section-title">About This Product</h3>
               <p className="details-about">
-                {selectedProduct.name} from {selectedProduct.seller?.store_name || selectedProduct.vendor?.full_name}, a trusted local
-                seller in the {selectedProduct.category} category. Every purchase supports
-                local artisans and small businesses in your community.
+                {selectedProduct.name} from{" "}
+                {selectedProduct.seller?.store_name ||
+                  selectedProduct.vendor?.full_name}
+                , a trusted local seller in the {selectedProduct.category}{" "}
+                category. Every purchase supports local artisans and small
+                businesses in your community.
               </p>
               <div className="details-price-row">
                 <span className="details-price-label">Price</span>
-                <span className="details-price-value">₹{Number(selectedProduct.price || 0).toLocaleString("en-IN")}</span>
+                <span className="details-price-value">
+                  ₹{Number(selectedProduct.price || 0).toLocaleString("en-IN")}
+                </span>
               </div>
               <button
                 className="details-book-btn"

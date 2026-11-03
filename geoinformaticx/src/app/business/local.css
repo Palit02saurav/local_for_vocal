@@ -73,7 +73,9 @@
   font-weight: 600;
   padding: 9px 14px;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .view-toggle button.active {
@@ -218,7 +220,9 @@
   font-size: 10.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .map-info-delivery-btn:hover {
@@ -323,7 +327,9 @@
   text-decoration: none;
 }
 
-.nearby-view-all:hover { opacity: 0.75; }
+.nearby-view-all:hover {
+  opacity: 0.75;
+}
 
 .nearby-cards {
   display: flex;
@@ -332,7 +338,9 @@
   scrollbar-width: none;
 }
 
-.nearby-cards::-webkit-scrollbar { display: none; }
+.nearby-cards::-webkit-scrollbar {
+  display: none;
+}
 
 .nearby-card {
   position: relative;
@@ -345,7 +353,9 @@
   transition: box-shadow 0.2s;
 }
 
-.nearby-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.nearby-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
 .nearby-card-link {
   text-decoration: none;
@@ -385,7 +395,9 @@
   display: block;
 }
 
-.nearby-info { padding: 8px 10px 10px; }
+.nearby-info {
+  padding: 8px 10px 10px;
+}
 
 .nearby-name {
   font-size: 12.5px;
@@ -406,7 +418,8 @@
   gap: 2px;
 }
 
-.nearby-rating, .nearby-distance {
+.nearby-rating,
+.nearby-distance {
   font-size: 11px;
   color: #666;
 }
@@ -528,8 +541,14 @@
 }
 
 @keyframes userLocPulse {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(1.7); opacity: 0; }
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
 }
 
 .user-loc-title {
@@ -587,7 +606,6 @@
 .map-info-close:hover {
   background: #fff;
 }
-
 
 .map-category-overlay {
   position: absolute;
@@ -661,8 +679,12 @@
 }
 
 @keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .business-detail-img {
@@ -704,7 +726,7 @@
   border: 1px solid #e2e2e2;
   border-radius: 12px;
   box-sizing: border-box;
-} 
+}
 .pd-wishlist-btn {
   position: absolute;
   top: 24px;
@@ -726,7 +748,7 @@
   position: absolute;
   bottom: 22px;
   right: 28px;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   color: #fff;
   font-size: 12px;
   padding: 2px 8px;
@@ -810,7 +832,8 @@
   gap: 12px;
   margin-top: 16px;
 }
-.pd-add-cart-btn, .pd-buy-now-btn {
+.pd-add-cart-btn,
+.pd-buy-now-btn {
   flex: 1;
   padding: 12px;
   border-radius: 8px;
@@ -914,4 +937,128 @@
   width: 26px;
   font-size: 11px;
   cursor: pointer;
+}
+
+/* ===== MOBILE FRIENDLY 10-MIN FRESH DELIVERY PAGE (keep this at the very bottom of the file) ===== */
+@media (max-width: 1000px) {
+  .local-page {
+    padding: 12px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  /* map first, filters below it, then the nearby list */
+  .local-main {
+    grid-row: 1;
+    min-height: 70vh;
+    min-height: 70dvh;
+  }
+  .local-sidebar {
+    grid-row: 2;
+  }
+  .local-bottom {
+    grid-row: 3;
+  }
+  .local-map,
+  .local-list {
+    min-height: 70vh;
+    min-height: 70dvh;
+  }
+
+  .local-sidebar .explore-sidebar {
+    padding: 16px;
+  }
+  .local-sidebar .explore-search input {
+    font-size: 16px;
+  }
+  .local-sidebar .filter-row select {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .local-page {
+    padding: 8px;
+  }
+
+  .local-page .map-toolbar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+  .local-page .view-toggle {
+    flex: 1;
+  }
+  .local-page .view-toggle button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+  }
+  .local-page .fullscreen-btn {
+    display: none;
+  }
+
+  .local-list {
+    padding: 62px 10px 10px;
+  }
+  .list-row {
+    gap: 10px;
+  }
+  .list-row > div {
+    min-width: 0;
+  }
+  .list-row img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .local-bottom {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+  .nearby-card {
+    width: 130px;
+  }
+  .local-legend-card {
+    border-left: none;
+    border-top: 1px solid #eee;
+    padding: 14px 0 0;
+    min-width: 0;
+  }
+  .legend-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  .local-support-card {
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* bigger tap targets inside the map pop-up card */
+  .map-info-add-cart-btn,
+  .map-info-btn {
+    font-size: 10.5px;
+    padding: 8px 0;
+  }
+  .map-info-delivery-btn {
+    padding: 8px 0;
+  }
+
+  /* seller detail slide-in panel */
+  .business-detail-modal {
+    width: 100%;
+    max-width: 100%;
+  }
+  .pd-main-img {
+    height: 200px;
+  }
+  .pd-feature-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pd-feature-item {
+    flex: 1 1 45%;
+    border-right: none;
+  }
 }
