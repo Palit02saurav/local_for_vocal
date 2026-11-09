@@ -385,3 +385,9 @@
 .sd-readmore-btn:hover {
   text-decoration: underline;
 }
+.sd-book-btn.booked,
+.sd-book-btn.booked:hover {
+  background: #e6f2ea;
+  color: #2f8d46;
+  cursor: default;
+}

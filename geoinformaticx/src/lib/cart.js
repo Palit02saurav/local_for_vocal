@@ -8,8 +8,8 @@ const client = axios.create({ baseURL: API_BASE, withCredentials: true });
 const normalizeItem = (raw) => {
   const source = raw.item_type === "service" ? raw.service : raw.product;
   return {
-    cartItemId: raw.id,                
-    id: source?.id,                  
+    cartItemId: raw.id,
+    id: source?.id,
     name: source?.name,
     seller: source?.seller?.store_name,
     verified: source?.verified ?? false,
@@ -18,7 +18,23 @@ const normalizeItem = (raw) => {
     quantity: raw.quantity,
     type: raw.item_type,
 
-    isFreshDelivery: raw.item_type === "product" && source?.delivery_type === "Fresh",
+    isFreshDelivery:
+      raw.item_type === "product" && source?.delivery_type === "Fresh",
+
+    // service details (used on the checkout summary)
+    category: source?.category,
+    priceType: raw.item_type === "service" ? source?.price_type : undefined,
+    priceUnit: raw.item_type === "service" ? source?.price_unit : undefined,
+    duration: raw.item_type === "service" ? source?.duration : undefined,
+    location:
+      raw.item_type === "service" ? source?.seller?.location : undefined,
+    coverageAreas:
+      raw.item_type === "service" && source?.coverage_areas
+        ? source.coverage_areas
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean)
+        : [],
   };
 };
 
@@ -35,7 +51,7 @@ export const getCart = async () => {
 };
 
 // item: { productId, type: "product" | "service" }
-export const addToCart = async (item, quantity = 1) => {
+export const addToCart = async (item, quantity = 1, options = {}) => {
   try {
     if (item.type === "service") quantity = 1;
     await client.post("/cart", {
@@ -45,11 +61,15 @@ export const addToCart = async (item, quantity = 1) => {
       quantity,
     });
     window.dispatchEvent(new Event("storage"));
-    showToast("Added to cart!");
+    if (!options.silent) showToast("Added to cart!");
     return { success: true };
   } catch (err) {
-    if (err.response?.status === 401) return { success: false, requiresLogin: true };
-    return { success: false, message: err.response?.data?.message || "Could not reach the server." };
+    if (err.response?.status === 401)
+      return { success: false, requiresLogin: true };
+    return {
+      success: false,
+      message: err.response?.data?.message || "Could not reach the server.",
+    };
   }
 };
 
@@ -59,7 +79,10 @@ export const updateCartQuantity = async (cartItemId, quantity) => {
     window.dispatchEvent(new Event("storage"));
     return { success: true };
   } catch (err) {
-    return { success: false, message: err.response?.data?.message || "Could not reach the server." };
+    return {
+      success: false,
+      message: err.response?.data?.message || "Could not reach the server.",
+    };
   }
 };
 
@@ -69,7 +92,10 @@ export const removeFromCart = async (cartItemId) => {
     window.dispatchEvent(new Event("storage"));
     return { success: true, message: res.data.message };
   } catch (err) {
-    return { success: false, message: err.response?.data?.message || "Could not reach the server." };
+    return {
+      success: false,
+      message: err.response?.data?.message || "Could not reach the server.",
+    };
   }
 };
 
@@ -80,7 +106,10 @@ export const clearCart = async () => {
     window.dispatchEvent(new Event("storage"));
     return { success: true, message: res.data.message };
   } catch (err) {
-    return { success: false, message: err.response?.data?.message || "Could not reach the server." };
+    return {
+      success: false,
+      message: err.response?.data?.message || "Could not reach the server.",
+    };
   }
 };
 

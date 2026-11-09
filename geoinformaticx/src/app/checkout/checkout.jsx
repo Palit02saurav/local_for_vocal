@@ -7,11 +7,27 @@ import axios from "axios";
 import { getCart, clearCart } from "@/lib/cart";
 import { getCurrentUser } from "@/lib/auth";
 import { validateCoupon, getSavedCoupon, saveCoupon } from "@/lib/coupons";
-import { createOrderFromCart, verifyRazorpayPayment, abortRazorpayPayment } from "@/lib/orders";
+import {
+  createOrderFromCart,
+  verifyRazorpayPayment,
+  abortRazorpayPayment,
+} from "@/lib/orders";
 import "./checkout.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const TIME_SLOTS = [
+  "9:00 AM - 11:00 AM",
+  "11:00 AM - 1:00 PM",
+  "1:00 PM - 3:00 PM",
+  "3:00 PM - 5:00 PM",
+  "5:00 PM - 7:00 PM",
+];
 
+const todayStr = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split("T")[0];
+};
 export default function Checkout() {
   const router = useRouter();
   const [items, setItems] = useState([]);
@@ -21,10 +37,18 @@ export default function Checkout() {
     email: "",
     address: "",
     paymentMethod: "cod",
+    serviceDate: "",
+    serviceTime: "",
+    serviceHours: "1",
   });
   const [errors, setErrors] = useState({});
   const [paying, setPaying] = useState(false);
   const [coupon, setCoupon] = useState(null);
+  const cartHasServices = items.some((i) => i.type === "service");
+  const cartHasProducts = items.some((i) => i.type !== "service");
+  const cartHasHourly = items.some(
+    (i) => i.type === "service" && i.priceType === "Hourly",
+  );
 
   useEffect(() => {
     const loadCart = async () => {
@@ -44,14 +68,22 @@ export default function Checkout() {
 
       const user = getCurrentUser();
       if (user) {
-        setForm((f) => ({ ...f, name: user.name || "", email: user.email || "" }));
+        setForm((f) => ({
+          ...f,
+          name: user.name || "",
+          email: user.email || "",
+        }));
       }
 
       try {
-        const { data } = await axios.get(`${API_BASE}/customer/auth/me`, { withCredentials: true });
+        const { data } = await axios.get(`${API_BASE}/customer/auth/me`, {
+          withCredentials: true,
+        });
         const u = data.data?.user;
         if (u) {
-          const fullAddress = [u.address, u.city, u.state, u.pincode].filter(Boolean).join(", ");
+          const fullAddress = [u.address, u.city, u.state, u.pincode]
+            .filter(Boolean)
+            .join(", ");
           setForm((f) => ({
             ...f,
             phone: f.phone || u.phone || "",
@@ -65,7 +97,10 @@ export default function Checkout() {
     loadCart();
   }, [router]);
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
   const discount = coupon ? coupon.discount : 0;
   const total = Math.max(0, subtotal - discount);
 
@@ -78,97 +113,128 @@ export default function Checkout() {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = "Name is required.";
     if (!form.phone.trim()) newErrors.phone = "Phone number is required.";
-    else if (!/^\d{10}$/.test(form.phone.trim())) newErrors.phone = "Enter a valid 10-digit phone number.";
+    else if (!/^\d{10}$/.test(form.phone.trim()))
+      newErrors.phone = "Enter a valid 10-digit phone number.";
     if (!form.email.trim()) newErrors.email = "Email is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) newErrors.email = "Enter a valid email.";
-    if (!form.address.trim()) newErrors.address = "Delivery address is required.";
+    else if (!/^\S+@\S+\.\S+$/.test(form.email.trim()))
+      newErrors.email = "Enter a valid email.";
+    if (!form.address.trim()) newErrors.address = "Address is required.";
+    if (cartHasServices) {
+      if (!form.serviceDate)
+        newErrors.serviceDate = "Please select a preferred service date.";
+      else if (form.serviceDate < todayStr())
+        newErrors.serviceDate = "Date can't be in the past.";
+      if (!form.serviceTime)
+        newErrors.serviceTime = "Please select a time slot.";
+      if (cartHasHourly && !form.serviceHours)
+        newErrors.serviceHours = "Please select the number of hours.";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const goToTracking = (hasProducts, hasServices) => {
-  if (hasProducts && hasServices) router.push("/trackorder?mixed=1");
-  else if (hasProducts) router.push("/trackorder");
-  else if (hasServices) router.push("/trackservice");
-};
+  const goToTracking = (hasProducts, hasServices) => {
+    if (hasProducts && hasServices) router.push("/trackorder?mixed=1");
+    else if (hasProducts) router.push("/trackorder");
+    else if (hasServices) router.push("/trackservice");
+  };
 
-const handlePlaceOrder = async (e) => {
-  e.preventDefault();
-  if (!validate() || paying) return;
-  setPaying(true);
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    if (!validate() || paying) return;
+    setPaying(true);
 
-  const { success, message, hasProducts, hasServices, razorpay } =
-    await createOrderFromCart(items, { ...form, couponCode: coupon?.code || "" });
-  if (!success) {
-    setPaying(false);
-    alert(message || "Could not place the order. Please try again.");
-    return;
-  }
-
-  if (form.paymentMethod !== "razorpay") {
-    await clearCart();
-    goToTracking(hasProducts, hasServices);
-    return;
-  }
-
-  if (!window.Razorpay) {
-    await abortRazorpayPayment(razorpay.orderId);
-    setPaying(false);
-    alert("Payment gateway failed to load. Please refresh and try again.");
-    return;
-  }
-
-  const rzp = new window.Razorpay({
-    key: razorpay.keyId,
-    amount: razorpay.amount,
-    currency: razorpay.currency,
-    order_id: razorpay.orderId,
-    name: "Geomaticx",
-    description: "Order payment",
-    prefill: { name: form.name, email: form.email, contact: form.phone },
-    theme: { color: "#2f6f4e" },
-    handler: async (response) => {
-      const v = await verifyRazorpayPayment({
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
+    const { success, message, hasProducts, hasServices, razorpay } =
+      await createOrderFromCart(items, {
+        ...form,
+        couponCode: coupon?.code || "",
       });
-      if (!v.success) {
-        setPaying(false);
-        alert(v.message || "Payment could not be verified. If money was deducted, please contact support.");
-        return;
-      }
+    if (!success) {
+      setPaying(false);
+      alert(message || "Could not place the order. Please try again.");
+      return;
+    }
+
+    if (form.paymentMethod !== "razorpay") {
       await clearCart();
       goToTracking(hasProducts, hasServices);
-    },
-    modal: {
-      ondismiss: async () => {
-        await abortRazorpayPayment(razorpay.orderId); 
-        setPaying(false);
+      return;
+    }
+
+    if (!window.Razorpay) {
+      await abortRazorpayPayment(razorpay.orderId);
+      setPaying(false);
+      alert("Payment gateway failed to load. Please refresh and try again.");
+      return;
+    }
+
+    const rzp = new window.Razorpay({
+      key: razorpay.keyId,
+      amount: razorpay.amount,
+      currency: razorpay.currency,
+      order_id: razorpay.orderId,
+      name: "Geomaticx",
+      description: "Order payment",
+      prefill: { name: form.name, email: form.email, contact: form.phone },
+      theme: { color: "#2f6f4e" },
+      handler: async (response) => {
+        const v = await verifyRazorpayPayment({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        });
+        if (!v.success) {
+          setPaying(false);
+          alert(
+            v.message ||
+              "Payment could not be verified. If money was deducted, please contact support.",
+          );
+          return;
+        }
+        await clearCart();
+        goToTracking(hasProducts, hasServices);
       },
-    },
-  });
-  rzp.on("payment.failed", (resp) => {
-    alert(resp.error?.description || "Payment failed. You can retry in the popup.");
-  });
-  rzp.open();
-};
+      modal: {
+        ondismiss: async () => {
+          await abortRazorpayPayment(razorpay.orderId);
+          setPaying(false);
+        },
+      },
+    });
+    rzp.on("payment.failed", (resp) => {
+      alert(
+        resp.error?.description ||
+          "Payment failed. You can retry in the popup.",
+      );
+    });
+    rzp.open();
+  };
 
   if (items.length === 0) return null;
 
   return (
     <main className="checkout-page">
       <div className="checkout-breadcrumb">
-        <Link href="/">Home</Link> <span>›</span>{" "}
-        <Link href="/cart">Cart</Link> <span>›</span> <span>Checkout</span>
+        <Link href="/">Home</Link> <span>›</span> <Link href="/cart">Cart</Link>{" "}
+        <span>›</span> <span>Checkout</span>
       </div>
 
-      <h1 className="checkout-title">Checkout</h1>
+      <h1 className="checkout-title">
+        {items.length > 0 && items.every((i) => i.type === "service")
+          ? "Confirm Booking"
+          : "Checkout"}
+      </h1>
 
       <div className="checkout-layout">
         {/* Left: form */}
         <form className="checkout-form" onSubmit={handlePlaceOrder}>
-          <h3 className="checkout-section-title">Contact & Delivery Details</h3>
+          <h3 className="checkout-section-title">
+            {cartHasServices && !cartHasProducts
+              ? "Contact & Service Details"
+              : cartHasServices
+                ? "Contact & Delivery / Service Details"
+                : "Contact & Delivery Details"}
+          </h3>
 
           <div className="checkout-field">
             <label>Full Name</label>
@@ -178,7 +244,9 @@ const handlePlaceOrder = async (e) => {
               value={form.name}
               onChange={(e) => handleChange("name", e.target.value)}
             />
-            {errors.name && <span className="checkout-error">{errors.name}</span>}
+            {errors.name && (
+              <span className="checkout-error">{errors.name}</span>
+            )}
           </div>
 
           <div className="checkout-field-row">
@@ -190,7 +258,9 @@ const handlePlaceOrder = async (e) => {
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
               />
-              {errors.phone && <span className="checkout-error">{errors.phone}</span>}
+              {errors.phone && (
+                <span className="checkout-error">{errors.phone}</span>
+              )}
             </div>
 
             <div className="checkout-field">
@@ -201,35 +271,124 @@ const handlePlaceOrder = async (e) => {
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
               />
-              {errors.email && <span className="checkout-error">{errors.email}</span>}
+              {errors.email && (
+                <span className="checkout-error">{errors.email}</span>
+              )}
             </div>
           </div>
 
           <div className="checkout-field">
-            <label>Delivery Address</label>
+            <label>
+              {cartHasServices && !cartHasProducts
+                ? "Service Location"
+                : cartHasServices
+                  ? "Delivery / Service Address"
+                  : "Delivery Address"}
+            </label>
             <textarea
               rows={3}
               placeholder="House no, street, area, city, state, PIN code"
               value={form.address}
               onChange={(e) => handleChange("address", e.target.value)}
             />
-            {errors.address && <span className="checkout-error">{errors.address}</span>}
+            {errors.address && (
+              <span className="checkout-error">{errors.address}</span>
+            )}
           </div>
+
+          {cartHasServices && (
+            <>
+              <h3 className="checkout-section-title">
+                Service Booking Details
+              </h3>
+
+              <div className="checkout-field-row">
+                <div className="checkout-field">
+                  <label>Preferred Date</label>
+                  <input
+                    type="date"
+                    min={todayStr()}
+                    value={form.serviceDate}
+                    onChange={(e) =>
+                      handleChange("serviceDate", e.target.value)
+                    }
+                  />
+                  {errors.serviceDate && (
+                    <span className="checkout-error">{errors.serviceDate}</span>
+                  )}
+                </div>
+
+                <div className="checkout-field">
+                  <label>Time Slot</label>
+                  <select
+                    value={form.serviceTime}
+                    onChange={(e) =>
+                      handleChange("serviceTime", e.target.value)
+                    }
+                  >
+                    <option value="">Select a time slot</option>
+                    {TIME_SLOTS.map((slot) => (
+                      <option key={slot} value={slot}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.serviceTime && (
+                    <span className="checkout-error">{errors.serviceTime}</span>
+                  )}
+                </div>
+              </div>
+
+              {cartHasHourly && (
+                <div className="checkout-field">
+                  <label>Service Duration (hours)</label>
+                  <select
+                    value={form.serviceHours}
+                    onChange={(e) =>
+                      handleChange("serviceHours", e.target.value)
+                    }
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((h) => (
+                      <option key={h} value={h}>
+                        {h} {h === 1 ? "hour" : "hours"}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.serviceHours && (
+                    <span className="checkout-error">
+                      {errors.serviceHours}
+                    </span>
+                  )}
+                </div>
+              )}
+            </>
+          )}
 
           <h3 className="checkout-section-title">Payment Method</h3>
 
           <div className="checkout-payment-options">
-            <label className={`checkout-payment-option ${form.paymentMethod === "cod" ? "selected" : ""}`}>
+            <label
+              className={`checkout-payment-option ${form.paymentMethod === "cod" ? "selected" : ""}`}
+            >
               <input
                 type="radio"
                 name="paymentMethod"
                 checked={form.paymentMethod === "cod"}
                 onChange={() => handleChange("paymentMethod", "cod")}
               />
-              <span>💰 Cash on Delivery</span>
+              <span>
+                💰{" "}
+                {cartHasServices && !cartHasProducts
+                  ? "Pay After Service"
+                  : cartHasServices
+                    ? "Cash on Delivery / Pay After Service"
+                    : "Cash on Delivery"}
+              </span>
             </label>
 
-            <label className={`checkout-payment-option ${form.paymentMethod === "razorpay" ? "selected" : ""}`}>
+            <label
+              className={`checkout-payment-option ${form.paymentMethod === "razorpay" ? "selected" : ""}`}
+            >
               <input
                 type="radio"
                 name="paymentMethod"
@@ -240,12 +399,21 @@ const handlePlaceOrder = async (e) => {
             </label>
           </div>
 
-        <button type="submit" className="checkout-place-order-btn" disabled={paying}>
-          {paying ? "Please wait..." : form.paymentMethod === "razorpay" ? `Pay ₹${total.toLocaleString("en-IN")}` : "Place Order"}
-        </button>
+          <button
+            type="submit"
+            className="checkout-place-order-btn"
+            disabled={paying}
+          >
+            {paying
+              ? "Please wait..."
+              : form.paymentMethod === "razorpay"
+                ? `Pay ₹${total.toLocaleString("en-IN")}`
+                : cartHasServices && !cartHasProducts
+                  ? "Confirm Booking"
+                  : "Place Order"}
+          </button>
         </form>
-
-        {/* Right: order summary */}
+``
         <aside className="checkout-summary">
           <h3>Order Summary</h3>
           <div className="checkout-summary-items">
@@ -254,7 +422,27 @@ const handlePlaceOrder = async (e) => {
                 <img src={item.image} alt={item.name} />
                 <div className="checkout-summary-item-info">
                   <p className="checkout-summary-item-name">{item.name}</p>
-                  <p className="checkout-summary-item-qty">Qty: {item.quantity}</p>
+                  {item.type === "service" ? (
+                    <div className="checkout-summary-item-meta">
+                      {item.seller && <p>By {item.seller}</p>}
+                      {item.category && <p>🏷️ {item.category}</p>}
+                      <p>💰 {servicePricingLabel(item)}</p>
+                      {item.duration && (
+                        <p>
+                          ⏱️ Turnaround: {item.duration}
+                          {/^\d+$/.test(item.duration) ? " days" : ""}
+                        </p>
+                      )}
+                      {item.location && <p>📍 {item.location}</p>}
+                      {item.coverageAreas?.length > 0 && (
+                        <p>🗺️ Areas: {item.coverageAreas.join(", ")}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="checkout-summary-item-qty">
+                      Qty: {item.quantity}
+                    </p>
+                  )}
                 </div>
                 <p className="checkout-summary-item-price">
                   ₹{(item.price * item.quantity).toLocaleString("en-IN")}
@@ -278,3 +466,16 @@ const handlePlaceOrder = async (e) => {
     </main>
   );
 }
+
+const servicePricingLabel = (item) => {
+  switch (item.priceType) {
+    case "Starting From":
+      return "Starting from";
+    case "Per Unit":
+      return `Per ${item.priceUnit || "unit"}`;
+    case "Hourly":
+      return "Per hour";
+    default:
+      return "Fixed price";
+  }
+};

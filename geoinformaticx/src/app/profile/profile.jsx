@@ -1011,7 +1011,7 @@ export default function Profile() {
               ) : (
                 <div className="prf-orders-empty">
                   <p className="prf-orders-empty-icon">📍</p>
-                  <p>You haven't added an address yet.</p>
+                  <p>You have not added an address yet.</p>
                 </div>
               )}
             </div>
@@ -1039,7 +1039,7 @@ export default function Profile() {
               ) : myReviews.length === 0 ? (
                 <div className="prf-orders-empty">
                   <p className="prf-orders-empty-icon">⭐</p>
-                  <p>You haven't reviewed anything yet.</p>
+                  <p>You have not reviewed anything yet.</p>
                   <Link href="/trackorder" className="prf-orders-shop-link">
                     Go to My Orders
                   </Link>

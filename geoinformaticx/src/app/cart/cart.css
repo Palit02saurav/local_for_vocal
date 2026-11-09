@@ -130,6 +130,10 @@
   padding: 0 18px;
 }
 
+.ct-table-head.no-qty,
+.ct-row.no-qty {
+  grid-template-columns: minmax(0, 2.4fr) 1fr 1fr 36px;
+}
 .ct-table-head {
   height: 32px;
   background: #f6f8f7;

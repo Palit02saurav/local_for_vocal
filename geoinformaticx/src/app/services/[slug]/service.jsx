@@ -1,8 +1,8 @@
 "use client";
-
+import { showToast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addToCart } from "@/lib/cart";
+import { addToCart, getCart } from "@/lib/cart";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { useState, useEffect } from "react";
 import "./service.css";
@@ -11,7 +11,8 @@ function ReadMoreText({ text, limit = 260 }) {
   const [expanded, setExpanded] = useState(false);
   if (!text) return null;
   const isLong = text.length > limit;
-  const shown = expanded || !isLong ? text : text.slice(0, limit).trimEnd() + "…";
+  const shown =
+    expanded || !isLong ? text : text.slice(0, limit).trimEnd() + "…";
 
   return (
     <p className="sd-description">
@@ -49,10 +50,23 @@ export default function ServiceDetail({ service }) {
   const router = useRouter();
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistItemId, setWishlistItemId] = useState(null);
+  const [booked, setBooked] = useState(false);
+
+  useEffect(() => {
+    const syncBooked = async () => {
+      const cart = await getCart();
+      setBooked(cart.some((c) => c.type === "service" && c.id === service.id));
+    };
+    syncBooked();
+    window.addEventListener("storage", syncBooked);
+    return () => window.removeEventListener("storage", syncBooked);
+  }, [service.id]);
 
   useEffect(() => {
     getWishlist().then((list) => {
-      const match = list.find((i) => i.id === service.id && i.type === "service");
+      const match = list.find(
+        (i) => i.id === service.id && i.type === "service",
+      );
       setWishlisted(!!match);
       setWishlistItemId(match?.wishlistItemId || null);
     });
@@ -64,23 +78,41 @@ export default function ServiceDetail({ service }) {
       setWishlisted(false);
       setWishlistItemId(null);
     } else {
-      const result = await addToWishlist({ productId: service.id, type: "service" });
+      const result = await addToWishlist({
+        productId: service.id,
+        type: "service",
+      });
       if (result.requiresLogin) {
         router.push(`/login?redirect=/services/${service.slug}`);
         return;
       }
       const list = await getWishlist();
-      const match = list.find((i) => i.id === service.id && i.type === "service");
+      const match = list.find(
+        (i) => i.id === service.id && i.type === "service",
+      );
       setWishlistItemId(match?.wishlistItemId || null);
       setWishlisted(true);
     }
   };
 
   const handleBookNow = async () => {
-    const result = await addToCart({ productId: service.id, type: "service" });
+    const result = await addToCart(
+      { productId: service.id, type: "service" },
+      1,
+      { silent: true },
+    );
     if (result.requiresLogin) {
       router.push(`/login?redirect=/services/${service.slug}`);
+      return;
     }
+    if (!result.success) {
+      showToast(
+        result.message || "Could not start the booking. Please try again.",
+        "error",
+      );
+      return;
+    }
+    router.push("/checkout");
   };
 
   return (
@@ -103,7 +135,9 @@ export default function ServiceDetail({ service }) {
             <p className="sd-seller">By {service.seller}</p>
 
             <div className="sd-meta">
-              {service.location && <span className="sd-distance">📍 {service.location}</span>}
+              {service.location && (
+                <span className="sd-distance">📍 {service.location}</span>
+              )}
               <span className="sd-category">{service.category}</span>
             </div>
 
@@ -113,20 +147,30 @@ export default function ServiceDetail({ service }) {
             {service.duration && (
               <div className="sd-info-row">
                 <span className="sd-info-icon">⏱️</span>
-                <span><strong>Turnaround:</strong> {service.duration}</span>
+                <span>
+                  <span>
+                    <strong>Turnaround:</strong> {service.duration}
+                    {/^\d+$/.test(service.duration) ? " days" : ""}
+                  </span>
+                </span>
               </div>
             )}
 
             {service.coverageAreas.length > 0 && (
               <div className="sd-info-row">
                 <span className="sd-info-icon">📍</span>
-                <span><strong>Areas Served:</strong> {service.coverageAreas.join(", ")}</span>
+                <span>
+                  <strong>Areas Served:</strong>{" "}
+                  {service.coverageAreas.join(", ")}
+                </span>
               </div>
             )}
 
             {service.requirements && (
               <div className="sd-requirements">
-                <h3 className="sd-section-title">What You'll Need to Provide</h3>
+                <h3 className="sd-section-title">
+                  What You all Need to Provide
+                </h3>
                 <ReadMoreText text={service.requirements} limit={150} />
               </div>
             )}
@@ -138,8 +182,12 @@ export default function ServiceDetail({ service }) {
           </div>
 
           <div className="sd-actions">
-            <button className="sd-book-btn" onClick={handleBookNow}>
-              📋 Book Now
+            <button
+              className={`sd-book-btn ${booked ? "booked" : ""}`}
+              onClick={handleBookNow}
+              disabled={booked}
+            >
+              {booked ? "✓ Booked" : "📋 Book Now"}
             </button>
             <button
               className={`sd-wishlist-btn ${wishlisted ? "active" : ""}`}
