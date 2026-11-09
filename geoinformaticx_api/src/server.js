@@ -41,7 +41,10 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+const upload = require("./middlewares/upload");
+
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads"))); // old files, keep
+app.use("/images", express.static(upload.imageDir, { maxAge: "30d" }));
 
 const { sequelize } = require("./models");
 
