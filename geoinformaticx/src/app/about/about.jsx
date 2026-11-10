@@ -20,7 +20,7 @@ import {
   FaHeadset,
 } from "react-icons/fa";
 import "./about.css";
-
+// About page component
 export default function About() {
   return (
     <div className="about-page">
@@ -48,17 +48,19 @@ export default function About() {
             <span className="highlight">Enriching Communities.</span>
           </h1>
           <p>
-            Geomaticx is a local marketplace that connects you with
-            unique products and trusted businesses from your community. We
-            believe in supporting local artisans, farmers, entrepreneurs,
-            and traditions that make our region special.
+            Geomaticx is a local marketplace that connects you with unique
+            products and trusted businesses from your community. We believe in
+            supporting local artisans, farmers, entrepreneurs, and traditions
+            that make our region special.
           </p>
           <button className="about-cta">Our Story</button>
         </div>
 
         <div className="about-hero-visual">
           <div className="floating-card card-1">
-            <span className="floating-icon"><FaUsers /></span>
+            <span className="floating-icon">
+              <FaUsers />
+            </span>
             <div>
               <h4>Support Local</h4>
               <p>Empowering local artisans and businesses</p>
@@ -66,7 +68,9 @@ export default function About() {
           </div>
 
           <div className="floating-card card-2">
-            <span className="floating-icon"><FaLeaf /></span>
+            <span className="floating-icon">
+              <FaLeaf />
+            </span>
             <div>
               <h4>Sustainable Choices</h4>
               <p>Promoting eco-friendly and ethical products</p>
@@ -74,7 +78,9 @@ export default function About() {
           </div>
 
           <div className="floating-card card-3">
-            <span className="floating-icon"><FaHandshake /></span>
+            <span className="floating-icon">
+              <FaHandshake />
+            </span>
             <div>
               <h4>Stronger Communities</h4>
               <p>Building a better future together</p>
@@ -91,9 +97,8 @@ export default function About() {
           </span>
           <h3>Our Mission</h3>
           <p>
-            To create a sustainable ecosystem that empowers local
-            businesses and makes unique, quality products accessible to
-            everyone.
+            To create a sustainable ecosystem that empowers local businesses and
+            makes unique, quality products accessible to everyone.
           </p>
         </div>
 
@@ -103,8 +108,8 @@ export default function About() {
           </span>
           <h3>Our Vision</h3>
           <p>
-            A thriving local economy where communities grow together,
-            traditions are preserved, and opportunities are limitless.
+            A thriving local economy where communities grow together, traditions
+            are preserved, and opportunities are limitless.
           </p>
         </div>
 
@@ -139,7 +144,9 @@ export default function About() {
               <FaAward />
             </span>
             <h4>Curated Quality</h4>
-            <p>We handpick the best products and businesses from your region.</p>
+            <p>
+              We handpick the best products and businesses from your region.
+            </p>
           </div>
           <div className="why-item">
             <span className="why-icon">
@@ -153,7 +160,9 @@ export default function About() {
               <FaMapMarkerAlt />
             </span>
             <h4>Local &amp; Authentic</h4>
-            <p>Discover products that reflect our local culture and heritage.</p>
+            <p>
+              Discover products that reflect our local culture and heritage.
+            </p>
           </div>
           <div className="why-item">
             <span className="why-icon">
@@ -229,7 +238,10 @@ export default function About() {
           </span>
           <div>
             <h4>Supporting Sustainability</h4>
-            <p>We promote eco-friendly products and responsible business practices.</p>
+            <p>
+              We promote eco-friendly products and responsible business
+              practices.
+            </p>
           </div>
         </div>
         <div className="strip-item">
@@ -238,7 +250,10 @@ export default function About() {
           </span>
           <div>
             <h4>Join Our Community</h4>
-            <p>Be a part of a growing community that values local and lives better.</p>
+            <p>
+              Be a part of a growing community that values local and lives
+              better.
+            </p>
           </div>
         </div>
         <div className="strip-item">
@@ -247,7 +262,9 @@ export default function About() {
           </span>
           <div>
             <h4>Partner With Us</h4>
-            <p>Are you a local business? Join us and grow with Geoinformaticx.</p>
+            <p>
+              Are you a local business? Join us and grow with Geoinformaticx.
+            </p>
           </div>
         </div>
         <div className="strip-item">
@@ -255,7 +272,7 @@ export default function About() {
             <FaHeadset />
           </span>
           <div>
-            <h4>We're Here to Help</h4>
+            <h4>We are Here to Help</h4>
             <p>Our support team is always ready to assist you.</p>
           </div>
         </div>
