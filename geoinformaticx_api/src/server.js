@@ -25,7 +25,7 @@ app.use(
 
       const isAllowed =
         allowedOrigins.includes(origin) ||
-        /^https:\/\/(geoinformaticx-dashboard|local-for-vocal-drate).*\.vercel\.app$/.test(
+        /^https:\/\/(geoinformaticx-dashboard|local-for-vocal).*\.vercel\.app$/.test(
           origin,
         );
 
