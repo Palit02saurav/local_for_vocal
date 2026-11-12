@@ -1,13 +1,15 @@
-const express = require('express');
-const { Op } = require('sequelize');
-const { Product, Service, Seller } = require('../models');
+const express = require("express");
+const { Op } = require("sequelize");
+const { Product, Service, Seller } = require("../models");
 
 const router = express.Router();
-const notEmpty = { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] };
+const notEmpty = { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: "" }] };
 
-router.get('/suggestions', async (req, res) => {
+router.get("/suggestions", async (req, res) => {
   try {
-    const q = String(req.query.q || '').trim().slice(0, 60);
+    const q = String(req.query.q || "")
+      .trim()
+      .slice(0, 60);
     if (!q) return res.json({ success: true, data: { suggestions: [] } });
 
     const like = { [Op.like]: `%${q}%` }; // MySQL LIKE is case-insensitive by default
@@ -15,47 +17,67 @@ router.get('/suggestions', async (req, res) => {
     const [products, services, stores] = await Promise.all([
       Product.findAll({
         where: {
-          approval_status: 'Approved',
-          status: { [Op.ne]: 'Out of Stock' },
-          [Op.or]: [{ name: like }, { category: like }],
+          approval_status: "Approved",
+          status: { [Op.ne]: "Out of Stock" },
+          [Op.or]: [{ name: like }, { category: like }, { tags: like }],
         },
-        attributes: ['id', 'name', 'sku'],
+        attributes: ["id", "name", "sku", "tags"],
         limit: 6,
       }),
       Service.findAll({
         where: {
-          approval_status: 'Approved',
-          status: 'Active',
+          approval_status: "Approved",
+          status: "Active",
           [Op.or]: [{ name: like }, { category: like }],
         },
-        attributes: ['id', 'name', 'sku'],
+        attributes: ["id", "name", "sku"],
         limit: 4,
       }),
       Seller.findAll({
         where: {
-          approval_status: 'Approved',
+          approval_status: "Approved",
           is_active: true,
           business_address: notEmpty,
           profile_image_url: notEmpty,
           [Op.or]: [{ store_name: like }, { full_name: like }],
         },
-        attributes: ['id', 'store_name', 'full_name'],
+        attributes: ["id", "store_name", "full_name"],
         limit: 4,
       }),
     ]);
 
     const lq = q.toLowerCase();
+    const lqTag = lq.replace(/^#+/, "");
+
+    // tags that contain what the user typed, e.g. "#organic"
+    const tagSet = new Set();
+    products.forEach((p) =>
+      (p.tags || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t && t.toLowerCase().replace(/^#+/, "").includes(lqTag))
+        .forEach((t) => tagSet.add(t)),
+    );
+    const tagSuggestions = [...tagSet]
+      .slice(0, 3)
+      .map((t) => ({ type: "tag", label: t }));
+
     const all = [
-      ...products.map((p) => ({ type: 'product', label: p.name, sku: p.sku })),
-      ...services.map((s) => ({ type: 'service', label: s.name, sku: s.sku })),
-      ...stores.map((s) => ({ type: 'store', label: s.store_name || s.full_name, id: s.id })),
+      ...tagSuggestions,
+      ...products.map((p) => ({ type: "product", label: p.name, sku: p.sku })),
+      ...services.map((s) => ({ type: "service", label: s.name, sku: s.sku })),
+      ...stores.map((s) => ({
+        type: "store",
+        label: s.store_name || s.full_name,
+        id: s.id,
+      })),
     ];
 
     // names that START with the text come first, then the rest
     all.sort(
       (a, b) =>
-        Number(b.label.toLowerCase().startsWith(lq)) -
-        Number(a.label.toLowerCase().startsWith(lq))
+        Number(b.label.toLowerCase().replace(/^#+/, "").startsWith(lqTag)) -
+        Number(a.label.toLowerCase().replace(/^#+/, "").startsWith(lqTag)),
     );
 
     // remove duplicates, keep 8
@@ -71,8 +93,10 @@ router.get('/suggestions', async (req, res) => {
 
     res.json({ success: true, data: { suggestions } });
   } catch (err) {
-    console.error('Search suggestions error:', err);
-    res.status(500).json({ success: false, message: 'Server error fetching suggestions.' });
+    console.error("Search suggestions error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error fetching suggestions." });
   }
 });
 
