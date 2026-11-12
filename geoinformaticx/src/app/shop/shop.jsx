@@ -146,11 +146,20 @@ export default function Shop() {
 
   const filteredProducts = allProducts
     .filter((p) => {
-      if (
-        searchQuery &&
-        !p.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-        return false;
+      if (searchQuery) {
+        // ignore a leading "#" so both "organic" and "#organic" work
+        const q = searchQuery.trim().toLowerCase().replace(/^#+/, "");
+        const tagList = (p.tags || "")
+          .toLowerCase()
+          .split(",")
+          .map((t) => t.trim().replace(/^#+/, ""))
+          .filter(Boolean);
+        const matches =
+          p.name.toLowerCase().includes(q) ||
+          (p.category || "").toLowerCase().includes(q) ||
+          tagList.some((t) => t.includes(q));
+        if (!matches) return false;
+      }
       if (
         selectedCategory !== "All Categories" &&
         p.category !== selectedCategory
