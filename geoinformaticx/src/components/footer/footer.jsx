@@ -54,7 +54,12 @@ const TRUST_ITEMS = [
   { icon: FaUsers, lines: ["Support", "Local"] },
 ];
 
-const BOTTOM_LINKS = ["Sitemap", "Accessibility", "Cookies", "Manage Preferences"];
+const BOTTOM_LINKS = [
+  "Sitemap",
+  "Accessibility",
+  "Cookies",
+  "Manage Preferences",
+];
 
 const LinkColumn = ({ title, links }) => (
   <div className="footer-col">
@@ -85,7 +90,10 @@ const Footer = () => {
       showToast("Thanks for subscribing! Check your inbox.", "success");
       setEmail("");
     } catch (err) {
-      showToast(err.message || "Could not subscribe. Please try again.", "error");
+      showToast(
+        err.message || "Could not subscribe. Please try again.",
+        "error",
+      );
     } finally {
       setSubscribing(false);
     }
@@ -101,14 +109,15 @@ const Footer = () => {
           <div className="footer-logo">
             <Image
               src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png"
-              alt="Geomaticx"
+              alt="Vocal For Local"
               width={52}
               height={52}
               unoptimized
             />
             <div>
               <h2>
-                Geo<span className="footer-logo-accent">maticx</span>
+                Vocal<span className="footer-logo-for">For</span>
+                <span className="footer-logo-accent">Local</span>
               </h2>
               <p className="footer-tagline">Discover. Support. Grow Local.</p>
             </div>
@@ -203,7 +212,8 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <p className="footer-copy">
-          &copy; {new Date().getFullYear()} Geomaticx. All Rights Reserved.
+          &copy; {new Date().getFullYear()} Vocal For Local. All Rights
+          Reserved.
         </p>
 
         <div className="footer-bottom-links">

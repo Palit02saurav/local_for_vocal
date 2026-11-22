@@ -23,7 +23,11 @@
   height: 420px;
   left: -160px;
   top: 40px;
-  background: radial-gradient(circle, rgba(76, 179, 111, 0.16), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(76, 179, 111, 0.16),
+    transparent 70%
+  );
 }
 
 .footer-glow-right {
@@ -31,7 +35,11 @@
   height: 320px;
   right: -140px;
   bottom: 40px;
-  background: radial-gradient(ellipse, rgba(76, 179, 111, 0.22), transparent 70%);
+  background: radial-gradient(
+    ellipse,
+    rgba(76, 179, 111, 0.22),
+    transparent 70%
+  );
 }
 
 .footer-container {
@@ -87,7 +95,6 @@
   transition: color 0.2s ease;
 }
 
-
 .footer-chevron {
   color: var(--f-green);
   font-size: 10px;
@@ -118,6 +125,16 @@
   margin: 0;
   color: #ffffff;
   line-height: 1.15;
+}
+
+.footer-logo-for {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 0 6px;
+  background: #fff;
+  color: #111;
+  border-radius: 6px;
+  line-height: 1.2;
 }
 
 .footer-logo-accent {
@@ -186,12 +203,26 @@
 }
 
 /* Brand colors */
-.footer-socials a:nth-child(1)::before { background: #3b5999; } /* Facebook */
-.footer-socials a:nth-child(2)::before {                         /* Instagram */
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+.footer-socials a:nth-child(1)::before {
+  background: #3b5999;
+} /* Facebook */
+.footer-socials a:nth-child(2)::before {
+  /* Instagram */
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
 }
-.footer-socials a:nth-child(3)::before { background: #ff0000; } /* YouTube */
-.footer-socials a:nth-child(4)::before { background: #25d366; } /* WhatsApp */
+.footer-socials a:nth-child(3)::before {
+  background: #ff0000;
+} /* YouTube */
+.footer-socials a:nth-child(4)::before {
+  background: #25d366;
+} /* WhatsApp */
 
 /* Trust strip */
 .footer-trust {
@@ -231,7 +262,11 @@
   align-self: start;
   padding: 26px 28px 28px;
   border-radius: 22px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.025));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.025)
+  );
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   overflow: hidden;
@@ -326,7 +361,9 @@
   font-size: 14.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.2s ease, transform 0.2s ease;
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease;
 }
 
 .newsletter-form button:hover {

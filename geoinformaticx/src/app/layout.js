@@ -19,22 +19,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Geomaticx",
+  title: "Vocal For Local",
   description: "Discover. Support. Grow Local.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body style={{ display: "flex", flexDirection: "column", minHeight: "100vh", margin: 0 }}>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      <body
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          margin: 0,
+        }}
+      >
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="afterInteractive"
+        />
         <SplashScreen />
         <ScrollToTop />
         <PageTransitionLoader />
         <Navbar />
-        <main style={{ flex: 1 }}>
-          {children}
-        </main>
+        <main style={{ flex: 1 }}>{children}</main>
         <Footer />
         <Toast />
       </body>

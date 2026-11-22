@@ -48,6 +48,16 @@
   line-height: 1.15;
 }
 
+.logo-for {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 0 6px;
+  background: #111;
+  color: #fff;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
 .logo-accent {
   color: var(--nav-green);
 }
@@ -581,7 +591,8 @@
 
 @media (max-width: 600px) {
   .logo-tagline {
-    display: none;
+    font-size: 9px;
+    margin-top: 1px;
   }
 
   .nav-link {

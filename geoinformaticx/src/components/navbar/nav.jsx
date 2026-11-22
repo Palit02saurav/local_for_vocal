@@ -163,12 +163,13 @@ export default function Navbar() {
               src="https://geomaticxweb.s3.ap-south-2.amazonaws.com/website-resources/506c5fc543eb23c40fff6a043d867c66.png"
               width="46"
               height="46"
-              alt="Geomaticx"
+              alt="Vocal For Local"
             />
           </div>
           <div className="logo-text">
             <span className="logo-name">
-              Geo<span className="logo-accent">maticx</span>
+              Vocal<span className="logo-for">For</span>
+              <span className="logo-accent">Local</span>
             </span>
             <span className="logo-tagline">Discover. Support. Grow Local.</span>
           </div>
